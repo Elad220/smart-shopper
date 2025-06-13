@@ -10,6 +10,8 @@ import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'; // Changed for "remove all in category"
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
+import CategoryIcon from '@mui/icons-material/LabelImportant';
 
 interface CategorySectionProps {
   categoryName: Category;
@@ -20,6 +22,21 @@ interface CategorySectionProps {
   onRemoveCategory: (categoryName: Category) => void;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  Dairy: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
+  Bakery: 'linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%)',
+  Produce: 'linear-gradient(90deg, #e8f5e9 0%, #a5d6a7 100%)',
+  Meat: 'linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)',
+  Frozen: 'linear-gradient(90deg, #e1f5fe 0%, #b3e5fc 100%)',
+  Snacks: 'linear-gradient(90deg, #f3e5f5 0%, #ce93d8 100%)',
+  Beverages: 'linear-gradient(90deg, #f9fbe7 0%, #fffde7 100%)',
+  Other: 'linear-gradient(90deg, #eceff1 0%, #cfd8dc 100%)',
+};
+
+function getCategoryColor(category: string) {
+  return CATEGORY_COLORS[category] || 'linear-gradient(90deg, #f5f5f5 0%, #e0e0e0 100%)';
+}
+
 const CategorySection: React.FC<CategorySectionProps> = ({ 
   categoryName, 
   items, 
@@ -28,48 +45,60 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   onEditItem,
   onRemoveCategory
 }) => {
-  const [isOpen, setIsOpen] = useState(true); // MUI Accordion uses `expanded` prop
-
+  const [isOpen, setIsOpen] = useState(true);
   if (items.length === 0) return null;
-
-  const handleAccordionChange = (event: React.SyntheticEvent, isExpanded: boolean) => {
-    setIsOpen(isExpanded);
-  };
-  
   const categoryTitle = typeof categoryName === 'string' ? categoryName : 'Unknown Category';
-
   return (
-    <Accordion expanded={isOpen} onChange={handleAccordionChange} sx={{ boxShadow: 2, '&:before': { display: 'none' } /* remove default top border */ }}>
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        aria-controls={`panel-${categoryName}-content`}
-        id={`panel-${categoryName}-header`}
-        sx={{ 
-          backgroundColor: 'grey.100',
-          borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
-          '& .MuiAccordionSummary-content': { // Target content area for spacing
-             justifyContent: 'space-between',
-             alignItems: 'center',
-          }
-        }}
+    <Box
+      sx={{
+        background: getCategoryColor(categoryName),
+        borderRadius: 3,
+        boxShadow: '0 4px 24px 0 rgba(0,0,0,0.07)',
+        p: 2,
+        mb: 2,
+        border: '1px solid #e0e0e0',
+        transition: 'box-shadow 0.2s, transform 0.2s',
+        '&:hover': {
+          boxShadow: '0 8px 32px 0 rgba(0,0,0,0.12)',
+          transform: 'translateY(-2px) scale(1.01)',
+        },
+      }}
+    >
+      <Box
+        sx={{ display: 'flex', alignItems: 'center', mb: 1, cursor: 'pointer', userSelect: 'none' }}
+        onClick={() => setIsOpen((prev) => !prev)}
       >
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 'medium' }}>{categoryTitle}</Typography>
+        <CategoryIcon sx={{ color: 'primary.main', mr: 1, fontSize: 28, opacity: 0.7 }} />
+        <Typography variant="h6" sx={{ fontWeight: 700, flexGrow: 1, letterSpacing: 1 }}>
+          {categoryTitle}
+        </Typography>
         <IconButton
-            size="small"
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent toggling accordion
-              if(window.confirm(`Are you sure you want to remove all items in the "${categoryTitle}" category?`)) {
-                onRemoveCategory(categoryName);
-              }
-            }}
-            aria-label={`Remove all items in ${categoryTitle}`}
-            sx={{color: 'error.main'}}
-          >
-            <DeleteSweepIcon />
-          </IconButton>
-      </AccordionSummary>
-      <AccordionDetails sx={{ p: 0, '& .MuiListItem-root:last-child': { borderBottom: 'none' } /* Remove border from last item */ }}>
-        <Box> {/* Changed from div to Box for potential sx props */}
+          size="small"
+          onClick={e => {
+            e.stopPropagation();
+            if(window.confirm(`Are you sure you want to remove all items in the \"${categoryTitle}\" category?`)) {
+              onRemoveCategory(categoryName);
+            }
+          }}
+          aria-label={`Remove all items in ${categoryTitle}`}
+          sx={{ color: 'error.main', ml: 1 }}
+        >
+          <DeleteSweepIcon />
+        </IconButton>
+        <IconButton
+          size="small"
+          onClick={e => {
+            e.stopPropagation();
+            setIsOpen((prev) => !prev);
+          }}
+          aria-label={isOpen ? 'Collapse' : 'Expand'}
+          sx={{ ml: 1 }}
+        >
+          <ExpandMoreIcon sx={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+        </IconButton>
+      </Box>
+      {isOpen && (
+        <Box>
           {items.map(item => (
             <ShoppingListItem
               key={item.id}
@@ -80,8 +109,8 @@ const CategorySection: React.FC<CategorySectionProps> = ({
             />
           ))}
         </Box>
-      </AccordionDetails>
-    </Accordion>
+      )}
+    </Box>
   );
 };
 

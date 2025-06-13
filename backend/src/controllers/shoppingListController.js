@@ -51,8 +51,12 @@ exports.createList = async (req, res) => {
 // Get a specific shopping list
 exports.getList = async (req, res) => {
   try {
+    const { listId } = req.params;
+    if (!listId || !require('mongoose').Types.ObjectId.isValid(listId)) {
+      return res.status(400).json({ message: 'Invalid shopping list ID.' });
+    }
     const list = await ShoppingList.findOne({
-      _id: req.params.listId,
+      _id: listId,
       user: req.user.userId
     }).populate('items');
     
@@ -190,5 +194,30 @@ exports.updateItem = async (req, res) => {
     res.json(transformItem(updatedItem));
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteCategoryItems = async (req, res) => {
+  try {
+    const { listId } = req.params;
+    const { categoryName } = req.body;
+    if (!listId || !require('mongoose').Types.ObjectId.isValid(listId)) {
+      return res.status(400).json({ message: 'Invalid shopping list ID.' });
+    }
+    if (!categoryName) {
+      return res.status(400).json({ message: 'Category name is required.' });
+    }
+    const list = await ShoppingList.findOne({ _id: listId, user: req.user.userId });
+    if (!list) {
+      return res.status(404).json({ message: 'Shopping list not found' });
+    }
+    // Remove items in the category
+    const itemsToRemove = list.items.filter(item => item.category === categoryName);
+    await Item.deleteMany({ _id: { $in: itemsToRemove } });
+    list.items = list.items.filter(item => item.category !== categoryName);
+    await list.save();
+    res.json({ message: `All items in category '${categoryName}' removed.` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
 }; 

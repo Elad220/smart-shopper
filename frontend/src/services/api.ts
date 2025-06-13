@@ -1,4 +1,4 @@
-import { ShoppingItem, Category } from '../types';
+import { ShoppingItem, Category } from '../../types';
 
 // Get the hostname from the current window location
 const getBaseUrl = () => {
@@ -13,7 +13,7 @@ const getBaseUrl = () => {
   return 'http://localhost:3001'; // Fallback for SSR
 };
 
-const BASE_URL = getBaseUrl();
+export const BASE_URL = getBaseUrl();
 
 interface AuthResponse {
   token: string;
@@ -78,11 +78,11 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 };
 
 // Authentication
-export const registerUser = async (email: string, password: string): Promise<AuthResponse> => {
+export const registerUser = async (username: string, email: string, password: string): Promise<AuthResponse> => {
   const response = await fetch(`${BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ username, email, password }),
   });
   return handleResponse<AuthResponse>(response);
 };
@@ -96,16 +96,25 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
   return handleResponse<AuthResponse>(response);
 };
 
+export const loginUserFlexible = async (payload: { email?: string; username?: string; password: string }): Promise<AuthResponse> => {
+  const response = await fetch(`${BASE_URL}/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  return handleResponse<AuthResponse>(response);
+};
+
 // Shopping Lists
 export const fetchShoppingLists = async (token: string): Promise<ShoppingList[]> => {
-  const response = await fetch(`${BASE_URL}/api/lists`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   return handleResponse<ShoppingList[]>(response);
 };
 
 export const createShoppingList = async (token: string, name: string): Promise<CreateListResponse> => {
-  const response = await fetch(`${BASE_URL}/api/lists`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -117,7 +126,7 @@ export const createShoppingList = async (token: string, name: string): Promise<C
 };
 
 export const updateShoppingList = async (token: string, listId: string, name: string): Promise<ShoppingList> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -129,7 +138,7 @@ export const updateShoppingList = async (token: string, listId: string, name: st
 };
 
 export const deleteShoppingList = async (token: string, listId: string): Promise<void> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -138,7 +147,7 @@ export const deleteShoppingList = async (token: string, listId: string): Promise
 
 // Shopping Items
 export const fetchShoppingList = async (token: string, listId: string): Promise<ShoppingItem[]> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   const list = await handleResponse<ShoppingList>(response);
@@ -150,7 +159,7 @@ export const addShoppingItem = async (
   listId: string,
   itemData: Omit<ShoppingItem, 'id' | 'isCompleted'>
 ): Promise<ShoppingItem> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}/items`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -167,7 +176,7 @@ export const updateShoppingItem = async (
   itemId: string,
   itemData: Partial<Omit<ShoppingItem, 'id'>> // Cannot update ID
 ): Promise<ShoppingItem> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}/items/${itemId}`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/${itemId}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -179,7 +188,7 @@ export const updateShoppingItem = async (
 };
 
 export const deleteShoppingItem = async (token: string, listId: string, itemId: string): Promise<void> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}/items/${itemId}`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/${itemId}`, {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -187,7 +196,7 @@ export const deleteShoppingItem = async (token: string, listId: string, itemId: 
 };
 
 export const deleteCheckedItems = async (token: string, listId: string): Promise<void> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}/items/delete-checked`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/delete-checked`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${token}` },
   });
@@ -195,7 +204,7 @@ export const deleteCheckedItems = async (token: string, listId: string): Promise
 };
 
 export const deleteCategoryItems = async (token: string, listId: string, categoryName: Category): Promise<void> => {
-  const response = await fetch(`${BASE_URL}/api/lists/${listId}/items/delete-category`, {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/delete-category`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

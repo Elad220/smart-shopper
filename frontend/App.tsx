@@ -3,8 +3,9 @@ import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
 import EditItemModal from './components/EditItemModal';
 import { ShoppingListManager } from './components/ShoppingListManager';
-import { ShoppingItem, Category, StandardCategory } from './types';
+import { ShoppingItem, Category } from './types';
 import * as api from './src/services/api'; // Import API service
+import { BASE_URL } from './src/services/api';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
@@ -12,7 +13,6 @@ import Typography from '@mui/material/Typography';
 import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
@@ -25,6 +25,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import CssBaseline from '@mui/material/CssBaseline';
 import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 // Define a warmer theme
 const theme = createTheme({
@@ -75,6 +77,9 @@ interface User {
   email: string;
 }
 
+// Utility to check for valid MongoDB ObjectId
+const isValidObjectId = (id: string | null) => !!id && /^[a-fA-F0-9]{24}$/.test(id);
+
 const App: React.FC = () => {
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [selectedListId, setSelectedListId] = useState<string | null>(localStorage.getItem('selectedListId'));
@@ -92,21 +97,38 @@ const App: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  const [username, setUsername] = useState('');
+
+  const [selectedList, setSelectedList] = useState<any | null>(null);
 
   const isMobile = useMediaQuery('(max-width:600px)');
+
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
+    localStorage.getItem('sidebarCollapsed') === 'true'
+  );
 
   // Fetch items when authenticated and list is selected
   useEffect(() => {
     if (authToken && selectedListId) {
+      if (!isValidObjectId(selectedListId)) {
+        setError('Invalid shopping list ID.');
+        setShoppingList([]);
+        setSelectedList(null);
+        return;
+      }
       localStorage.setItem('authToken', authToken);
       if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
       
-      const fetchItems = async () => {
+      const fetchList = async () => {
         setIsLoading(true);
         setError(null);
         try {
-          const items = await api.fetchShoppingList(authToken, selectedListId);
-          setShoppingList(items.sort((a,b) => a.name.localeCompare(b.name)));
+          const response = await fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
+            headers: { 'Authorization': `Bearer ${authToken}` },
+          });
+          const list = await response.json();
+          setSelectedList(list);
+          setShoppingList(list.items.sort((a: any, b: any) => a.name.localeCompare(b.name)));
         } catch (err: any) {
           setError(err.message || 'Failed to fetch shopping list.');
           if (err.message === 'Unauthorized' || err.status === 401) handleLogout();
@@ -114,22 +136,30 @@ const App: React.FC = () => {
           setIsLoading(false);
         }
       };
-      fetchItems();
+      fetchList();
     } else if (!authToken) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
       setShoppingList([]);
       setSelectedListId(null);
+      setSelectedList(null);
     }
   }, [authToken, currentUser, selectedListId]);
 
+  const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
   const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setIsLoading(true);
     setError(null);
     try {
-      const data = await api.loginUser(email, password);
+      let loginPayload: any;
+      if (isEmail(email)) {
+        loginPayload = { email, password };
+      } else {
+        loginPayload = { username: email, password };
+      }
+      const data = await api.loginUserFlexible(loginPayload);
       setAuthToken(data.token);
       setCurrentUser({ id: data.userId, email: data.email });
       setEmail('');
@@ -157,11 +187,9 @@ const App: React.FC = () => {
     setIsLoading(true);
     setError(null);
     try {
-      await api.registerUser(email, password);
-      setError('Registration successful! Please log in.'); // Set an info message
-      setIsRegistering(false); // Switch to login form
-      // Optionally, auto-login after successful registration:
-      // await handleLogin(); 
+      await api.registerUser(username, email, password);
+      setError('Registration successful! Please log in.');
+      setIsRegistering(false);
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
     } finally {
@@ -301,21 +329,53 @@ const App: React.FC = () => {
     }
   }, [authToken, selectedListId, shoppingList]);
 
+  const handleToggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      localStorage.setItem('sidebarCollapsed', String(!prev));
+      return !prev;
+    });
+  };
+
   const renderAuthForm = () => (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
         {isRegistering ? 'Create Account' : 'Welcome Back'}
       </Typography>
       <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-        <TextField
-          fullWidth
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          margin="normal"
-          required
-        />
+        {isRegistering && (
+          <>
+            <TextField
+              fullWidth
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              margin="normal"
+              required
+            />
+            <TextField
+              fullWidth
+              label="Email"
+              placeholder="Enter your email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              margin="normal"
+              required
+            />
+          </>
+        )}
+        {!isRegistering && (
+          <TextField
+            fullWidth
+            label="Username or Email"
+            placeholder="Enter your username or email"
+            type="text"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            margin="normal"
+            required
+          />
+        )}
         <TextField
           fullWidth
           label="Password"
@@ -390,23 +450,36 @@ const App: React.FC = () => {
     <Box sx={{ display: 'flex', height: '100vh' }}>
       <Drawer
         variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? isDrawerOpen : true}
+        open={isMobile ? isDrawerOpen : !isSidebarCollapsed}
         onClose={() => setIsDrawerOpen(false)}
         sx={{
-          width: 280,
+          width: isSidebarCollapsed ? 56 : 280,
           flexShrink: 0,
           '& .MuiDrawer-paper': {
-            width: 280,
+            width: isSidebarCollapsed ? 56 : 280,
             boxSizing: 'border-box',
+            overflowX: 'hidden',
+            transition: 'width 0.3s',
           },
         }}
       >
-        <Toolbar />
-        <ShoppingListManager
-          token={authToken!}
-          onListSelect={handleListSelect}
-          selectedListId={selectedListId}
-        />
+        <Toolbar sx={{ minHeight: 48, px: 1, justifyContent: isSidebarCollapsed ? 'center' : 'flex-end' }}>
+          <IconButton onClick={handleToggleSidebar} size="small">
+            {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+          </IconButton>
+        </Toolbar>
+        {!isSidebarCollapsed && (
+          <ShoppingListManager
+            token={authToken!}
+            onListSelect={handleListSelect}
+            selectedListId={selectedListId}
+          />
+        )}
+        {isSidebarCollapsed && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2 }}>
+            <AddIcon color="primary" />
+          </Box>
+        )}
       </Drawer>
       <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
         <Toolbar />
@@ -421,6 +494,11 @@ const App: React.FC = () => {
           </Box>
         ) : (
           <>
+            {selectedList && (
+              <Typography variant="h4" component="h2" sx={{ mb: 3 }}>
+                {selectedList.name}
+              </Typography>
+            )}
             <ShoppingList
               items={shoppingList}
               onToggleComplete={handleToggleComplete}
@@ -447,22 +525,22 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AppBar position="fixed">
-        <Toolbar>
+        <Toolbar sx={{ justifyContent: 'center', position: 'relative' }}>
           {isMobile && (
             <IconButton
               color="inherit"
               edge="start"
               onClick={() => setIsDrawerOpen(true)}
-              sx={{ mr: 2 }}
+              sx={{ mr: 2, position: 'absolute', left: 8 }}
             >
               <MenuIcon />
             </IconButton>
           )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 0, textAlign: 'center', mx: 'auto' }}>
             Smart Shopper
           </Typography>
           {authToken && (
-            <IconButton color="inherit" onClick={handleLogout}>
+            <IconButton color="inherit" onClick={handleLogout} sx={{ position: 'absolute', right: 8 }}>
               <LogoutIcon />
             </IconButton>
           )}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingItem, Category } from '../types';
 import CategorySection from './CategorySection';
 import { CATEGORY_OPTIONS } from '../constants'; 
@@ -8,6 +8,8 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever'; // For "Remove Checked"
 import TextField from '@mui/material/TextField';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 interface ShoppingListProps {
   items: ShoppingItem[];
@@ -27,6 +29,25 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   onRemoveCheckedItems
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+
+  // Get listId from the first item (assumes all items are from the same list)
+  const listId = items[0]?.listId || 'default';
+
+  // Load custom order from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(`categoryOrder_${listId}`);
+    if (stored) {
+      setCategoryOrder(JSON.parse(stored));
+    }
+  }, [listId]);
+
+  // Save custom order to localStorage
+  useEffect(() => {
+    if (categoryOrder.length) {
+      localStorage.setItem(`categoryOrder_${listId}` , JSON.stringify(categoryOrder));
+    }
+  }, [categoryOrder, listId]);
 
   // Filter items by search query (name or category)
   const filteredItems = searchQuery.trim() === ''
@@ -98,17 +119,36 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   const standardCategoryOrder = [...CATEGORY_OPTIONS, "Other"];
   
   // Sort categories
-  const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
-    const indexA = standardCategoryOrder.indexOf(a as any);
-    const indexB = standardCategoryOrder.indexOf(b as any);
-
-    if (indexA !== -1 && indexB !== -1) return indexA - indexB; // Both are standard categories
-    if (indexA !== -1) return -1; // A is standard, B is custom
-    if (indexB !== -1) return 1;  // B is standard, A is custom
-    return a.localeCompare(b);    // Both are custom categories
-  });
+  let sortedCategories = Object.keys(groupedItems);
+  if (categoryOrder.length) {
+    sortedCategories.sort((a, b) => {
+      const ia = categoryOrder.indexOf(a);
+      const ib = categoryOrder.indexOf(b);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  } else {
+    sortedCategories = sortedCategories.sort((a, b) => {
+      const indexA = standardCategoryOrder.indexOf(a as any);
+      const indexB = standardCategoryOrder.indexOf(b as any);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      if (indexA !== -1) return -1;
+      if (indexB !== -1) return 1;
+      return a.localeCompare(b);
+    });
+  }
 
   const hasCheckedItems = items.some(item => item.isCompleted);
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const reordered = Array.from(sortedCategories);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    setCategoryOrder(reordered);
+  };
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -138,17 +178,42 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
           </Button>
         </Box>
       )}
-      {sortedCategories.map(categoryName => (
-        <CategorySection
-          key={categoryName}
-          categoryName={categoryName}
-          items={groupedItems[categoryName]}
-          onToggleComplete={onToggleComplete}
-          onDeleteItem={onDeleteItem}
-          onEditItem={onEditItem}
-          onRemoveCategory={onRemoveCategory}
-        />
-      ))}
+      <DragDropContext onDragEnd={onDragEnd}>
+        <Droppable droppableId="category-droppable">
+          {(provided) => (
+            <div ref={provided.innerRef} {...provided.droppableProps}>
+              {sortedCategories.map((categoryName, idx) => (
+                <Draggable key={categoryName} draggableId={categoryName} index={idx}>
+                  {(provided, snapshot) => (
+                    <div
+                      ref={provided.innerRef}
+                      {...provided.draggableProps}
+                      style={{ marginBottom: 16, ...provided.draggableProps.style }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <span {...provided.dragHandleProps} style={{ cursor: 'grab', marginRight: 8 }}>
+                          <DragIndicatorIcon color={snapshot.isDragging ? 'primary' : 'disabled'} />
+                        </span>
+                        <Box sx={{ flexGrow: 1 }}>
+                          <CategorySection
+                            categoryName={categoryName}
+                            items={groupedItems[categoryName]}
+                            onToggleComplete={onToggleComplete}
+                            onDeleteItem={onDeleteItem}
+                            onEditItem={onEditItem}
+                            onRemoveCategory={onRemoveCategory}
+                          />
+                        </Box>
+                      </Box>
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     </Box>
   );
 };

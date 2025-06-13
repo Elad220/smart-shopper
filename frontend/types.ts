@@ -7,6 +7,7 @@ export enum StandardCategory {
   BAKERY = "Bakery",
   PANTRY = "Pantry",
   DISPOSABLE = "Disposable",
+  HYGIENE = "Hygiene",
   OTHER = "Other", // Represents the option to add a custom category
 }
 

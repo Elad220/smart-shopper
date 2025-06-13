@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { ShoppingItem, StandardCategory } from '../types';
 import { CATEGORY_OPTIONS, UNIT_OPTIONS } from '../constants';
@@ -13,7 +12,6 @@ import Select, { SelectChangeEvent } from '@mui/material/Select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
-import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
@@ -143,41 +141,41 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Whole Milk"
           />
-          <Grid container spacing={2} sx={{ mb: 2 }}>
-            <Grid xs={12} sm={showCustomCategoryInput ? 6 : 12}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : '100%' } }}>
               <FormControl fullWidth margin="normal">
                 <InputLabel id="category-label">Category</InputLabel>
                 <Select
                   labelId="category-label"
-                  id="category"
                   value={selectedCategory}
-                  label="Category"
                   onChange={handleCategoryChange}
+                  label="Category"
                 >
-                  {CATEGORY_OPTIONS.map(cat => (
-                    <MenuItem key={cat} value={cat}>{cat}</MenuItem>
+                  {Object.values(StandardCategory).map((cat) => (
+                    <MenuItem key={cat} value={cat}>
+                      {cat}
+                    </MenuItem>
                   ))}
+                  <MenuItem value="custom">Custom Category</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
+            </Box>
             {showCustomCategoryInput && (
-              <Grid xs={12} sm={6}>
+              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                 <TextField
                   margin="normal"
                   required
                   fullWidth
-                  id="customCategoryName"
-                  label="Custom Category Name"
+                  label="Custom Category"
                   value={customCategoryName}
                   onChange={(e) => setCustomCategoryName(e.target.value)}
-                  placeholder="e.g., Pet Supplies"
                 />
-              </Grid>
+              </Box>
             )}
-          </Grid>
+          </Box>
 
-          <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
-            <Grid xs={12} sm={6}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}>
+            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <InputLabel shrink htmlFor="amount-input" sx={{mb:0.5, fontSize: '0.9rem'}}>Amount</InputLabel>
               <Box display="flex" alignItems="center">
                 <IconButton onClick={() => handleAmountChange(amount - 1)} disabled={amount <= 1} aria-label="Decrease amount" size="small">
@@ -196,24 +194,25 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
                   <AddCircleOutlineIcon />
                 </IconButton>
               </Box>
-            </Grid>
-            <Grid xs={12} sm={6}>
+            </Box>
+            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <FormControl fullWidth margin="normal" sx={{mt:0}}>
                 <InputLabel id="units-label">Units</InputLabel>
                 <Select
                   labelId="units-label"
-                  id="units"
                   value={units}
-                  label="Units"
                   onChange={(e) => setUnits(e.target.value)}
+                  label="Units"
                 >
-                  {UNIT_OPTIONS.map(unit => (
-                    <MenuItem key={unit} value={unit}>{unit}</MenuItem>
-                  ))}
+                  <MenuItem value="kg">kg</MenuItem>
+                  <MenuItem value="g">g</MenuItem>
+                  <MenuItem value="l">l</MenuItem>
+                  <MenuItem value="ml">ml</MenuItem>
+                  <MenuItem value="pcs">pcs</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
-          </Grid>
+            </Box>
+          </Box>
           
           <Box sx={{ my: 2 }}>
             <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Image (Optional)</InputLabel>

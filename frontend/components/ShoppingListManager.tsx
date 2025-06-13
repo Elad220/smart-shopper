@@ -16,7 +16,7 @@ import {
   ListItemSecondaryAction,
   Divider,
   Alert,
-  Snackbar,
+  Paper,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -24,6 +24,11 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShoppingList } from '../src/services/api';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import SortIcon from '@mui/icons-material/Sort';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface ShoppingList {
   _id: string;
@@ -39,12 +44,22 @@ interface ShoppingListManagerProps {
   selectedListId: string | null;
 }
 
+const SORT_MODES = [
+  { key: 'alpha', label: 'Alphabetical (A-Z)' },
+  { key: 'created', label: 'Creation Date (Newest)' },
+  { key: 'custom', label: 'Custom Order' },
+];
+
 export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   token,
   onListSelect,
   selectedListId,
 }) => {
+  const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
   const [lists, setLists] = useState<ShoppingList[]>([]);
+  const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
+  const [customOrder, setCustomOrder] = useState<string[]>(JSON.parse(localStorage.getItem('shoppingListCustomOrder') || '[]'));
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -56,13 +71,39 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     loadLists();
   }, [token]);
 
+  useEffect(() => {
+    localStorage.setItem('shoppingListSortMode', sortMode);
+  }, [sortMode]);
+
+  useEffect(() => {
+    localStorage.setItem('shoppingListCustomOrder', JSON.stringify(customOrder));
+  }, [customOrder]);
+
+  useEffect(() => {
+    let sortedLists = [...listsRaw];
+    if (sortMode === 'alpha') {
+      sortedLists.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortMode === 'created') {
+      sortedLists.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } else if (sortMode === 'custom' && customOrder.length) {
+      sortedLists.sort((a, b) => {
+        const ia = customOrder.indexOf(a._id);
+        const ib = customOrder.indexOf(b._id);
+        if (ia === -1 && ib === -1) return 0;
+        if (ia === -1) return 1;
+        if (ib === -1) return -1;
+        return ia - ib;
+      });
+    }
+    setLists(sortedLists);
+  }, [listsRaw, sortMode, customOrder]);
+
   const loadLists = async () => {
     setIsLoading(true);
     setError(null);
     try {
       const fetchedLists = await fetchShoppingLists(token);
-      setLists(fetchedLists);
-      
+      setListsRaw(fetchedLists);
       // If no list is selected and we have lists, select the first one
       if (!selectedListId && fetchedLists.length > 0) {
         onListSelect(fetchedLists[0]._id);
@@ -146,17 +187,58 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     setIsEditDialogOpen(true);
   };
 
+  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleSortClose = () => {
+    setAnchorEl(null);
+  };
+  const handleSortChange = (mode: string) => {
+    setSortMode(mode);
+    setAnchorEl(null);
+  };
+
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+    const reordered = Array.from(lists);
+    const [removed] = reordered.splice(result.source.index, 1);
+    reordered.splice(result.destination.index, 0, removed);
+    const newOrder = reordered.map(l => l._id);
+    setCustomOrder(newOrder);
+    console.log('Drag ended. New custom order:', newOrder);
+  };
+
   return (
-    <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
+    <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', p: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Shopping Lists
         </Typography>
         <IconButton
           color="primary"
+          onClick={handleSortClick}
+          size="medium"
+          sx={{ ml: 1 }}
+        >
+          <SortIcon />
+        </IconButton>
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
+          {SORT_MODES.map(mode => (
+            <MenuItem
+              key={mode.key}
+              selected={sortMode === mode.key}
+              onClick={() => handleSortChange(mode.key)}
+            >
+              {mode.label}
+            </MenuItem>
+          ))}
+        </Menu>
+        <IconButton
+          color="primary"
           onClick={() => setIsCreateDialogOpen(true)}
-          size="small"
+          size="medium"
           disabled={isLoading}
+          sx={{ ml: 1 }}
         >
           <AddIcon />
         </IconButton>
@@ -168,51 +250,149 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         </Alert>
       )}
 
-      <List>
-        {lists.map((list) => (
-          <React.Fragment key={list._id}>
-            <ListItem disablePadding>
-              <ListItemButton
-                selected={selectedListId === list._id}
-                onClick={() => onListSelect(list._id)}
+      <Box sx={{ maxHeight: 400, overflowY: 'auto', pr: 1 }}>
+        {sortMode === 'custom' ? (
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="shopping-lists-droppable">
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps}>
+                  {lists.map((list, idx) => (
+                    <Draggable key={list._id} draggableId={list._id} index={idx}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          style={{
+                            marginBottom: 16,
+                            ...provided.draggableProps.style,
+                          }}
+                        >
+                          <Paper
+                            elevation={selectedListId === list._id ? 6 : 1}
+                            sx={{
+                              p: 2,
+                              borderRadius: 3,
+                              display: 'flex',
+                              alignItems: 'center',
+                              background: selectedListId === list._id ? 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)' : 'background.paper',
+                              border: selectedListId === list._id ? '2px solid #90caf9' : '1px solid #e0e0e0',
+                              boxShadow: selectedListId === list._id ? 4 : 1,
+                              cursor: 'pointer',
+                              transition: 'box-shadow 0.2s, border 0.2s',
+                              opacity: snapshot.isDragging ? 0.7 : 1,
+                            }}
+                            onClick={() => onListSelect(list._id)}
+                          >
+                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                              <Typography
+                                variant="subtitle1"
+                                noWrap
+                                sx={{ fontWeight: selectedListId === list._id ? 700 : 500 }}
+                              >
+                                {list.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {list.items.length} items
+                              </Typography>
+                            </Box>
+                            <IconButton
+                              edge="end"
+                              aria-label="edit"
+                              onClick={e => {
+                                e.stopPropagation();
+                                openEditDialog(list);
+                              }}
+                              size="small"
+                              sx={{ ml: 1 }}
+                              disabled={isLoading}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                            <IconButton
+                              edge="end"
+                              aria-label="delete"
+                              onClick={e => {
+                                e.stopPropagation();
+                                handleDeleteList(list._id);
+                              }}
+                              size="small"
+                              sx={{ ml: 1 }}
+                              disabled={isLoading}
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Paper>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        ) : (
+          lists.map((list) => (
+            <Paper
+              key={list._id}
+              elevation={selectedListId === list._id ? 6 : 1}
+              sx={{
+                mb: 2,
+                p: 2,
+                borderRadius: 3,
+                display: 'flex',
+                alignItems: 'center',
+                background: selectedListId === list._id ? 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)' : 'background.paper',
+                border: selectedListId === list._id ? '2px solid #90caf9' : '1px solid #e0e0e0',
+                boxShadow: selectedListId === list._id ? 4 : 1,
+                cursor: 'pointer',
+                transition: 'box-shadow 0.2s, border 0.2s',
+              }}
+              onClick={() => onListSelect(list._id)}
+            >
+              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                <Typography
+                  variant="subtitle1"
+                  noWrap
+                  sx={{ fontWeight: selectedListId === list._id ? 700 : 500 }}
+                >
+                  {list.name}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {list.items.length} items
+                </Typography>
+              </Box>
+              <IconButton
+                edge="end"
+                aria-label="edit"
+                onClick={e => {
+                  e.stopPropagation();
+                  openEditDialog(list);
+                }}
+                size="small"
+                sx={{ ml: 1 }}
                 disabled={isLoading}
               >
-                <ListItemText
-                  primary={list.name}
-                  secondary={`${list.items.length} items`}
-                />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="edit"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEditDialog(list);
-                    }}
-                    size="small"
-                    disabled={isLoading}
-                  >
-                    <EditIcon />
-                  </IconButton>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteList(list._id);
-                    }}
-                    size="small"
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItemButton>
-            </ListItem>
-            <Divider />
-          </React.Fragment>
-        ))}
-      </List>
+                <EditIcon fontSize="small" />
+              </IconButton>
+              <IconButton
+                edge="end"
+                aria-label="delete"
+                onClick={e => {
+                  e.stopPropagation();
+                  handleDeleteList(list._id);
+                }}
+                size="small"
+                sx={{ ml: 1 }}
+                disabled={isLoading}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Paper>
+          ))
+        )}
+      </Box>
 
       {/* Create List Dialog */}
       <Dialog open={isCreateDialogOpen} onClose={() => !isLoading && setIsCreateDialogOpen(false)}>

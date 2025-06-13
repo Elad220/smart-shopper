@@ -35,6 +35,13 @@ exports.register = async (req, res) => {
       });
     }
 
+    // Validate username
+    if (!username || username.length < 3) {
+      return res.status(400).json({
+        message: 'Username is required and must be at least 3 characters.'
+      });
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
@@ -74,17 +81,34 @@ exports.register = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Mongoose validation error
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ message: messages.join(' ') });
+    }
+    res.status(500).json({ message: error.message || 'An unexpected error occurred.' });
   }
 };
 
 // Login user
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, email, password } = req.body;
 
-    // Find user by username
-    const user = await User.findOne({ username });
+    if (!password) {
+      return res.status(400).json({ message: 'Password is required.' });
+    }
+    if ((!username || username.length < 3) && (!email || !validateEmail(email))) {
+      return res.status(400).json({ message: 'Please provide a valid username or email.' });
+    }
+
+    // Find user by username or email
+    const user = await User.findOne({
+      $or: [
+        username ? { username } : {},
+        email ? { email } : {}
+      ]
+    });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -111,6 +135,11 @@ exports.login = async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    // Mongoose validation error
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((err) => err.message);
+      return res.status(400).json({ message: messages.join(' ') });
+    }
+    res.status(500).json({ message: error.message || 'An unexpected error occurred.' });
   }
 }; 
