@@ -90,20 +90,25 @@ exports.updateList = async (req, res) => {
 // Delete a shopping list
 exports.deleteList = async (req, res) => {
   try {
+    // Validate ObjectId
+    const { listId } = req.params;
+    if (!listId || !require('mongoose').Types.ObjectId.isValid(listId)) {
+      return res.status(400).json({ message: 'Invalid shopping list ID' });
+    }
     const list = await ShoppingList.findOneAndDelete({
-      _id: req.params.listId,
+      _id: listId,
       user: req.user.userId
     });
-    
     if (!list) {
       return res.status(404).json({ message: 'Shopping list not found' });
     }
-    
     // Delete all items associated with this list
     await Item.deleteMany({ _id: { $in: list.items } });
-    
     res.json({ message: 'Shopping list deleted' });
   } catch (error) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid shopping list ID format' });
+    }
     res.status(500).json({ message: error.message });
   }
 };

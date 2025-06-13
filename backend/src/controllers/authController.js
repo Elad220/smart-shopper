@@ -19,7 +19,7 @@ const validatePassword = (password) => {
 // Register a new user
 exports.register = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
     // Validate email
     if (!email || !validateEmail(email)) {
@@ -36,13 +36,14 @@ exports.register = async (req, res) => {
     }
 
     // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create new user
     const user = new User({
+      username,
       email,
       password
     });
@@ -65,15 +66,11 @@ exports.register = async (req, res) => {
     );
 
     res.status(201).json({
-      message: 'User registered successfully',
       token,
       user: {
         id: user._id,
+        username: user.username,
         email: user.email
-      },
-      defaultList: {
-        id: defaultList._id,
-        name: defaultList.name
       }
     });
   } catch (error) {
@@ -84,17 +81,10 @@ exports.register = async (req, res) => {
 // Login user
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    // Validate email format
-    if (!email || !validateEmail(email)) {
-      return res.status(400).json({ 
-        message: 'Invalid email format. Please provide a valid email address.' 
-      });
-    }
-
-    // Find user
-    const user = await User.findOne({ email });
+    // Find user by username
+    const user = await User.findOne({ username });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -113,10 +103,10 @@ exports.login = async (req, res) => {
     );
 
     res.json({
-      message: 'Login successful',
       token,
       user: {
         id: user._id,
+        username: user.username,
         email: user.email
       }
     });

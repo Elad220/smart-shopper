@@ -4,48 +4,40 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
+const authRoutes = require('./routes/auth');
+const itemRoutes = require('./routes/items');
+const shoppingListRoutes = require('./routes/shoppingList');
+
 const app = express();
 
-// CORS configuration
-const corsOptions = {
-  origin: '*', // Allow all origins in development
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-};
-
 // Middleware
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
-app.use(bodyParser.urlencoded({ limit: '5mb', extended: true }));
-
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-shopper', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
 // Routes
-const shoppingListRoutes = require('./routes/shoppingListRoutes');
-const authRoutes = require('./routes/auth');
-const itemsRoutes = require('./routes/items');
-
-app.use('/api/lists', shoppingListRoutes);
 app.use('/auth', authRoutes);
-app.use('/api/items', itemsRoutes);
+app.use('/api/items', itemRoutes);
+app.use('/api/shopping-lists', shoppingListRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('Error:', err.stack || err);
-  res.status(500).json({ message: 'Something went wrong!', error: err.message });
+  console.error(err.stack);
+  res.status(500).json({ error: 'Something went wrong!' });
 });
 
-const PORT = process.env.PORT || 3001;
-const HOST = '0.0.0.0'; // Listen on all network interfaces
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/smart-shopper')
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-app.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-  console.log('To access from other devices on the network, use your computer\'s IP address');
-}); 
+// Only start the server if this file is run directly
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${PORT}`);
+    console.log('To access from other devices on the network, use your computer\'s IP address');
+  });
+}
+
+module.exports = app; 
