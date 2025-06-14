@@ -21,5 +21,5 @@ export interface ShoppingItem {
   units: string;
   amount: number;
   imageUrl?: string;
-  isCompleted: boolean;
+  completed: boolean;
 }

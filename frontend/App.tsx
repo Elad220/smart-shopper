@@ -21,7 +21,9 @@ import Alert from '@mui/material/Alert';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CssBaseline from '@mui/material/CssBaseline';
 import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -87,9 +89,14 @@ const App: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showUserEmail, setShowUserEmail] = useState(false);
 
   const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('authToken'));
-  const [currentUser, setCurrentUser] = useState<User | null>(JSON.parse(localStorage.getItem('currentUser') || 'null'));
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const user = localStorage.getItem('currentUser');
+    console.log('Initializing currentUser from localStorage:', user);
+    return user ? JSON.parse(user) : null;
+  });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -159,11 +166,25 @@ const App: React.FC = () => {
       } else {
         loginPayload = { username: email, password };
       }
+      console.log('Login payload:', loginPayload);
       const data = await api.loginUserFlexible(loginPayload);
+      console.log('Login response:', data);
+      
+      const userData = { 
+        id: data.userId, 
+        email: data.email || data.user?.email || email 
+      };
+      
+      console.log('Setting user data:', userData);
       setAuthToken(data.token);
-      setCurrentUser({ id: data.userId, email: data.email });
+      setCurrentUser(userData);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
       setEmail('');
       setPassword('');
+      
+      // Verify the data was set
+      console.log('Current user after set:', JSON.parse(localStorage.getItem('currentUser') || '{}'));
       
       // Initialize list selection after login
       try {
@@ -206,7 +227,7 @@ const App: React.FC = () => {
   };
 
 
-  const handleAddItem = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'isCompleted'>) => {
+  const handleAddItem = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
     setIsLoading(true);
     try {
@@ -222,7 +243,7 @@ const App: React.FC = () => {
   const handleOpenAddItemModal = () => setIsAddItemModalOpen(true);
   const handleCloseAddItemModal = () => setIsAddItemModalOpen(false);
 
-  const handleAddItemAndCloseModal = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'isCompleted'>) => {
+  const handleAddItemAndCloseModal = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     await handleAddItem(newItemData);
     if (!error) { // Only close modal if add was successful (or at least no immediate error)
         handleCloseAddItemModal();
@@ -234,14 +255,14 @@ const App: React.FC = () => {
     const item = shoppingList.find(i => i.id === id);
     if (!item) return;
 
-    const updatedItemData = { ...item, isCompleted: !item.isCompleted };
+    const updatedItemData = { ...item, completed: !item.completed };
     
     setShoppingList(prevList =>
       prevList.map(i => (i.id === id ? updatedItemData : i))
     );
 
     try {
-      await api.updateShoppingItem(authToken, selectedListId, id, { isCompleted: updatedItemData.isCompleted });
+      await api.updateShoppingItem(authToken, selectedListId, id, { completed: updatedItemData.completed });
     } catch (err: any) {
       setError(err.message || 'Failed to update item.');
       setShoppingList(prevList =>
@@ -301,12 +322,17 @@ const App: React.FC = () => {
     if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
     if(window.confirm("Are you sure you want to remove all checked items?")) {
       const originalList = [...shoppingList];
-      const itemsToRemove = shoppingList.filter(item => item.isCompleted);
-      if (itemsToRemove.length === 0) return;
+      const hasCheckedItems = shoppingList.some(item => item.completed);
+      if (!hasCheckedItems) return;
 
-      setShoppingList(prevList => prevList.filter(item => !item.isCompleted));
+      setShoppingList(prevList => prevList.filter(item => !item.completed));
       try {
         await api.deleteCheckedItems(authToken, selectedListId);
+        // Refresh the shopping list after successful deletion
+        if (selectedListId) {
+          const updatedList = await api.fetchShoppingList(authToken, selectedListId);
+          setShoppingList(updatedList);
+        }
       } catch (err: any) {
         setError(err.message || 'Failed to remove checked items.');
         setShoppingList(originalList);
@@ -315,19 +341,53 @@ const App: React.FC = () => {
   }, [authToken, selectedListId, shoppingList]);
 
   const handleRemoveCategory = useCallback(async (categoryName: Category) => {
-    if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
+    if (!authToken || !selectedListId) { 
+      setError("Authentication and list selection required."); 
+      return; 
+    }
+    
     const originalList = [...shoppingList];
     const itemsToRemove = shoppingList.filter(item => item.category === categoryName);
     if (itemsToRemove.length === 0) return;
 
-    setShoppingList(prevList => prevList.filter(item => item.category !== categoryName));
-    try {
-      await api.deleteCategoryItems(authToken, selectedListId, categoryName);
-    } catch (err: any) {
-      setError(err.message || 'Failed to remove category items.');
-      setShoppingList(originalList);
+    console.log('Removing category:', categoryName);
+    console.log('Items to remove:', itemsToRemove);
+
+    // Optimistically update the UI
+    const updatedList = shoppingList.filter(item => item.category !== categoryName);
+    setShoppingList(updatedList);
+    
+    // Update the selected list to maintain consistency
+    if (selectedList) {
+      setSelectedList({
+        ...selectedList,
+        items: updatedList
+      });
     }
-  }, [authToken, selectedListId, shoppingList]);
+    
+    try {
+      console.log('Calling deleteCategoryItems with:', { selectedListId, categoryName });
+      // Remove from backend
+      await api.deleteCategoryItems(authToken, selectedListId, categoryName);
+      console.log('Successfully deleted category items');
+    } catch (err: any) {
+      console.error('Error removing category:', {
+        error: err,
+        message: err.message,
+        stack: err.stack,
+        response: err.response
+      });
+      setError(err.message || 'Failed to remove category items.');
+      // Revert to original list on error
+      setShoppingList(originalList);
+      if (selectedList) {
+        setSelectedList({
+          ...selectedList,
+          items: originalList
+        });
+      }
+    }
+  }, [authToken, selectedListId, shoppingList, selectedList]);
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
@@ -501,6 +561,7 @@ const App: React.FC = () => {
             )}
             <ShoppingList
               items={shoppingList}
+              listId={selectedListId || 'default'}
               onToggleComplete={handleToggleComplete}
               onDeleteItem={handleDeleteItem}
               onEditItem={handleOpenEditModal}
@@ -524,26 +585,125 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="fixed">
-        <Toolbar sx={{ justifyContent: 'center', position: 'relative' }}>
-          {isMobile && (
-            <IconButton
-              color="inherit"
-              edge="start"
-              onClick={() => setIsDrawerOpen(true)}
-              sx={{ mr: 2, position: 'absolute', left: 8 }}
-            >
-              <MenuIcon />
-            </IconButton>
-          )}
-          <Typography variant="h6" component="div" sx={{ flexGrow: 0, textAlign: 'center', mx: 'auto' }}>
+      <AppBar position="fixed" elevation={1}>
+        <Toolbar sx={{ 
+          minHeight: 56, // Standard mobile toolbar height
+          px: { xs: 1, sm: 2 }, // Horizontal padding
+          justifyContent: 'space-between', // Space between elements
+          alignItems: 'center', // Center items vertically
+          '&.MuiToolbar-root': {
+            minHeight: 56,
+          }
+        }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center',
+            width: { xs: 40, sm: 'auto' }, // Fixed width for mobile to prevent layout shift
+            justifyContent: 'flex-start'
+          }}>
+            {isMobile && (
+              <IconButton
+                color="inherit"
+                edge="start"
+                onClick={() => setIsDrawerOpen(true)}
+                sx={{ 
+                  ml: 0,
+                  mr: 1,
+                  p: 1
+                }}
+              >
+                <MenuIcon />
+              </IconButton>
+            )}
+          </Box>
+          
+          <Typography 
+            variant="h6" 
+            component="h1" 
+            sx={{ 
+              flexGrow: 1,
+              textAlign: 'center',
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 500,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              px: 1
+            }}
+          >
             Smart Shopper
           </Typography>
-          {authToken && (
-            <IconButton color="inherit" onClick={handleLogout} sx={{ position: 'absolute', right: 8 }}>
-              <LogoutIcon />
-            </IconButton>
-          )}
+          
+          <Box sx={{ 
+            width: { xs: 40, sm: 'auto' }, // Match the left side for balance
+            display: 'flex',
+            justifyContent: 'flex-end'
+          }}>
+            {authToken && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Tooltip 
+                  title={currentUser?.email || 'User'}
+                  placement="bottom-end"
+                  arrow
+                >
+                  <Box 
+                    onClick={() => setShowUserEmail(prev => !prev)}
+                    sx={{ 
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: 'white',
+                      cursor: 'pointer',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderRadius: 1
+                      },
+                      px: { xs: 0.5, sm: 1 },
+                      py: 0.5,
+                      position: 'relative'
+                    }}
+                  >
+                    <AccountCircleIcon sx={{ 
+                      mr: { xs: 0, sm: 1 },
+                      fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                    }} />
+                    <Typography 
+                      variant="body2" 
+                      noWrap
+                      sx={{
+                        display: { 
+                          xs: showUserEmail ? 'block' : 'none', 
+                          sm: 'block' 
+                        },
+                        position: { xs: 'absolute', sm: 'static' },
+                        right: { xs: '100%', sm: 'auto' },
+                        mr: { xs: 1, sm: 0 },
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        px: 1,
+                        borderRadius: 1,
+                        maxWidth: { xs: '150px', sm: 'none' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      {currentUser?.email?.split('@')[0] || 'User'}
+                    </Typography>
+                  </Box>
+                </Tooltip>
+                <IconButton 
+                  color="inherit" 
+                  onClick={handleLogout}
+                  size="small"
+                  sx={{
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                    }
+                  }}
+                >
+                  <LogoutIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            )}
+          </Box>
         </Toolbar>
       </AppBar>
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>

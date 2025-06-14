@@ -203,12 +203,19 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
                   value={units}
                   onChange={(e) => setUnits(e.target.value)}
                   label="Units"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300, // Prevent the menu from getting too tall
+                      },
+                    },
+                  }}
                 >
-                  <MenuItem value="kg">kg</MenuItem>
-                  <MenuItem value="g">g</MenuItem>
-                  <MenuItem value="l">l</MenuItem>
-                  <MenuItem value="ml">ml</MenuItem>
-                  <MenuItem value="pcs">pcs</MenuItem>
+                  {UNIT_OPTIONS.map((unit) => (
+                    <MenuItem key={unit} value={unit}>
+                      {unit}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
             </Box>

@@ -20,7 +20,9 @@ interface ShoppingListItemProps {
   onEditItem: (item: ShoppingItem) => void;
 }
 
-const StyledListItem = styled(ListItem)(({ theme, completed }: { theme?: any, completed: boolean }) => ({
+const StyledListItem = styled(ListItem, {
+  shouldForwardProp: (prop) => prop !== 'completed',
+})<{ completed: boolean }>(({ theme, completed }) => ({
   transition: 'background-color 0.3s ease-in-out, opacity 0.3s ease-in-out',
   backgroundColor: completed ? theme.palette.action.hover : theme.palette.background.paper,
   opacity: completed ? 0.6 : 1,
@@ -32,17 +34,45 @@ const StyledListItem = styled(ListItem)(({ theme, completed }: { theme?: any, co
 }));
 
 
-const ShoppingListItem: React.FC<ShoppingListItemProps> = ({ item, onToggleComplete, onDeleteItem, onEditItem }) => {
+const ShoppingListItem: React.FC<ShoppingListItemProps> = ({ 
+  item, 
+  onToggleComplete, 
+  onDeleteItem, 
+  onEditItem 
+}) => {
   return (
     <StyledListItem
-      completed={item.isCompleted}
+      completed={item.completed}
       secondaryAction={
         <Box>
-          <IconButton edge="end" aria-label="edit" onClick={() => onEditItem(item)} sx={{mr:0.5}}>
+          <IconButton 
+            edge="end" 
+            aria-label="edit" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditItem(item);
+            }}
+            sx={{
+              padding: '4px',
+              '&:hover': { color: 'primary.main' },
+              marginRight: '4px'
+            }}
+          >
             <EditIcon />
           </IconButton>
-          <IconButton edge="end" aria-label="delete" onClick={() => onDeleteItem(item.id)}>
-            <DeleteIcon color="error" />
+          <IconButton 
+            edge="end" 
+            aria-label="delete" 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteItem(item.id);
+            }}
+            sx={{ 
+              padding: '4px',
+              '&:hover': { color: 'error.main' }
+            }}
+          >
+            <DeleteIcon />
           </IconButton>
         </Box>
       }
@@ -51,7 +81,7 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({ item, onToggleCompl
       <ListItemIcon sx={{minWidth: 'auto', mr: 1.5}}>
         <Checkbox
           edge="start"
-          checked={item.isCompleted}
+          checked={item.completed}
           onChange={() => onToggleComplete(item.id)}
           tabIndex={-1}
           disableRipple
@@ -97,7 +127,7 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({ item, onToggleCompl
       )}
       <ListItemText 
         primary={
-            <Typography variant="body1" sx={{ textDecoration: item.isCompleted ? 'line-through' : 'none', color: item.isCompleted ? 'text.disabled' : 'text.primary' }}>
+            <Typography variant="body1" sx={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'text.disabled' : 'text.primary' }}>
                 {item.name}
             </Typography>
         }

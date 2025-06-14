@@ -6,13 +6,17 @@ import { CATEGORY_OPTIONS } from '../constants';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever'; // For "Remove Checked"
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 interface ShoppingListProps {
   items: ShoppingItem[];
+  listId: string;
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
@@ -22,17 +26,16 @@ interface ShoppingListProps {
 
 const ShoppingList: React.FC<ShoppingListProps> = ({ 
   items, 
+  listId,
   onToggleComplete, 
   onDeleteItem, 
-  onEditItem, 
+  onEditItem,
   onRemoveCategory,
   onRemoveCheckedItems
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
-
-  // Get listId from the first item (assumes all items are from the same list)
-  const listId = items[0]?.listId || 'default';
+  const [allCollapsed, setAllCollapsed] = useState(false);
 
   // Load custom order from localStorage
   useEffect(() => {
@@ -45,7 +48,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   // Save custom order to localStorage
   useEffect(() => {
     if (categoryOrder.length) {
-      localStorage.setItem(`categoryOrder_${listId}` , JSON.stringify(categoryOrder));
+      localStorage.setItem(`categoryOrder_${listId}`, JSON.stringify(categoryOrder));
     }
   }, [categoryOrder, listId]);
 
@@ -107,8 +110,8 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   Object.keys(groupedItems).forEach(category => {
     groupedItems[category].sort((a, b) => {
       // First sort by completion status
-      if (a.isCompleted !== b.isCompleted) {
-        return a.isCompleted ? 1 : -1;
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
       }
       // Then sort alphabetically by name
       return a.name.localeCompare(b.name);
@@ -140,7 +143,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
     });
   }
 
-  const hasCheckedItems = items.some(item => item.isCompleted);
+  const hasCheckedItems = items.some(item => item.completed);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
@@ -152,14 +155,67 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <TextField
-        fullWidth
-        label="Search by product or isle"
-        variant="outlined"
-        value={searchQuery}
-        onChange={e => setSearchQuery(e.target.value)}
-        sx={{ mb: 3 }}
-      />
+      <Box sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'flex-start' }}>
+        <TextField
+          fullWidth
+          label="Search by product or isle"
+          variant="outlined"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          InputProps={{
+            endAdornment: searchQuery ? (
+              <IconButton
+                onClick={() => setSearchQuery('')}
+                edge="end"
+                size="small"
+                sx={{ mr: 1 }}
+              >
+                ×
+              </IconButton>
+            ) : null,
+          }}
+          sx={{
+            backgroundColor: 'white',
+            borderRadius: 1,
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'white',
+              '& fieldset': {
+                borderColor: 'rgba(0, 0, 0, 0.12)',
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(0, 0, 0, 0.23)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'primary.main',
+              },
+            },
+            '& .MuiInputLabel-root': {
+              color: 'text.secondary',
+            },
+            '& .MuiInputBase-input': {
+              color: 'text.primary',
+            },
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+          }}
+        />
+        <IconButton
+          onClick={() => setAllCollapsed(!allCollapsed)}
+          aria-label={allCollapsed ? 'Expand all categories' : 'Collapse all categories'}
+          title={allCollapsed ? 'Expand all' : 'Collapse all'}
+          sx={{
+            backgroundColor: 'action.hover',
+            '&:hover': {
+              backgroundColor: 'action.selected',
+            },
+            borderRadius: 2,
+            p: 1.5,
+            height: '56px',
+            width: '56px',
+          }}
+        >
+          {allCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
+        </IconButton>
+      </Box>
       {hasCheckedItems && (
         <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
           <Button
@@ -196,12 +252,14 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
                         </span>
                         <Box sx={{ flexGrow: 1 }}>
                           <CategorySection
+                            key={categoryName}
                             categoryName={categoryName}
                             items={groupedItems[categoryName]}
                             onToggleComplete={onToggleComplete}
                             onDeleteItem={onDeleteItem}
                             onEditItem={onEditItem}
                             onRemoveCategory={onRemoveCategory}
+                            defaultCollapsed={allCollapsed}
                           />
                         </Box>
                       </Box>

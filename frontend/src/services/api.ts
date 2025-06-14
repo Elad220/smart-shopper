@@ -157,7 +157,7 @@ export const fetchShoppingList = async (token: string, listId: string): Promise<
 export const addShoppingItem = async (
   token: string,
   listId: string,
-  itemData: Omit<ShoppingItem, 'id' | 'isCompleted'>
+  itemData: Omit<ShoppingItem, 'id' | 'completed'>
 ): Promise<ShoppingItem> => {
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items`, {
     method: 'POST',
@@ -204,6 +204,7 @@ export const deleteCheckedItems = async (token: string, listId: string): Promise
 };
 
 export const deleteCategoryItems = async (token: string, listId: string, categoryName: Category): Promise<void> => {
+  console.log('Sending delete category request:', { listId, categoryName });
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/delete-category`, {
     method: 'POST',
     headers: {
@@ -212,5 +213,18 @@ export const deleteCategoryItems = async (token: string, listId: string, categor
     },
     body: JSON.stringify({ categoryName }),
   });
-  await handleResponse<void>(response);
+  
+  console.log('Delete category response status:', response.status);
+  const responseData = await response.json().catch(() => null);
+  console.log('Delete category response data:', responseData);
+  
+  if (!response.ok) {
+    const errorMessage = responseData?.message || 'Failed to delete category items';
+    console.error('Delete category error:', { status: response.status, message: errorMessage });
+    throw new Error(errorMessage);
+  }
+  
+  if (responseData && responseData.message) {
+    console.log('Delete category success:', responseData.message);
+  }
 };

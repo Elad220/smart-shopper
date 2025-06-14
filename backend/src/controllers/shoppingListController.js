@@ -201,23 +201,116 @@ exports.deleteCategoryItems = async (req, res) => {
   try {
     const { listId } = req.params;
     const { categoryName } = req.body;
+    
     if (!listId || !require('mongoose').Types.ObjectId.isValid(listId)) {
       return res.status(400).json({ message: 'Invalid shopping list ID.' });
     }
+    
     if (!categoryName) {
       return res.status(400).json({ message: 'Category name is required.' });
     }
-    const list = await ShoppingList.findOne({ _id: listId, user: req.user.userId });
+
+    // Find the list
+    const list = await ShoppingList.findById(listId);
     if (!list) {
       return res.status(404).json({ message: 'Shopping list not found' });
     }
-    // Remove items in the category
-    const itemsToRemove = list.items.filter(item => item.category === categoryName);
-    await Item.deleteMany({ _id: { $in: itemsToRemove } });
-    list.items = list.items.filter(item => item.category !== categoryName);
-    await list.save();
-    res.json({ message: `All items in category '${categoryName}' removed.` });
+
+    // Find items in the category
+    const itemsInCategory = await Item.find({
+      _id: { $in: list.items },
+      category: categoryName
+    });
+
+    const itemIdsToDelete = itemsInCategory.map(item => item._id);
+
+    if (itemIdsToDelete.length === 0) {
+      return res.json({ 
+        success: true,
+        message: `No items found in category '${categoryName}'.`,
+        count: 0
+      });
+    }
+
+    // Delete the items
+    await Item.deleteMany({ _id: { $in: itemIdsToDelete } });
+    
+    // Remove the items from the list
+    await ShoppingList.findByIdAndUpdate(
+      listId,
+      { $pull: { items: { $in: itemIdsToDelete } } }
+    );
+    
+    res.json({ 
+      success: true,
+      message: `Removed ${itemIdsToDelete.length} items from category '${categoryName}'.`,
+      count: itemIdsToDelete.length
+    });
+    
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting category items:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete category items',
+      error: error.message 
+    });
   }
-}; 
+};
+
+/**
+ * Delete all checked items from a shopping list
+ */
+exports.deleteCheckedItems = async (req, res) => {
+  try {
+    const { listId } = req.params;
+    
+    if (!listId || !require('mongoose').Types.ObjectId.isValid(listId)) {
+      return res.status(400).json({ message: 'Invalid shopping list ID.' });
+    }
+
+    // Find the list
+    const list = await ShoppingList.findById(listId);
+    if (!list) {
+      return res.status(404).json({ message: 'Shopping list not found' });
+    }
+
+    // Find checked items
+    const checkedItems = await Item.find({
+      _id: { $in: list.items },
+      completed: true
+    });
+
+    const itemIdsToDelete = checkedItems.map(item => item._id);
+
+    if (itemIdsToDelete.length === 0) {
+      return res.json({ 
+        success: true,
+        message: 'No checked items found to remove.',
+        count: 0
+      });
+    }
+
+    // Delete the checked items
+    await Item.deleteMany({ _id: { $in: itemIdsToDelete } });
+    
+    // Remove the items from the list
+    await ShoppingList.findByIdAndUpdate(
+      listId,
+      { $pull: { items: { $in: itemIdsToDelete } } }
+    );
+    
+    res.json({ 
+      success: true,
+      message: `Removed ${itemIdsToDelete.length} checked items.`,
+      count: itemIdsToDelete.length
+    });
+    
+  } catch (error) {
+    console.error('Error deleting checked items:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to delete checked items',
+      error: error.message 
+    });
+  }
+};

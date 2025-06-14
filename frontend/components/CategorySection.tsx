@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
-import { ShoppingItem, Category } from '../types';
+import { ShoppingItem, Category, StandardCategory } from '../types';
 import ShoppingListItem from './ShoppingListItem';
 
-import Accordion from '@mui/material/Accordion';
-import AccordionSummary from '@mui/material/AccordionSummary';
-import AccordionDetails from '@mui/material/AccordionDetails';
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'; // Changed for "remove all in category"
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import CategoryIcon from '@mui/icons-material/LabelImportant';
 
 interface CategorySectionProps {
@@ -20,17 +16,19 @@ interface CategorySectionProps {
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onRemoveCategory: (categoryName: Category) => void;
+  defaultCollapsed?: boolean;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Dairy: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
-  Bakery: 'linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%)',
-  Produce: 'linear-gradient(90deg, #e8f5e9 0%, #a5d6a7 100%)',
-  Meat: 'linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)',
-  Frozen: 'linear-gradient(90deg, #e1f5fe 0%, #b3e5fc 100%)',
-  Snacks: 'linear-gradient(90deg, #f3e5f5 0%, #ce93d8 100%)',
-  Beverages: 'linear-gradient(90deg, #f9fbe7 0%, #fffde7 100%)',
-  Other: 'linear-gradient(90deg, #eceff1 0%, #cfd8dc 100%)',
+  [StandardCategory.PRODUCE]: 'linear-gradient(90deg, #e8f5e9 0%, #a5d6a7 100%)',
+  [StandardCategory.DAIRY]: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
+  [StandardCategory.FRIDGE]: 'linear-gradient(90deg, #e1f5fe 0%, #b3e5fc 100%)',
+  [StandardCategory.FREEZER]: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
+  [StandardCategory.BAKERY]: 'linear-gradient(90deg, #fff3e0 0%, #ffe0b2 100%)',
+  [StandardCategory.PANTRY]: 'linear-gradient(90deg, #f3e5f5 0%, #ce93d8 100%)',
+  [StandardCategory.DISPOSABLE]: 'linear-gradient(90deg, #f9fbe7 0%, #fffde7 100%)',
+  [StandardCategory.HYGIENE]: 'linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)',
+  [StandardCategory.OTHER]: 'linear-gradient(90deg, #eceff1 0%, #cfd8dc 100%)',
 };
 
 function getCategoryColor(category: string) {
@@ -43,9 +41,15 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   onToggleComplete, 
   onDeleteItem, 
   onEditItem,
-  onRemoveCategory
+  onRemoveCategory,
+  defaultCollapsed = false
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(!defaultCollapsed);
+  
+  // Update isOpen when defaultCollapsed changes
+  React.useEffect(() => {
+    setIsOpen(!defaultCollapsed);
+  }, [defaultCollapsed]);
   if (items.length === 0) return null;
   const categoryTitle = typeof categoryName === 'string' ? categoryName : 'Unknown Category';
   return (
