@@ -110,7 +110,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
       customCategoryName: selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : undefined,
       units: units,
       amount,
-      imageUrl: imageUrl,
+      image: imageUrl, // Changed from imageUrl to image to match backend expectations
     });
     onClose(); 
   };

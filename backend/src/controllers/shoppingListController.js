@@ -8,7 +8,7 @@ const transformItem = (item) => {
   return {
     ...obj,
     id: obj._id ? obj._id.toString() : undefined,
-    imageUrl: obj.image || null,
+    imageUrl: obj.image || obj.imageUrl || null, // Handle both image and imageUrl properties
   };
 };
 
