@@ -111,6 +111,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
       units: units,
       amount,
       image: imageUrl, // Changed from imageUrl to image to match backend expectations
+      completed: false // New items are not completed by default
     });
     onClose(); 
   };

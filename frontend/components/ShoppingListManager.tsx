@@ -9,12 +9,6 @@ import {
   DialogActions,
   Button,
   TextField,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  ListItemSecondaryAction,
-  Divider,
   Alert,
   Paper,
 } from '@mui/material';
@@ -24,7 +18,6 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShoppingList } from '../src/services/api';
-import StarBorderIcon from '@mui/icons-material/StarBorder';
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';

@@ -1,16 +1,8 @@
 import { ShoppingItem, Category } from '../../types';
 
-// Get the hostname from the current window location
+// Use the Render backend URL
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    // If accessing from localhost, use localhost:3001
-    // Otherwise, use the same hostname with port 3001
-    return hostname === 'localhost' || hostname === '127.0.0.1'
-      ? 'http://localhost:3001'
-      : `http://${hostname}:3001`;
-  }
-  return 'http://localhost:3001'; // Fallback for SSR
+  return 'https://smart-shopper-l9uf.onrender.com';
 };
 
 export const BASE_URL = getBaseUrl();
@@ -19,6 +11,10 @@ interface AuthResponse {
   token: string;
   userId: string;
   email: string;
+  user?: {
+    email?: string;
+    [key: string]: any;
+  };
   message?: string; // For registration success message
 }
 

@@ -20,6 +20,7 @@ export interface ShoppingItem {
   customCategoryName?: string; // Stores the name if StandardCategory.OTHER is chosen
   units: string;
   amount: number;
-  imageUrl?: string;
+  imageUrl?: string; // For backward compatibility
+  image?: string;    // New property for image URL
   completed: boolean;
 }
