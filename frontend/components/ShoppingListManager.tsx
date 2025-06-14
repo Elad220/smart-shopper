@@ -21,7 +21,7 @@ import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShopp
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 
 interface ShoppingList {
   _id: string;
@@ -247,11 +247,11 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         {sortMode === 'custom' ? (
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="shopping-lists-droppable">
-              {(provided) => (
+              {(provided: DroppableProvided) => (
                 <div ref={provided.innerRef} {...provided.droppableProps}>
                   {lists.map((list, idx) => (
                     <Draggable key={list._id} draggableId={list._id} index={idx}>
-                      {(provided, snapshot) => (
+                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.draggableProps}

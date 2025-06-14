@@ -11,7 +11,7 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import IconButton from '@mui/material/IconButton';
 import TextField from '@mui/material/TextField';
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 interface ShoppingListProps {
@@ -236,11 +236,11 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
       )}
       <DragDropContext onDragEnd={onDragEnd}>
         <Droppable droppableId="category-droppable">
-          {(provided) => (
+          {(provided: DroppableProvided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
               {sortedCategories.map((categoryName, idx) => (
                 <Draggable key={categoryName} draggableId={categoryName} index={idx}>
-                  {(provided, snapshot) => (
+                  {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.draggableProps}

@@ -18,6 +18,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
+import { checkBackendHealth } from './src/services/api';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -83,6 +84,11 @@ interface User {
 const isValidObjectId = (id: string | null) => !!id && /^[a-fA-F0-9]{24}$/.test(id);
 
 const App: React.FC = () => {
+  useEffect(() => {
+    // Log the current API URL for debugging
+    console.log('Current API URL:', import.meta.env.VITE_API_URL);
+  }, []);
+
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [selectedListId, setSelectedListId] = useState<string | null>(localStorage.getItem('selectedListId'));
   const [itemToEdit, setItemToEdit] = useState<ShoppingItem | null>(null);
@@ -127,18 +133,36 @@ const App: React.FC = () => {
       if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
       
       const fetchList = async () => {
+        if (!selectedListId) return;
+        
         setIsLoading(true);
         setError(null);
         try {
           const response = await fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
             headers: { 'Authorization': `Bearer ${authToken}` },
           });
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
           const list = await response.json();
+          if (!list) {
+            throw new Error('No data received from server');
+          }
+          
           setSelectedList(list);
-          setShoppingList(list.items.sort((a: any, b: any) => a.name.localeCompare(b.name)));
+          // Ensure list.items exists and is an array before sorting
+          const items = Array.isArray(list.items) ? list.items : [];
+          setShoppingList([...items].sort((a, b) => a.name.localeCompare(b.name)));
         } catch (err: any) {
-          setError(err.message || 'Failed to fetch shopping list.');
-          if (err.message === 'Unauthorized' || err.status === 401) handleLogout();
+          const errorMessage = err.message || 'Failed to fetch shopping list.';
+          console.error('Error fetching list:', errorMessage, err);
+          setError(errorMessage);
+          
+          if (err.message === 'Unauthorized' || err.status === 401) {
+            handleLogout();
+          }
         } finally {
           setIsLoading(false);
         }
@@ -635,10 +659,42 @@ const App: React.FC = () => {
           </Typography>
           
           <Box sx={{ 
-            width: { xs: 40, sm: 'auto' }, // Match the left side for balance
+            width: 'auto',
             display: 'flex',
-            justifyContent: 'flex-end'
+            justifyContent: 'flex-end',
+            gap: 1,
+            alignItems: 'center'
           }}>
+            <Tooltip title="Test backend connection" arrow>
+              <Button 
+                variant="outlined" 
+                size="small"
+                color="inherit"
+                onClick={async () => {
+                  try {
+                    const health = await checkBackendHealth();
+                    alert(`✅ Backend is healthy!\nStatus: ${health.status}\nVersion: ${health.version || 'N/A'}`);
+                  } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+                    alert(`❌ Failed to connect to backend: ${errorMessage}`);
+                  }
+                }}
+                sx={{
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                  },
+                  minWidth: 'auto',
+                  px: 1,
+                  fontSize: '0.75rem',
+                  display: { xs: 'none', sm: 'inline-flex' }
+                }}
+              >
+                Test Connection
+              </Button>
+            </Tooltip>
             {authToken && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <Tooltip 

@@ -1,11 +1,25 @@
 import { ShoppingItem, Category } from '../../types';
 
-// Use the Render backend URL
+// Get the API URL from environment variable or fallback to localhost
 const getBaseUrl = () => {
-  return 'https://smart-shopper-l9uf.onrender.com';
+  return import.meta.env.VITE_API_URL || 'http://localhost:3001';
 };
 
 export const BASE_URL = getBaseUrl();
+
+// Health check function to test backend connection
+export const checkBackendHealth = async (): Promise<{ status: string, version?: string }> => {
+  try {
+    const response = await fetch(`${BASE_URL}/health`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Backend health check failed:', error);
+    throw error;
+  }
+};
 
 interface AuthResponse {
   token: string;

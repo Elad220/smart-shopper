@@ -15,7 +15,16 @@ app.use(cors());
 app.use(bodyParser.json({ limit: '5mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '5mb' }));
 
-// Routes
+// Health check endpoint - must come before other routes
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    version: process.env.npm_package_version || '1.0.0',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// API Routes
 app.use('/auth', authRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/shopping-lists', shoppingListRoutes);
