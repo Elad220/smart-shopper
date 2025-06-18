@@ -1,5 +1,12 @@
 const Item = require('../models/Item');
+const User = require('../models/User');
 const mongoose = require('mongoose');
+
+const STANDARD_CATEGORIES = [
+  "Produce", "Dairy", "Fridge", "Freezer", "Bakery",
+  "Pantry", "Disposable", "Hygiene", "Canned Goods",
+  "Organics", "Deli", "Other"
+];
 
 // Transform MongoDB document to match frontend format
 const transformItem = (item) => {
@@ -152,4 +159,56 @@ exports.deleteCategoryItems = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-}; 
+};
+
+exports.getUserCategories = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        // Use Set to handle duplicates automatically
+        let allCategories = [...new Set([...STANDARD_CATEGORIES, ...user.customCategories])];
+
+        const otherCategory = 'Other';
+        const otherIndex = allCategories.indexOf(otherCategory);
+        if (otherIndex > -1) {
+            allCategories.splice(otherIndex, 1);
+        }
+
+        // Sort the remaining categories alphabetically
+        allCategories.sort((a, b) => a.localeCompare(b));
+        
+        // Add "Other" category at the end of the list
+        allCategories.push(otherCategory);
+
+        res.json(allCategories);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+exports.deleteUserCategory = async (req, res) => {
+  try {
+    const { categoryName } = req.params;
+    const userId = req.user.userId;
+
+    // Prevent deletion of standard categories
+    if (STANDARD_CATEGORIES.includes(categoryName)) {
+      return res.status(400).json({ message: 'Cannot delete a standard category.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Pull the category from the array
+    user.customCategories.pull(categoryName);
+    await user.save();
+
+    res.json({ message: `Custom category '${categoryName}' deleted successfully.` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

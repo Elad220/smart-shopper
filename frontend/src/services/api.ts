@@ -238,3 +238,20 @@ export const deleteCategoryItems = async (token: string, listId: string, categor
     console.log('Delete category success:', responseData.message);
   }
 };
+
+export const fetchUserCategories = async (token: string): Promise<string[]> => {
+  const response = await fetch(`${BASE_URL}/api/items/categories`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return handleResponse<string[]>(response);
+};
+
+export const deleteUserCategory = async (token: string, categoryName: string): Promise<void> => {
+  const response = await fetch(`${BASE_URL}/api/items/categories/${encodeURIComponent(categoryName)}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+  await handleResponse<void>(response);
+};

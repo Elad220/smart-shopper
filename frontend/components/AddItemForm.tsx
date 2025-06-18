@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { ShoppingItem, StandardCategory } from '../types';
-import { CATEGORY_OPTIONS, UNIT_OPTIONS } from '../constants';
+import { ShoppingItem, StandardCategory, Category } from '../types';
+import { UNIT_OPTIONS } from '../constants';
 
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -20,27 +20,31 @@ import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ClearIcon from '@mui/icons-material/Clear';
 import Typography from '@mui/material/Typography';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface AddItemFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onAddItem: (item: Omit<ShoppingItem, 'id' | 'isCompleted'>) => void;
+  onAddItem: (item: Omit<ShoppingItem, 'id' | 'completed'>) => void;
+  categories: Category[];
+  onDeleteCategory: (categoryName: string) => void;
 }
 
-const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem }) => {
+const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, categories, onDeleteCategory }) => {
   const [name, setName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<StandardCategory | ''>(CATEGORY_OPTIONS[0]);
+  const [selectedCategory, setSelectedCategory] = useState<Category | ''>(categories[0] || '');
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined); // Will store base64 data URL
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const standardCategories = Object.values(StandardCategory);
 
   useEffect(() => {
     if (isOpen) {
         setName('');
-        setSelectedCategory(CATEGORY_OPTIONS[0]);
+        setSelectedCategory(categories.includes(StandardCategory.PRODUCE) ? StandardCategory.PRODUCE : (categories[0] || ''));
         setCustomCategoryName('');
         setUnits(UNIT_OPTIONS[0]);
         setAmount(1);
@@ -50,10 +54,10 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
             fileInputRef.current.value = ""; // Reset file input
         }
     }
-  }, [isOpen]);
+  }, [isOpen, categories]);
 
-  const handleCategoryChange = (event: SelectChangeEvent<StandardCategory | ''>) => {
-    const value = event.target.value as StandardCategory;
+  const handleCategoryChange = (event: SelectChangeEvent<Category | ''>) => {
+    const value = event.target.value as Category;
     setSelectedCategory(value);
     setShowCustomCategoryInput(value === StandardCategory.OTHER);
     if (value !== StandardCategory.OTHER) {
@@ -107,11 +111,9 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
     onAddItem({
       name: name.trim(),
       category: finalCategory,
-      customCategoryName: selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : undefined,
       units: units,
       amount,
-      image: imageUrl, // Changed from imageUrl to image to match backend expectations
-      completed: false // New items are not completed by default
+      image: imageUrl,
     });
     onClose(); 
   };
@@ -151,13 +153,34 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem })
                   value={selectedCategory}
                   onChange={handleCategoryChange}
                   label="Category"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      },
+                    },
+                  }}
                 >
-                  {Object.values(StandardCategory).map((cat) => (
+                  {categories.map((cat) => (
                     <MenuItem key={cat} value={cat}>
-                      {cat}
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                        <span>{cat}</span>
+                        {!standardCategories.includes(cat as StandardCategory) && (
+                          <IconButton
+                            size="small"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteCategory(cat);
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
                     </MenuItem>
                   ))}
-                  <MenuItem value="custom">Custom Category</MenuItem>
                 </Select>
               </FormControl>
             </Box>

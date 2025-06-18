@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ShoppingItem, StandardCategory } from '../types';
-import { CATEGORY_OPTIONS, UNIT_OPTIONS } from '../constants';
+import { ShoppingItem, StandardCategory, Category } from '../types';
+import { UNIT_OPTIONS } from '../constants';
 
 import {
   Dialog,
@@ -23,23 +23,27 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ClearIcon from '@mui/icons-material/Clear';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface EditItemModalProps {
   item: ShoppingItem | null;
   isOpen: boolean;
   onClose: () => void;
   onSave: (updatedItem: ShoppingItem) => void;
+  categories: Category[];
+  onDeleteCategory: (categoryName: string) => void;
 }
 
-const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, onSave }) => {
+const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, onSave, categories, onDeleteCategory }) => {
   const [name, setName] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<StandardCategory | ''>('');
+  const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
   const [customCategoryName, setCustomCategoryName] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined); // Will store base64 data URL
+  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const standardCategories = Object.values(StandardCategory);
 
 
   useEffect(() => {
@@ -47,46 +51,32 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       setName(item.name);
       setUnits(item.units || UNIT_OPTIONS[0]);
       setAmount(item.amount);
-      setImageUrl(item.imageUrl || undefined); // Expecting data URL or undefined
+      setImageUrl(item.imageUrl || undefined);
 
-      const isStandard = CATEGORY_OPTIONS.includes(item.category as StandardCategory);
-      if (isStandard) {
-        setSelectedCategory(item.category as StandardCategory);
-        const showCustom = item.category === StandardCategory.OTHER;
-        setShowCustomCategoryInput(showCustom);
-        setCustomCategoryName(showCustom ? item.customCategoryName || '' : '');
+      const isStandard = Object.values(StandardCategory).some(v => v === item.category);
+      
+      if (categories.includes(item.category) && item.category !== StandardCategory.OTHER) {
+          setSelectedCategory(item.category);
+          setShowCustomCategoryInput(false);
+          setCustomCategoryName('');
       } else {
-        setSelectedCategory(StandardCategory.OTHER);
-        setShowCustomCategoryInput(true);
-        setCustomCategoryName(item.category as string);
+          setSelectedCategory(StandardCategory.OTHER);
+          setShowCustomCategoryInput(true);
+          setCustomCategoryName(isStandard ? '' : item.category);
       }
+      
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset file input
       }
-    } else if (!isOpen) { 
-        setName('');
-        setSelectedCategory(CATEGORY_OPTIONS[0]);
-        setCustomCategoryName('');
-        setUnits(UNIT_OPTIONS[0]);
-        setAmount(1);
-        setImageUrl(undefined);
-        setShowCustomCategoryInput(false);
-        if (fileInputRef.current) {
-            fileInputRef.current.value = ""; // Reset file input
-        }
     }
-  }, [item, isOpen]);
+  }, [item, isOpen, categories]);
 
-  const handleCategoryChange = (event: SelectChangeEvent<StandardCategory | ''>) => {
-    const value = event.target.value as StandardCategory;
+  const handleCategoryChange = (event: SelectChangeEvent<Category>) => {
+    const value = event.target.value as Category;
     setSelectedCategory(value);
     setShowCustomCategoryInput(value === StandardCategory.OTHER);
     if (value !== StandardCategory.OTHER) {
       setCustomCategoryName('');
-    } else if (item && item.category !== StandardCategory.OTHER && typeof item.category === 'string' && !CATEGORY_OPTIONS.includes(item.category as StandardCategory)) {
-      setCustomCategoryName(item.category);
-    } else {
-      setCustomCategoryName(item?.customCategoryName && value === StandardCategory.OTHER ? item.customCategoryName : '');
     }
   };
   
@@ -112,16 +102,13 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
         return;
       }
       reader.readAsDataURL(file);
-    } else {
-        // If no file selected (e.g., user cancels dialog), keep current or original image
-        // setImageUrl(item?.imageUrl || undefined); // Or could clear it: setImageUrl(undefined)
     }
   };
 
   const handleRemoveImage = () => {
     setImageUrl(undefined);
     if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input
+        fileInputRef.current.value = "";
     }
   };
 
@@ -144,7 +131,6 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       ...item,
       name: name.trim(),
       category: finalCategory,
-      customCategoryName: selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : undefined,
       units: units,
       amount,
       imageUrl: imageUrl,
@@ -185,12 +171,26 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                   onChange={handleCategoryChange}
                   label="Category"
                 >
-                  {Object.values(StandardCategory).map((cat) => (
+                  {categories.map((cat) => (
                     <MenuItem key={cat} value={cat}>
-                      {cat}
+                       <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                        <span>{cat}</span>
+                        {!standardCategories.includes(cat as StandardCategory) && (
+                          <IconButton
+                            size="small"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteCategory(cat);
+                            }}
+                            sx={{ p: 0.5 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
                     </MenuItem>
                   ))}
-                  <MenuItem value="custom">Custom Category</MenuItem>
                 </Select>
               </FormControl>
             </Box>

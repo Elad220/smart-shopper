@@ -1,5 +1,22 @@
 const ShoppingList = require('../models/ShoppingList');
 const Item = require('../models/Item');
+const User = require('../models/User');
+
+const STANDARD_CATEGORIES = [
+  "Produce", "Dairy", "Fridge", "Freezer", "Bakery",
+  "Pantry", "Disposable", "Hygiene", "Canned Goods",
+  "Organics", "Deli", "Other"
+];
+
+const addCustomCategory = async (userId, categoryName) => {
+  if (categoryName && !STANDARD_CATEGORIES.includes(categoryName)) {
+    const user = await User.findById(userId);
+    if (user && !user.customCategories.includes(categoryName)) {
+      user.customCategories.push(categoryName);
+      await user.save();
+    }
+  }
+};
 
 // Helper to transform item for frontend
 const transformItem = (item) => {
@@ -135,6 +152,7 @@ exports.addItem = async (req, res) => {
     });
     
     const savedItem = await item.save();
+    await addCustomCategory(req.user.userId, savedItem.category);
     list.items.push(savedItem._id);
     await list.save();
     
@@ -190,6 +208,9 @@ exports.updateItem = async (req, res) => {
     );
     if (!updatedItem) {
       return res.status(404).json({ message: 'Item not found' });
+    }
+    if (updatedItem.category) {
+      await addCustomCategory(req.user.userId, updatedItem.category);
     }
     res.json(transformItem(updatedItem));
   } catch (error) {

@@ -6,6 +6,12 @@ const auth = require('../middleware/auth');
 // All routes require authentication
 router.use(auth);
 
+// Get all of user's categories
+router.get('/categories', itemController.getUserCategories);
+
+// Delete a custom category for a user
+router.delete('/categories/:categoryName', itemController.deleteUserCategory);
+
 // Get all items
 router.get('/', itemController.getItems);
 
@@ -24,4 +30,4 @@ router.post('/delete-checked', itemController.deleteCheckedItems);
 // Delete items by category
 router.post('/delete-category', itemController.deleteCategoryItems);
 
-module.exports = router; 
+module.exports = router;

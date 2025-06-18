@@ -18,6 +18,10 @@ declare global {
   }
 }
 
+// Mock props that are now required by the component
+const mockCategories = ['Dairy', 'Bakery', 'Produce', 'My Custom Category', StandardCategory.OTHER];
+const mockOnDeleteCategory = vi.fn();
+
 const selectCategory = async (user: ReturnType<typeof userEvent.setup>, category: string) => {
   // Click the select button
   const select = screen.getByRole('button', { name: /category/i });
@@ -30,19 +34,35 @@ const selectCategory = async (user: ReturnType<typeof userEvent.setup>, category
 
 describe('AddItemForm Component', () => {
   it('renders form elements', async () => {
-    render(<AddItemForm isOpen={true} onClose={() => {}} onAddItem={vi.fn()} />);
+    render(
+      <AddItemForm
+        isOpen={true}
+        onClose={() => {}}
+        onAddItem={vi.fn()}
+        categories={mockCategories}
+        onDeleteCategory={mockOnDeleteCategory}
+      />
+    );
     
     expect(screen.getByPlaceholderText('e.g., Whole Milk')).toBeInTheDocument();
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
     expect(screen.getByLabelText('Units')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /add/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
   });
 
   it('handles form submission', async () => {
     const onAddItem = vi.fn();
     const user = userEvent.setup();
     
-    render(<AddItemForm isOpen={true} onClose={() => {}} onAddItem={onAddItem} />);
+    render(
+      <AddItemForm
+        isOpen={true}
+        onClose={() => {}}
+        onAddItem={onAddItem}
+        categories={mockCategories}
+        onDeleteCategory={mockOnDeleteCategory}
+      />
+    );
 
     // Fill in the form
     await user.type(screen.getByPlaceholderText('e.g., Whole Milk'), 'New Item');
@@ -51,7 +71,7 @@ describe('AddItemForm Component', () => {
     await selectCategory(user, 'Dairy');
     
     // Submit the form
-    await user.click(screen.getByRole('button', { name: /add/i }));
+    await user.click(screen.getByRole('button', { name: /add item/i }));
 
     // Check that onAddItem was called with the correct data
     expect(onAddItem).toHaveBeenCalledWith(expect.objectContaining({
@@ -59,7 +79,6 @@ describe('AddItemForm Component', () => {
       category: StandardCategory.DAIRY,
       amount: 1,
       units: 'pcs',
-      isCompleted: false
     }));
   });
 
@@ -67,10 +86,18 @@ describe('AddItemForm Component', () => {
     const onAddItem = vi.fn();
     const user = userEvent.setup();
     
-    render(<AddItemForm isOpen={true} onClose={() => {}} onAddItem={onAddItem} />);
+    render(
+      <AddItemForm
+        isOpen={true}
+        onClose={() => {}}
+        onAddItem={onAddItem}
+        categories={mockCategories}
+        onDeleteCategory={mockOnDeleteCategory}
+      />
+    );
 
     // Try to submit without filling required fields
-    await user.click(screen.getByRole('button', { name: /add/i }));
+    await user.click(screen.getByRole('button', { name: /add item/i }));
 
     expect(onAddItem).not.toHaveBeenCalled();
     expect(window.alert).toHaveBeenCalledWith('Item name cannot be empty.');
@@ -81,7 +108,15 @@ describe('AddItemForm Component', () => {
     const onClose = vi.fn();
     const user = userEvent.setup();
     
-    render(<AddItemForm isOpen={true} onClose={onClose} onAddItem={onAddItem} />);
+    render(
+      <AddItemForm
+        isOpen={true}
+        onClose={onClose}
+        onAddItem={onAddItem}
+        categories={mockCategories}
+        onDeleteCategory={mockOnDeleteCategory}
+      />
+    );
 
     // Fill in the form
     await user.type(screen.getByPlaceholderText('e.g., Whole Milk'), 'New Item');
@@ -90,7 +125,7 @@ describe('AddItemForm Component', () => {
     await selectCategory(user, 'Dairy');
     
     // Submit the form
-    await user.click(screen.getByRole('button', { name: /add/i }));
+    await user.click(screen.getByRole('button', { name: /add item/i }));
 
     // Check that both callbacks were called
     expect(onAddItem).toHaveBeenCalled();

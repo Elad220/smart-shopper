@@ -1,4 +1,3 @@
-
 export enum StandardCategory {
   PRODUCE = "Produce",
   DAIRY = "Dairy",
@@ -20,7 +19,6 @@ export interface ShoppingItem {
   id: string;
   name: string;
   category: Category;
-  customCategoryName?: string; // Stores the name if StandardCategory.OTHER is chosen
   units: string;
   amount: number;
   imageUrl?: string; // For backward compatibility

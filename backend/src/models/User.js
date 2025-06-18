@@ -22,6 +22,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  customCategories: {
+    type: [String],
+    default: []
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -46,4 +50,4 @@ userSchema.methods.comparePassword = async function(candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-module.exports = mongoose.model('User', userSchema); 
+module.exports = mongoose.model('User', userSchema);

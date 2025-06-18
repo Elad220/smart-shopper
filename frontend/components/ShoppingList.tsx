@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ShoppingItem, Category } from '../types';
+import { ShoppingItem, Category, StandardCategory } from '../types';
 import CategorySection from './CategorySection';
-import { CATEGORY_OPTIONS } from '../constants'; 
 
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
@@ -117,9 +116,6 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
       return a.name.localeCompare(b.name);
     });
   });
-
-  // Define category order
-  const standardCategoryOrder = [...CATEGORY_OPTIONS, "Other"];
   
   // Sort categories
   let sortedCategories = Object.keys(groupedItems);
@@ -127,18 +123,19 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
     sortedCategories.sort((a, b) => {
       const ia = categoryOrder.indexOf(a);
       const ib = categoryOrder.indexOf(b);
-      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1 && ib === -1) {
+          if (a === StandardCategory.OTHER) return 1;
+          if (b === StandardCategory.OTHER) return -1;
+          return a.localeCompare(b);
+      };
       if (ia === -1) return 1;
       if (ib === -1) return -1;
       return ia - ib;
     });
   } else {
     sortedCategories = sortedCategories.sort((a, b) => {
-      const indexA = standardCategoryOrder.indexOf(a as any);
-      const indexB = standardCategoryOrder.indexOf(b as any);
-      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-      if (indexA !== -1) return -1;
-      if (indexB !== -1) return 1;
+      if (a === StandardCategory.OTHER) return 1;
+      if (b === StandardCategory.OTHER) return -1;
       return a.localeCompare(b);
     });
   }

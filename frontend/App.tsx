@@ -3,9 +3,9 @@ import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
 import EditItemModal from './components/EditItemModal';
 import { ShoppingListManager } from './components/ShoppingListManager';
-import { ShoppingItem, Category } from './types';
+import { ShoppingItem, Category, StandardCategory } from './types';
 import * as api from './src/services/api'; // Import API service
-import { BASE_URL } from './src/services/api';
+import { BASE_URL, fetchUserCategories } from './src/services/api';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
@@ -96,6 +96,7 @@ const App: React.FC = () => {
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showUserEmail, setShowUserEmail] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('authToken'));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -138,19 +139,23 @@ const App: React.FC = () => {
         setIsLoading(true);
         setError(null);
         try {
-          const response = await fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
-            headers: { 'Authorization': `Bearer ${authToken}` },
-          });
+          const [listResponse, userCategories] = await Promise.all([
+            fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
+              headers: { 'Authorization': `Bearer ${authToken}` },
+            }),
+            fetchUserCategories(authToken)
+          ]);
           
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+          if (!listResponse.ok) {
+            throw new Error(`HTTP error! status: ${listResponse.status}`);
           }
           
-          const list = await response.json();
+          const list = await listResponse.json();
           if (!list) {
             throw new Error('No data received from server');
           }
           
+          setCategories(userCategories);
           setSelectedList(list);
           // Ensure list.items exists and is an array before sorting
           const items = Array.isArray(list.items) ? list.items : [];
@@ -257,12 +262,15 @@ const App: React.FC = () => {
     try {
       const newItem = await api.addShoppingItem(authToken, selectedListId, newItemData);
       setShoppingList(prevList => [newItem, ...prevList].sort((a,b) => a.name.localeCompare(b.name)));
+      if (!categories.includes(newItem.category)) {
+        setCategories(prev => [...prev, newItem.category].sort());
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to add item.');
     } finally {
       setIsLoading(false);
     }
-  }, [authToken, selectedListId]);
+  }, [authToken, selectedListId, categories]);
 
   const handleOpenAddItemModal = () => setIsAddItemModalOpen(true);
   const handleCloseAddItemModal = () => setIsAddItemModalOpen(false);
@@ -327,12 +335,15 @@ const App: React.FC = () => {
 
     try {
       const { id, ...updatePayload } = updatedItem;
-      await api.updateShoppingItem(authToken, selectedListId, updatedItem.id, updatePayload);
+      const savedItem = await api.updateShoppingItem(authToken, selectedListId, updatedItem.id, updatePayload);
+      if (!categories.includes(savedItem.category)) {
+        setCategories(prev => [...prev, savedItem.category].sort());
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to save item.');
       setShoppingList(originalList);
     }
-  }, [authToken, selectedListId, shoppingList, handleCloseEditModal]);
+  }, [authToken, selectedListId, shoppingList, handleCloseEditModal, categories]);
 
   const handleListSelect = (listId: string) => {
     setSelectedListId(listId);
@@ -412,6 +423,27 @@ const App: React.FC = () => {
       }
     }
   }, [authToken, selectedListId, shoppingList, selectedList]);
+
+  const handleDeleteCategory = useCallback(async (categoryToDelete: string) => {
+    if (!authToken) {
+      setError("Authentication required.");
+      return;
+    }
+    if (Object.values(StandardCategory).includes(categoryToDelete as StandardCategory)) {
+        alert("Standard categories cannot be deleted.");
+        return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the category "${categoryToDelete}"? This cannot be undone.`)) {
+        try {
+            await api.deleteUserCategory(authToken, categoryToDelete);
+            // On success, update the local state
+            setCategories(prev => prev.filter(cat => cat !== categoryToDelete));
+        } catch (err: any) {
+            setError(err.message || "Failed to delete category.");
+        }
+    }
+  }, [authToken]);
 
   const handleToggleSidebar = () => {
     setIsSidebarCollapsed((prev) => {
@@ -770,6 +802,8 @@ const App: React.FC = () => {
           isOpen={isAddItemModalOpen}
           onClose={handleCloseAddItemModal}
           onAddItem={handleAddItemAndCloseModal}
+          categories={categories}
+          onDeleteCategory={handleDeleteCategory}
         />
       )}
       {isEditModalOpen && itemToEdit && (
@@ -778,6 +812,8 @@ const App: React.FC = () => {
           onClose={handleCloseEditModal}
           onSave={handleSaveItem}
           item={itemToEdit}
+          categories={categories}
+          onDeleteCategory={handleDeleteCategory}
         />
       )}
     </ThemeProvider>
