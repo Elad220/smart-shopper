@@ -28,6 +28,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   [StandardCategory.PANTRY]: 'linear-gradient(90deg, #f3e5f5 0%, #ce93d8 100%)',
   [StandardCategory.DISPOSABLE]: 'linear-gradient(90deg, #f9fbe7 0%, #fffde7 100%)',
   [StandardCategory.HYGIENE]: 'linear-gradient(90deg, #fce4ec 0%, #f8bbd0 100%)',
+  [StandardCategory.CANNED_GOODS]: 'linear-gradient(90deg, #d7ccc8 0%, #bcaaa4 100%)',
+  [StandardCategory.ORGANICS]: 'linear-gradient(90deg, #c5e1a5 0%, #8bc34a 100%)',
+  [StandardCategory.DELI]: 'linear-gradient(90deg, #ffe082 0%,rgba(255, 217, 0, 0.3) 100%)',
   [StandardCategory.OTHER]: 'linear-gradient(90deg, #eceff1 0%, #cfd8dc 100%)',
 };
 

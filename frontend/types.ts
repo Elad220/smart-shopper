@@ -8,7 +8,10 @@ export enum StandardCategory {
   PANTRY = "Pantry",
   DISPOSABLE = "Disposable",
   HYGIENE = "Hygiene",
-  OTHER = "Other", // Represents the option to add a custom category
+  CANNED_GOODS = "Canned Goods",
+  ORGANICS = "Organics",
+  DELI = "Deli",
+  OTHER = "Other",
 }
 
 export type Category = StandardCategory | string; // Allows for custom category strings

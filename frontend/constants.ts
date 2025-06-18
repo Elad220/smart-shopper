@@ -10,6 +10,9 @@ export const CATEGORY_OPTIONS: StandardCategory[] = [
   StandardCategory.PANTRY,
   StandardCategory.DISPOSABLE,
   StandardCategory.HYGIENE,
+  StandardCategory.CANNED_GOODS,
+  StandardCategory.ORGANICS,
+  StandardCategory.DELI,
   StandardCategory.OTHER,
 ];
 
