@@ -45,6 +45,19 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const standardCategories = Object.values(StandardCategory);
 
+  const sortedCategories = [...categories].sort((a, b) => {
+    const aIsStandard = standardCategories.includes(a as StandardCategory);
+    const bIsStandard = standardCategories.includes(b as StandardCategory);
+
+    if(a === StandardCategory.OTHER) return 1;
+    if(b === StandardCategory.OTHER) return -1;
+
+    if (aIsStandard && !bIsStandard) return -1;
+    if (!aIsStandard && bIsStandard) return 1;
+
+    return a.localeCompare(b);
+  });
+
 
   useEffect(() => {
     if (item && isOpen) {
@@ -171,7 +184,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                   onChange={handleCategoryChange}
                   label="Category"
                 >
-                  {categories.map((cat) => (
+                  {sortedCategories.map((cat) => (
                     <MenuItem key={cat} value={cat}>
                        <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                         <span>{cat}</span>
