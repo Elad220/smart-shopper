@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
 import EditItemModal from './components/EditItemModal';
@@ -30,50 +30,8 @@ import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-
-// Define a warmer theme
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#90CAF9', // Soft blue
-      light: '#BBDEFB',
-      dark: '#64B5F6',
-    },
-    secondary: {
-      main: '#A5D6A7', // Soft sage green
-      light: '#C8E6C9',
-      dark: '#81C784',
-    },
-    background: {
-      default: '#ffffff',
-      paper: '#ffffff',
-    }
-  },
-  typography: {
-    fontFamily: 'Roboto, Arial, sans-serif',
-    h1: {
-      fontSize: '2.2rem',
-      fontWeight: 700,
-    },
-    h2: {
-      fontSize: '1.75rem',
-      fontWeight: 600,
-    }
-  },
-  components: {
-    MuiCssBaseline: {
-      styleOverrides: {
-        body: {
-          margin: 0,
-          padding: 0,
-          minHeight: '100vh',
-          width: '100%',
-          overflowX: 'hidden'
-        }
-      }
-    }
-  }
-});
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
 
 interface User {
   id: string;
@@ -97,6 +55,63 @@ const App: React.FC = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [showUserEmail, setShowUserEmail] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [mode, setMode] = useState<'light' | 'dark'>(
+    () => (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
+  );
+
+  useEffect(() => {
+    localStorage.setItem('themeMode', mode);
+  }, [mode]);
+
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode,
+          ...(mode === 'light'
+            ? {
+                // Light mode palette
+                primary: {
+                  main: '#90CAF9',
+                  light: '#BBDEFB',
+                  dark: '#64B5F6',
+                },
+                secondary: {
+                  main: '#A5D6A7',
+                  light: '#C8E6C9',
+                  dark: '#81C784',
+                },
+                background: {
+                  default: '#fafafa',
+                  paper: '#ffffff',
+                },
+              }
+            : {
+                // Dark mode palette
+                primary: {
+                  main: '#90CAF9',
+                },
+                secondary: {
+                  main: '#81C784',
+                },
+                background: {
+                  default: '#121212',
+                  paper: '#1e1e1e',
+                },
+                text: {
+                  primary: '#ffffff',
+                  secondary: 'rgba(255, 255, 255, 0.7)',
+                },
+              }),
+        },
+        typography: {
+          fontFamily: 'Roboto, Arial, sans-serif',
+          h1: { fontSize: '2.2rem', fontWeight: 700 },
+          h2: { fontSize: '1.75rem', fontWeight: 600 },
+        },
+      }),
+    [mode]
+  );
 
   const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('authToken'));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -612,7 +627,7 @@ const App: React.FC = () => {
         ) : (
           <>
             {selectedList && (
-              <Typography variant="h4" component="h2" sx={{ mb: 3 }}>
+              <Typography variant="h4" component="h2" sx={{ mb: 3, color: 'text.primary' }}>
                 {selectedList.name}
               </Typography>
             )}
@@ -730,6 +745,9 @@ const App: React.FC = () => {
             </Tooltip>
             {authToken && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
+                  {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
+                </IconButton>
                 <Tooltip 
                   title={currentUser?.email || 'User'}
                   placement="bottom-end"

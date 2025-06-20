@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingItem, Category, StandardCategory } from '../types';
 import ShoppingListItem from './ShoppingListItem';
 
 import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import DeleteSweepIcon from '@mui/icons-material/DeleteSweep'; // Changed for "remove all in category"
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import Box from '@mui/material/Box';
 import CategoryIcon from '@mui/icons-material/LabelImportant';
+import { useTheme } from '@mui/material/styles';
 
 interface CategorySectionProps {
   categoryName: Category;
@@ -19,7 +20,7 @@ interface CategorySectionProps {
   defaultCollapsed?: boolean;
 }
 
-const CATEGORY_COLORS: Record<string, string> = {
+const CATEGORY_COLORS_LIGHT: Record<string, string> = {
   [StandardCategory.PRODUCE]: 'linear-gradient(90deg, #e8f5e9 0%, #a5d6a7 100%)',
   [StandardCategory.DAIRY]: 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)',
   [StandardCategory.FRIDGE]: 'linear-gradient(90deg, #e1f5fe 0%, #b3e5fc 100%)',
@@ -34,8 +35,24 @@ const CATEGORY_COLORS: Record<string, string> = {
   [StandardCategory.OTHER]: 'linear-gradient(90deg, #eceff1 0%, #cfd8dc 100%)',
 };
 
-function getCategoryColor(category: string) {
-  return CATEGORY_COLORS[category] || 'linear-gradient(90deg, #f5f5f5 0%, #e0e0e0 100%)';
+const CATEGORY_COLORS_DARK: Record<string, string> = {
+    [StandardCategory.PRODUCE]: 'linear-gradient(90deg, #1b2e1c 0%, #2e5c30 100%)',
+    [StandardCategory.DAIRY]: 'linear-gradient(90deg, #1a2a38 0%, #2a4a68 100%)',
+    [StandardCategory.FRIDGE]: 'linear-gradient(90deg, #192a38 0%, #294a68 100%)',
+    [StandardCategory.FREEZER]: 'linear-gradient(90deg, #1a2a38 0%, #2a4a68 100%)',
+    [StandardCategory.BAKERY]: 'linear-gradient(90deg, #3a2d1a 0%, #685a2a 100%)',
+    [StandardCategory.PANTRY]: 'linear-gradient(90deg, #2e1a2e 0%, #5c2e5c 100%)',
+    [StandardCategory.DISPOSABLE]: 'linear-gradient(90deg, #33331a 0%, #66662a 100%)',
+    [StandardCategory.HYGIENE]: 'linear-gradient(90deg, #381a2e 0%, #682a4a 100%)',
+    [StandardCategory.CANNED_GOODS]: 'linear-gradient(90deg, #2e2a2a 0%, #5c4a4a 100%)',
+    [StandardCategory.ORGANICS]: 'linear-gradient(90deg, #2a381a 0%, #4a682a 100%)',
+    [StandardCategory.DELI]: 'linear-gradient(90deg, #382d1a 0%, #685a2a 100%)',
+    [StandardCategory.OTHER]: 'linear-gradient(90deg, #1a1a1a 0%, #383838 100%)',
+};
+
+function getCategoryColor(category: string, mode: 'light' | 'dark') {
+  const colors = mode === 'light' ? CATEGORY_COLORS_LIGHT : CATEGORY_COLORS_DARK;
+  return colors[category] || 'linear-gradient(90deg, #f5f5f5 0%, #e0e0e0 100%)';
 }
 
 const CategorySection: React.FC<CategorySectionProps> = ({ 
@@ -48,9 +65,10 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   defaultCollapsed = false
 }) => {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
+  const theme = useTheme();
   
   // Update isOpen when defaultCollapsed changes
-  React.useEffect(() => {
+  useEffect(() => {
     setIsOpen(!defaultCollapsed);
   }, [defaultCollapsed]);
   if (items.length === 0) return null;
@@ -58,12 +76,13 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   return (
     <Box
       sx={{
-        background: getCategoryColor(categoryName),
+        background: getCategoryColor(categoryName, theme.palette.mode),
         borderRadius: 3,
         boxShadow: '0 4px 24px 0 rgba(0,0,0,0.07)',
         p: 2,
         mb: 2,
-        border: '1px solid #e0e0e0',
+        border: '1px solid',
+        borderColor: 'divider',
         transition: 'box-shadow 0.2s, transform 0.2s',
         '&:hover': {
           boxShadow: '0 8px 32px 0 rgba(0,0,0,0.12)',

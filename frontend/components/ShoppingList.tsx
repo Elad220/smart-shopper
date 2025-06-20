@@ -172,25 +172,10 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
             ) : null,
           }}
           sx={{
-            backgroundColor: 'white',
+            backgroundColor: 'background.paper',
             borderRadius: 1,
             '& .MuiOutlinedInput-root': {
-              backgroundColor: 'white',
-              '& fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.12)',
-              },
-              '&:hover fieldset': {
-                borderColor: 'rgba(0, 0, 0, 0.23)',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: 'primary.main',
-              },
-            },
-            '& .MuiInputLabel-root': {
-              color: 'text.secondary',
-            },
-            '& .MuiInputBase-input': {
-              color: 'text.primary',
+              backgroundColor: 'background.paper',
             },
             boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
           }}
