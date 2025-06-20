@@ -472,10 +472,12 @@ const App: React.FC = () => {
         <Box
             component="img"
             sx={{
-                height: 64,
+                width: '80%',
+                maxWidth: 250,
+                height: 'auto',
                 display: 'block',
                 mx: 'auto',
-                mb: 2,
+                mb: 4,
             }}
             alt="Ticklist Logo"
             src="/Logo - Ticklist.png"
