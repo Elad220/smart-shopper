@@ -36,8 +36,10 @@ interface EditItemModalProps {
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, onSave, categories, onDeleteCategory }) => {
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
   const [customCategoryName, setCustomCategoryName] = useState('');
+  const [categoryError, setCategoryError] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
@@ -62,6 +64,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
   useEffect(() => {
     if (item && isOpen) {
       setName(item.name);
+      setNameError('');
       setUnits(item.units || UNIT_OPTIONS[0]);
       setAmount(item.amount);
       setImageUrl(item.imageUrl || undefined);
@@ -77,6 +80,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
           setShowCustomCategoryInput(true);
           setCustomCategoryName(isStandard ? '' : item.category);
       }
+      setCategoryError('');
       
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset file input
@@ -127,16 +131,21 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setNameError('');
+    setCategoryError('');
     if (!item) return;
 
+    let isValid = true;
     if (!name.trim()) {
-      alert("Item name cannot be empty.");
-      return;
+      setNameError("Item name cannot be empty.");
+      isValid = false;
     }
     if (selectedCategory === StandardCategory.OTHER && !customCategoryName.trim()) {
-      alert("Please specify a name for the 'Other' category.");
-      return;
+      setCategoryError("Please specify a name for the 'Other' category.");
+      isValid = false;
     }
+
+    if (!isValid) return;
     
     const finalCategory = selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : selectedCategory;
 
@@ -172,6 +181,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
             value={name}
             onChange={(e) => setName(e.target.value)}
             autoFocus
+            error={!!nameError}
+            helperText={nameError}
           />
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
@@ -216,6 +227,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                   label="Custom Category"
                   value={customCategoryName}
                   onChange={(e) => setCustomCategoryName(e.target.value)}
+                  error={!!categoryError}
+                  helperText={categoryError}
                 />
               </Box>
             )}

@@ -32,8 +32,10 @@ interface AddItemFormProps {
 
 const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, categories, onDeleteCategory }) => {
   const [name, setName] = useState('');
+  const [nameError, setNameError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>(categories[0] || '');
   const [customCategoryName, setCustomCategoryName] = useState('');
+  const [categoryError, setCategoryError] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined); // Will store base64 data URL
@@ -57,8 +59,10 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
   useEffect(() => {
     if (isOpen) {
         setName('');
+        setNameError('');
         setSelectedCategory(categories.includes(StandardCategory.PRODUCE) ? StandardCategory.PRODUCE : (categories[0] || ''));
         setCustomCategoryName('');
+        setCategoryError('');
         setUnits(UNIT_OPTIONS[0]);
         setAmount(1);
         setImageUrl(undefined);
@@ -110,14 +114,20 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setNameError('');
+    setCategoryError('');
+
+    let isValid = true;
     if (!name.trim()) {
-      alert("Item name cannot be empty.");
-      return;
+      setNameError("Item name cannot be empty.");
+      isValid = false;
     }
     if (selectedCategory === StandardCategory.OTHER && !customCategoryName.trim()) {
-      alert("Please specify a name for the 'Other' category.");
-      return;
+      setCategoryError("Please specify a name for the 'Other' category.");
+      isValid = false;
     }
+
+    if(!isValid) return;
 
     const finalCategory = selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : selectedCategory;
 
@@ -156,6 +166,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g., Whole Milk"
+            error={!!nameError}
+            helperText={nameError}
           />
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
             <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : '100%' } }}>
@@ -206,6 +218,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                   label="Custom Category"
                   value={customCategoryName}
                   onChange={(e) => setCustomCategoryName(e.target.value)}
+                  error={!!categoryError}
+                  helperText={categoryError}
                 />
               </Box>
             )}
