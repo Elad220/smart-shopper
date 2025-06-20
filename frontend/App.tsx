@@ -457,6 +457,7 @@ const App: React.FC = () => {
       <Typography variant="h4" component="h1" gutterBottom align="center">
         {isRegistering ? 'Create Account' : 'Welcome Back'}
       </Typography>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
       <form onSubmit={isRegistering ? handleRegister : handleLogin}>
         {isRegistering && (
           <>
