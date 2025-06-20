@@ -1,6 +1,7 @@
 const ShoppingList = require('../models/ShoppingList');
 const Item = require('../models/Item');
 const User = require('../models/User');
+const mongoose = require('mongoose');
 
 const STANDARD_CATEGORIES = [
   "Produce", "Dairy", "Fridge", "Freezer", "Bakery",
@@ -333,5 +334,64 @@ exports.deleteCheckedItems = async (req, res) => {
       message: 'Failed to delete checked items',
       error: error.message 
     });
+  }
+};
+
+exports.exportList = async (req, res) => {
+  try {
+    const { listId } = req.params;
+    const list = await ShoppingList.findOne({ _id: listId, user: req.user.userId }).populate('items');
+
+    if (!list) {
+      return res.status(404).json({ message: 'Shopping list not found' });
+    }
+
+    res.json(list.items.map(transformItem));
+  } catch (error) {
+    res.status(500).json({ message: 'Error exporting list.' });
+  }
+};
+
+exports.importList = async (req, res) => {
+  try {
+    const { listId } = req.params;
+    const { items: itemsToImport } = req.body;
+    const userId = req.user.userId;
+
+    const list = await ShoppingList.findOne({ _id: listId, user: userId });
+    if (!list) {
+      return res.status(404).json({ message: 'Shopping list not found' });
+    }
+
+    if (!Array.isArray(itemsToImport)) {
+      return res.status(400).json({ message: "Invalid import data: 'items' must be an array." });
+    }
+
+    const newItems = itemsToImport.map(item => ({
+      name: item.name,
+      category: item.category,
+      units: item.units,
+      amount: item.amount,
+      completed: item.completed || false,
+      image: item.imageUrl || item.image,
+      userId: userId,
+      _id: new mongoose.Types.ObjectId(), // Ensure new ID
+    }));
+    
+    const createdItems = await Item.insertMany(newItems);
+    const newItemIds = createdItems.map(item => item._id);
+    const categoriesToUpdate = [...new Set(createdItems.map(item => item.category))];
+    
+    for (const category of categoriesToUpdate) {
+        await addCustomCategory(userId, category);
+    }
+
+    list.items.push(...newItemIds);
+    await list.save();
+
+    res.status(201).json(createdItems.map(transformItem));
+  } catch (error) {
+    console.error("Import error:", error);
+    res.status(500).json({ message: 'Error importing list: ' + error.message });
   }
 };

@@ -36,4 +36,8 @@ router.post('/:listId/items/delete-category', shoppingListController.deleteCateg
 // Remove all checked items from a shopping list
 router.post('/:listId/items/delete-checked', shoppingListController.deleteCheckedItems);
 
-module.exports = router; 
+// Export/Import routes
+router.get('/:listId/export', shoppingListController.exportList);
+router.post('/:listId/import', shoppingListController.importList);
+
+module.exports = router;

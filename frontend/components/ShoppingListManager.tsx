@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   IconButton,
@@ -11,13 +11,16 @@ import {
   TextField,
   Alert,
   Paper,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  UploadFile as ImportIcon,
+  Download as ExportIcon,
 } from '@mui/icons-material';
-import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShoppingList } from '../src/services/api';
+import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
@@ -35,6 +38,7 @@ interface ShoppingListManagerProps {
   token: string;
   onListSelect: (listId: string) => void;
   selectedListId: string | null;
+  onDataChange: () => void;
 }
 
 const SORT_MODES = [
@@ -47,6 +51,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   token,
   onListSelect,
   selectedListId,
+  onDataChange,
 }) => {
   const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
   const [lists, setLists] = useState<ShoppingList[]>([]);
@@ -59,6 +64,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const [editingList, setEditingList] = useState<ShoppingList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     loadLists();
@@ -200,6 +206,53 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     setCustomOrder(newOrder);
     console.log('Drag ended. New custom order:', newOrder);
   };
+  
+  const handleExport = async () => {
+    if(!selectedListId) {
+      setError("Please select a list to export.");
+      return;
+    }
+    try {
+      const itemsToExport = await exportShoppingList(token, selectedListId);
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(itemsToExport, null, 2))}`;
+      const link = document.createElement("a");
+      link.href = jsonString;
+      link.download = "shopping-list.json";
+      link.click();
+    } catch (err: any) {
+      setError(err.message || 'Failed to export list.');
+    }
+  };
+  
+  const handleImportClick = () => {
+    if(!selectedListId){
+      setError("Please select a list to import into.");
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+  
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if(!selectedListId){
+      setError("Please select a list to import into.");
+      return;
+    }
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const items = JSON.parse(e.target?.result as string);
+          await importShoppingList(token, selectedListId, items);
+          await loadLists(); // This updates the item count in the manager
+          onDataChange(); // This triggers the main list refresh in App.tsx
+        } catch (err: any) {
+          setError(err.message || 'Failed to import items.');
+        }
+      };
+      reader.readAsText(file);
+    }
+  };
 
   return (
     <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', p: 1 }}>
@@ -207,14 +260,16 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         <Typography variant="h6" sx={{ flexGrow: 1 }}>
           Shopping Lists
         </Typography>
-        <IconButton
-          color="primary"
-          onClick={handleSortClick}
-          size="medium"
-          sx={{ ml: 1 }}
-        >
-          <SortIcon />
-        </IconButton>
+        <Tooltip title="Sort Lists">
+            <IconButton
+              color="primary"
+              onClick={handleSortClick}
+              size="medium"
+              sx={{ ml: 1 }}
+            >
+              <SortIcon />
+            </IconButton>
+        </Tooltip>
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
           {SORT_MODES.map(mode => (
             <MenuItem
@@ -226,15 +281,46 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             </MenuItem>
           ))}
         </Menu>
-        <IconButton
-          color="primary"
-          onClick={() => setIsCreateDialogOpen(true)}
-          size="medium"
-          disabled={isLoading}
-          sx={{ ml: 1 }}
-        >
-          <AddIcon />
-        </IconButton>
+        <Tooltip title="Create New List">
+            <IconButton
+              color="primary"
+              onClick={() => setIsCreateDialogOpen(true)}
+              size="medium"
+              disabled={isLoading}
+              sx={{ ml: 1 }}
+            >
+              <AddIcon />
+            </IconButton>
+        </Tooltip>
+        <Tooltip title="Import Items to Selected List">
+            <IconButton
+              color="primary"
+              onClick={handleImportClick}
+              size="medium"
+              disabled={isLoading || !selectedListId}
+              sx={{ ml: 1 }}
+            >
+              <ImportIcon />
+            </IconButton>
+        </Tooltip>
+        <Tooltip title="Export Selected List">
+            <IconButton
+              color="primary"
+              onClick={handleExport}
+              size="medium"
+              disabled={isLoading || !selectedListId}
+              sx={{ ml: 1 }}
+            >
+              <ExportIcon />
+            </IconButton>
+        </Tooltip>
+        <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileImport}
+            style={{ display: 'none' }}
+            accept=".json"
+        />
       </Box>
 
       {error && (
@@ -450,4 +536,4 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       </Dialog>
     </Box>
   );
-}; 
+};

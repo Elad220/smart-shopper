@@ -255,3 +255,22 @@ export const deleteUserCategory = async (token: string, categoryName: string): P
   });
   await handleResponse<void>(response);
 };
+
+export const exportShoppingList = async (token: string, listId: string): Promise<ShoppingItem[]> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/export`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return handleResponse<ShoppingItem[]>(response);
+};
+
+export const importShoppingList = async (token: string, listId: string, items: Omit<ShoppingItem, 'id'>[]): Promise<ShoppingItem[]> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/import`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ items }),
+  });
+  return handleResponse<ShoppingItem[]>(response);
+};

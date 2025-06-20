@@ -135,59 +135,59 @@ const App: React.FC = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
     localStorage.getItem('sidebarCollapsed') === 'true'
   );
+  
+  const fetchDataForSelectedList = useCallback(async () => {
+    if (!authToken || !selectedListId) return;
 
-  // Fetch items when authenticated and list is selected
-  useEffect(() => {
-    if (authToken && selectedListId) {
-      if (!isValidObjectId(selectedListId)) {
+    if (!isValidObjectId(selectedListId)) {
         setError('Invalid shopping list ID.');
         setShoppingList([]);
         setSelectedList(null);
         return;
+    }
+    
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [listResponse, userCategories] = await Promise.all([
+        fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+        }),
+        fetchUserCategories(authToken)
+      ]);
+      
+      if (!listResponse.ok) {
+        throw new Error(`HTTP error! status: ${listResponse.status}`);
       }
+      
+      const list = await listResponse.json();
+      if (!list) {
+        throw new Error('No data received from server');
+      }
+      
+      setCategories(userCategories);
+      setSelectedList(list);
+      const items = Array.isArray(list.items) ? list.items : [];
+      setShoppingList([...items].sort((a, b) => a.name.localeCompare(b.name)));
+    } catch (err: any) {
+        const errorMessage = err.message || 'Failed to fetch shopping list.';
+        console.error('Error fetching list:', errorMessage, err);
+        setError(errorMessage);
+        
+        if (err.message === 'Unauthorized' || err.status === 401) {
+          handleLogout();
+        }
+    } finally {
+      setIsLoading(false);
+    }
+  }, [authToken, selectedListId]);
+
+  // Fetch items when authenticated and list is selected
+  useEffect(() => {
+    if (authToken && selectedListId) {
       localStorage.setItem('authToken', authToken);
       if (currentUser) localStorage.setItem('currentUser', JSON.stringify(currentUser));
-      
-      const fetchList = async () => {
-        if (!selectedListId) return;
-        
-        setIsLoading(true);
-        setError(null);
-        try {
-          const [listResponse, userCategories] = await Promise.all([
-            fetch(`${BASE_URL}/api/shopping-lists/${selectedListId}`, {
-              headers: { 'Authorization': `Bearer ${authToken}` },
-            }),
-            fetchUserCategories(authToken)
-          ]);
-          
-          if (!listResponse.ok) {
-            throw new Error(`HTTP error! status: ${listResponse.status}`);
-          }
-          
-          const list = await listResponse.json();
-          if (!list) {
-            throw new Error('No data received from server');
-          }
-          
-          setCategories(userCategories);
-          setSelectedList(list);
-          // Ensure list.items exists and is an array before sorting
-          const items = Array.isArray(list.items) ? list.items : [];
-          setShoppingList([...items].sort((a, b) => a.name.localeCompare(b.name)));
-        } catch (err: any) {
-          const errorMessage = err.message || 'Failed to fetch shopping list.';
-          console.error('Error fetching list:', errorMessage, err);
-          setError(errorMessage);
-          
-          if (err.message === 'Unauthorized' || err.status === 401) {
-            handleLogout();
-          }
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchList();
+      fetchDataForSelectedList();
     } else if (!authToken) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
@@ -195,7 +195,7 @@ const App: React.FC = () => {
       setSelectedListId(null);
       setSelectedList(null);
     }
-  }, [authToken, currentUser, selectedListId]);
+  }, [authToken, currentUser, selectedListId, fetchDataForSelectedList]);
 
   const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -469,6 +469,17 @@ const App: React.FC = () => {
 
   const renderAuthForm = () => (
     <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
+        <Box
+            component="img"
+            sx={{
+                height: 64,
+                display: 'block',
+                mx: 'auto',
+                mb: 2,
+            }}
+            alt="Ticklist Logo"
+            src="/Logo - Ticklist.png"
+        />
       <Typography variant="h4" component="h1" gutterBottom align="center">
         {isRegistering ? 'Create Account' : 'Welcome Back'}
       </Typography>
@@ -605,6 +616,7 @@ const App: React.FC = () => {
             token={authToken!}
             onListSelect={handleListSelect}
             selectedListId={selectedListId}
+            onDataChange={fetchDataForSelectedList}
           />
         )}
         {isSidebarCollapsed && (
@@ -703,7 +715,7 @@ const App: React.FC = () => {
               px: 1
             }}
           >
-            Smart Shopper
+            Ticklist
           </Typography>
           
           <Box sx={{ 
