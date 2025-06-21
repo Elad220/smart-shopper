@@ -5,13 +5,8 @@ import CategorySection from './CategorySection';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
 import AddIcon from '@mui/icons-material/Add';
-import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
-import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided } from '@hello-pangea/dnd';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 
 interface ShoppingListProps {
@@ -21,7 +16,7 @@ interface ShoppingListProps {
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onRemoveCategory: (categoryName: Category) => void;
-  onRemoveCheckedItems: () => void;
+  onRemoveCheckedItems: () => Promise<void>;
   onAddItem: () => void;
 }
 
@@ -31,12 +26,9 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   onToggleComplete, 
   onDeleteItem, 
   onEditItem,
-  onRemoveCategory,
-  onRemoveCheckedItems,
-  onAddItem
+  onRemoveCategory
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [allCollapsed, setAllCollapsed] = useState(false);
+  const [allCollapsed] = useState(false);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
 
   // Load custom order from localStorage
@@ -53,14 +45,6 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
       localStorage.setItem(`categoryOrder_${listId}`, JSON.stringify(categoryOrder));
     }
   }, [categoryOrder, listId]);
-
-  // Filter items by search query (name or category)
-  const filteredItems = searchQuery.trim() === ''
-    ? items
-    : items.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.category && item.category.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
 
   if (items.length === 0) {
     return (
@@ -81,33 +65,15 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           Add your first item to get started
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={onAddItem}>
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => {}} sx={{ mb: 2 }}>
           Add First Item
         </Button>
       </Box>
     );
   }
 
-  if (filteredItems.length === 0) {
-    return (
-      <Box>
-        <TextField
-          fullWidth
-          label="Search..."
-          variant="outlined"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          sx={{ mb: 3 }}
-        />
-        <Typography variant="subtitle1" color="text.secondary" align="center" sx={{ py: 4 }}>
-          No items match your search.
-        </Typography>
-      </Box>
-    );
-  }
-
   // Group items by category
-  const groupedItems = filteredItems.reduce((acc, item) => {
+  const groupedItems = items.reduce((acc, item) => {
     const categoryKey = typeof item.category === 'string' ? item.category : 'Unknown';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
@@ -152,78 +118,37 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
     setCategoryOrder(reordered);
   };
 
-  const totalItems = items.length;
-  const completedItems = items.filter(item => item.completed).length;
-  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-        <TextField
-            fullWidth
-            label="Search..."
-            variant="outlined"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            sx={{
-                mr: 2,
-                '& .MuiOutlinedInput-root': {
-                    borderRadius: '20px',
-                },
-            }}
-        />
-        <IconButton onClick={() => setAllCollapsed(!allCollapsed)}>
-            {allCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
-        </IconButton>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={onAddItem}>
-            Add
-        </Button>
-      </Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2}}>
-          <Typography variant="body1">{totalItems} items</Typography>
-          <Typography variant="body1" color="text.secondary">
-              <span style={{ color: 'green' }}>✓</span> {completedItems} completed
-          </Typography>
-          <Typography variant="body1" color="text.secondary">{completionPercentage}%</Typography>
-      </Box>
-      
-      <DragDropContext onDragEnd={onDragEnd}>
-        <Droppable droppableId="category-droppable">
-          {(provided: DroppableProvided) => (
-            <div ref={provided.innerRef} {...provided.droppableProps}>
-              {sortedCategories.map((categoryName, idx) => (
-                <Draggable key={categoryName} draggableId={categoryName} index={idx}>
-                  {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.draggableProps}
-                    >
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <span {...provided.dragHandleProps} style={{ cursor: 'grab', display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
-                          <DragIndicatorIcon color={snapshot.isDragging ? 'primary' : 'disabled'} />
-                        </span>
-                        <Box sx={{ flexGrow: 1 }}>
-                          <CategorySection
-                            categoryName={categoryName}
-                            items={groupedItems[categoryName]}
-                            onToggleComplete={onToggleComplete}
-                            onDeleteItem={onDeleteItem}
-                            onEditItem={onEditItem}
-                            onRemoveCategory={onRemoveCategory}
-                            defaultCollapsed={allCollapsed}
-                          />
-                        </Box>
-                      </Box>
-                    </div>
-                  )}
-                </Draggable>
-              ))}
-              {provided.placeholder}
-            </div>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </Box>
+    <DragDropContext onDragEnd={onDragEnd}>
+      <Droppable droppableId="category-droppable">
+        {(provided: DroppableProvided) => (
+          <div ref={provided.innerRef} {...provided.droppableProps}>
+            {sortedCategories.map((categoryName, idx) => (
+              <Draggable key={categoryName} draggableId={categoryName} index={idx}>
+                {(provided: DraggableProvided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.draggableProps}
+                  >
+                    <CategorySection
+                      dragHandleProps={provided.dragHandleProps}
+                      categoryName={categoryName}
+                      items={groupedItems[categoryName]}
+                      onToggleComplete={onToggleComplete}
+                      onDeleteItem={onDeleteItem}
+                      onEditItem={onEditItem}
+                      onRemoveCategory={onRemoveCategory}
+                      defaultCollapsed={allCollapsed}
+                    />
+                  </div>
+                )}
+              </Draggable>
+            ))}
+            {provided.placeholder}
+          </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 };
 

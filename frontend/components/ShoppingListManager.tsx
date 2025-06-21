@@ -20,7 +20,7 @@ import {
   UploadFile as ImportIcon,
   Download as ExportIcon,
 } from '@mui/icons-material';
-import { fetchShoppingLists, createShoppingList, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
+import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';

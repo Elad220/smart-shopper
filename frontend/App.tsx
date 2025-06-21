@@ -10,7 +10,6 @@ import { BASE_URL, fetchUserCategories } from './src/services/api';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
-import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
 import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
@@ -18,7 +17,6 @@ import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
-import { checkBackendHealth } from './src/services/api';
 import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
@@ -32,7 +30,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Chip, LinearProgress } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from '@mui/material';
 
 interface User {
   id: string;
@@ -683,7 +681,7 @@ const App: React.FC = () => {
           </Box>
         )}
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.paper' }}>
         <Toolbar />
         {error && (
           <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
@@ -704,7 +702,7 @@ const App: React.FC = () => {
                     Add Item
                 </Button>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                 <Typography variant="body2">{totalItems} items</Typography>
                 <Typography variant="body2" color="text.secondary">
                     <span style={{ color: 'green' }}>✓</span> {completedItems} completed
@@ -788,36 +786,6 @@ const App: React.FC = () => {
             gap: 1,
             alignItems: 'center'
           }}>
-            <Tooltip title="Test backend connection" arrow>
-              <Button 
-                variant="outlined" 
-                size="small"
-                color="inherit"
-                onClick={async () => {
-                  try {
-                    const health = await checkBackendHealth();
-                    alert(`✅ Backend is healthy!\nStatus: ${health.status}\nVersion: ${health.version || 'N/A'}`);
-                  } catch (error) {
-                    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-                    alert(`❌ Failed to connect to backend: ${errorMessage}`);
-                  }
-                }}
-                sx={{
-                  color: 'white',
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                  '&:hover': {
-                    borderColor: 'white',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                  },
-                  minWidth: 'auto',
-                  px: 1,
-                  fontSize: '0.75rem',
-                  display: { xs: 'none', sm: 'inline-flex' }
-                }}
-              >
-                Test Connection
-              </Button>
-            </Tooltip>
             {authToken && (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">

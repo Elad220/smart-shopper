@@ -14,8 +14,8 @@ vi.mock('../../services/api', () => ({
 
 describe('ShoppingList Component', () => {
   const mockItems = [
-    { id: '1', name: 'Milk', checked: false, category: 'Dairy', units: 'pcs', amount: 1, completed: false, isCompleted: false },
-    { id: '2', name: 'Bread', checked: true, category: 'Bakery', units: 'pcs', amount: 1, completed: true, isCompleted: true },
+    { id: '1', name: 'Milk', checked: false, category: 'Dairy', units: 'pcs', amount: 1, completed: false, isCompleted: false, priority: 'Medium' as const, notes: '' },
+    { id: '2', name: 'Bread', checked: true, category: 'Bakery', units: 'pcs', amount: 1, completed: true, isCompleted: true, priority: 'Medium' as const, notes: '' },
   ];
   const mockFn = vi.fn();
 
@@ -29,6 +29,7 @@ describe('ShoppingList Component', () => {
         onEditItem={mockFn}
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
+        onAddItem={mockFn}
       />
     );
     expect(screen.getByText('Milk')).toBeInTheDocument();
@@ -45,6 +46,7 @@ describe('ShoppingList Component', () => {
         onEditItem={mockFn}
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
+        onAddItem={mockFn}
       />
     );
     const categories = screen.getAllByRole('heading', { level: 6 });

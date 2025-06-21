@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
+import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 
 interface CategorySectionProps {
   categoryName: Category;
@@ -15,6 +16,7 @@ interface CategorySectionProps {
   onEditItem: (item: ShoppingItem) => void;
   onRemoveCategory: (categoryName: Category) => void;
   defaultCollapsed?: boolean;
+  dragHandleProps?: any;
 }
 
 const CATEGORY_EMOJIS: Record<string, string> = {
@@ -36,24 +38,24 @@ const getCategoryEmoji = (categoryName: string) => {
     return CATEGORY_EMOJIS[categoryName] || '🛒'; // Default emoji
 };
 
-const CategorySection: React.FC<CategorySectionProps> = ({ 
-  categoryName, 
-  items, 
-  onToggleComplete, 
-  onDeleteItem, 
+const CategorySection: React.FC<CategorySectionProps> = ({
+  categoryName,
+  items,
+  onToggleComplete,
+  onDeleteItem,
   onEditItem,
-  onRemoveCategory,
-  defaultCollapsed = false
+  defaultCollapsed = false,
+  dragHandleProps,
 }) => {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
-  
+
   useEffect(() => {
     setIsOpen(!defaultCollapsed);
   }, [defaultCollapsed]);
 
   if (items.length === 0) return null;
 
-  const completedItems = items.filter(item => item.completed).length;
+  const completedItems = items.filter((item) => item.completed).length;
   const totalItems = items.length;
   const categoryTitle = typeof categoryName === 'string' ? categoryName : 'Unknown Category';
   const categoryEmoji = getCategoryEmoji(categoryName);
@@ -67,25 +69,33 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         p: 2,
         mb: 2,
         border: '1px solid',
-        borderColor: 'divider'
+        borderColor: 'divider',
       }}
     >
       <Box
         sx={{ display: 'flex', alignItems: 'center', mb: 1, cursor: 'pointer', userSelect: 'none' }}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <Typography variant="h5" component="span" sx={{ mr: 1.5 }}>{categoryEmoji}</Typography>
+        <span {...dragHandleProps} style={{ cursor: 'grab', display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
+          <DragIndicatorIcon color={'disabled'} />
+        </span>
+        <Typography variant="h5" component="span" sx={{ mr: 1.5 }}>
+          {categoryEmoji}
+        </Typography>
         <Box sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
-              {categoryTitle}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {completedItems} of {totalItems} completed
-            </Typography>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            {categoryTitle}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {completedItems} of {totalItems} completed
+          </Typography>
         </Box>
+        <Typography variant="body2" sx={{ mr: 1, color: 'text.secondary', bgcolor: 'action.hover', px: 1.5, py: 0.5, borderRadius: '12px' }}>
+          {totalItems}
+        </Typography>
         <IconButton
           size="small"
-          onClick={e => {
+          onClick={(e) => {
             e.stopPropagation();
             setIsOpen((prev) => !prev);
           }}
@@ -96,7 +106,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
       </Box>
       {isOpen && (
         <Box sx={{ pt: 1 }}>
-          {items.map(item => (
+          {items.map((item) => (
             <ShoppingListItem
               key={item.id}
               item={item}

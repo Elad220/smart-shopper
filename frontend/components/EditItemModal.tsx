@@ -17,6 +17,7 @@ import {
   Typography,
   IconButton,
   SelectChangeEvent,
+  FormHelperText,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -87,6 +88,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       if (fileInputRef.current) {
         fileInputRef.current.value = ""; // Reset file input
       }
+    } else if (isOpen) {
+        setSelectedCategory(''); // Set to empty for the placeholder
     }
   }, [item, isOpen, categories]);
 
@@ -142,6 +145,10 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       setNameError("Item name cannot be empty.");
       isValid = false;
     }
+    if (!selectedCategory) {
+        setCategoryError("Please select a category.");
+        isValid = false;
+    }
     if (selectedCategory === StandardCategory.OTHER && !customCategoryName.trim()) {
       setCategoryError("Please specify a name for the 'Other' category.");
       isValid = false;
@@ -160,6 +167,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       priority,
       notes,
       imageUrl: imageUrl,
+      completed: item.completed
     });
     onClose();
   };
@@ -228,20 +236,20 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
           )}
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-              <FormControl fullWidth margin="normal">
-                <InputLabel id="edit-category-label">Category</InputLabel>
+            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)' } }}>
+              <FormControl fullWidth margin="normal" error={!!categoryError}>
+                <InputLabel id="edit-category-label" shrink={true}>Category</InputLabel>
                 <Select
                   labelId="edit-category-label"
                   value={selectedCategory}
                   onChange={handleCategoryChange}
                   label="Category"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                      },
-                    },
+                  displayEmpty
+                  renderValue={(value) => {
+                    if (value === "") {
+                      return <em style={{ color: 'grey' }}>Select a category</em>;
+                    }
+                    return value;
                   }}
                 >
                   {sortedCategories.map((cat) => (
@@ -265,8 +273,23 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                     </MenuItem>
                   ))}
                 </Select>
+                {categoryError && <FormHelperText>{categoryError}</FormHelperText>}
               </FormControl>
             </Box>
+            {showCustomCategoryInput && (
+              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+                  <TextField
+                      margin="normal"
+                      required
+                      fullWidth
+                      label="Custom Category"
+                      value={customCategoryName}
+                      onChange={(e) => setCustomCategoryName(e.target.value)}
+                      error={!!categoryError}
+                      helperText={categoryError}
+                  />
+              </Box>
+            )}
              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
                <FormControl fullWidth margin="normal">
                  <InputLabel id="priority-label">Priority</InputLabel>
@@ -284,21 +307,18 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}>
-            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-              <InputLabel shrink htmlFor="edit-amount-input" sx={{mb:0.5, fontSize: '0.9rem'}}>Amount</InputLabel>
-               <TextField
+          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
+              <TextField
                   id="edit-amount-input"
+                  label="Amount"
                   type="number"
                   value={amount}
                   onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                  inputProps={{ min: 1 }} 
-                  size="small"
-                  fullWidth
-                />
-            </Box>
-            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-              <FormControl fullWidth margin="normal" sx={{mt:0}}>
+                  inputProps={{ min: 1 }}
+              />
+            </FormControl>
+            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
                 <InputLabel id="edit-units-label">Unit</InputLabel>
                 <Select
                   labelId="edit-units-label"
@@ -308,7 +328,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                   MenuProps={{
                     PaperProps: {
                       style: {
-                        maxHeight: 300, // Prevent the menu from getting too tall
+                        maxHeight: 300,
                       },
                     },
                   }}
@@ -317,8 +337,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                     <MenuItem key={unit} value={unit}>{unit}</MenuItem>
                   ))}
                 </Select>
-              </FormControl>
-            </Box>
+            </FormControl>
           </Box>
 
           <TextField
