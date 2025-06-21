@@ -24,6 +24,16 @@ const itemSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  priority: {
+    type: String,
+    enum: ['Low', 'Medium', 'High'],
+    default: 'Medium'
+  },
+  notes: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   image: {
     type: String,
     default: null
@@ -53,4 +63,4 @@ itemSchema.pre('save', function(next) {
   next();
 });
 
-module.exports = mongoose.model('Item', itemSchema); 
+module.exports = mongoose.model('Item', itemSchema);

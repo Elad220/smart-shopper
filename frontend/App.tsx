@@ -32,6 +32,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Chip, LinearProgress } from '@mui/material';
 
 interface User {
   id: string;
@@ -58,6 +59,9 @@ const App: React.FC = () => {
   const [mode, setMode] = useState<'light' | 'dark'>(
     () => (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
   );
+  const [isCreateListDialogOpen, setIsCreateListDialogOpen] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [listManagerKey, setListManagerKey] = useState(0);
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
@@ -341,24 +345,37 @@ const App: React.FC = () => {
   }, []);
 
   const handleSaveItem = useCallback(async (updatedItem: ShoppingItem) => {
-    if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
-    const originalList = [...shoppingList];
-    setShoppingList(prevList =>
-      prevList.map(item => (item.id === updatedItem.id ? updatedItem : item))
-    );
+    if (!authToken || !selectedListId) {
+      setError("Authentication and list selection required.");
+      return;
+    }
+  
+    // Close the modal first for a better user experience.
     handleCloseEditModal();
-
+  
     try {
       const { id, ...updatePayload } = updatedItem;
-      const savedItem = await api.updateShoppingItem(authToken, selectedListId, updatedItem.id, updatePayload);
+  
+      // Call the API to save the item.
+      const savedItem = await api.updateShoppingItem(authToken, selectedListId, id, updatePayload);
+  
+      // After a successful save, update the local state with the returned item.
+      // This ensures the UI is in sync with the database, including the new image URL.
+      setShoppingList(prevList =>
+        prevList.map(item => (item.id === savedItem.id ? savedItem : item))
+      );
+  
+      // Also update the categories list if a new custom category was added.
       if (!categories.includes(savedItem.category)) {
         setCategories(prev => [...prev, savedItem.category].sort());
       }
     } catch (err: any) {
+      // If the API call fails, we ideally should revert the optimistic UI changes.
+      // For now, we'll just log the error and show a message.
       setError(err.message || 'Failed to save item.');
-      setShoppingList(originalList);
+      console.error("Failed to save item:", err);
     }
-  }, [authToken, selectedListId, shoppingList, handleCloseEditModal, categories]);
+  }, [authToken, selectedListId, categories, handleCloseEditModal]);
 
   const handleListSelect = (listId: string) => {
     setSelectedListId(listId);
@@ -465,6 +482,33 @@ const App: React.FC = () => {
       localStorage.setItem('sidebarCollapsed', String(!prev));
       return !prev;
     });
+  };
+
+  const handleCreateList = async () => {
+    if (!newListName.trim() || !authToken) {
+      setError('List name cannot be empty');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const newList = await api.createShoppingList(authToken, newListName.trim());
+      setNewListName('');
+      setIsCreateListDialogOpen(false);
+      
+      // Update the selected list ID to the newly created list
+      setSelectedListId(newList._id);
+      localStorage.setItem('selectedListId', newList._id);
+      
+      // Force the list manager to re-fetch and update
+      setListManagerKey(prevKey => prevKey + 1);
+    } catch (error: any) {
+      setError(error.message || 'Failed to create shopping list');
+      console.error('Error creating shopping list:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderAuthForm = () => (
@@ -591,7 +635,12 @@ const App: React.FC = () => {
     );
   }
 
-  const renderShoppingList = () => (
+  const renderShoppingList = () => {
+    const completedItems = shoppingList.filter(item => item.completed).length;
+    const totalItems = shoppingList.length;
+    const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+    
+    return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
       <Drawer
         variant={isMobile ? "temporary" : "permanent"}
@@ -605,6 +654,7 @@ const App: React.FC = () => {
             boxSizing: 'border-box',
             overflowX: 'hidden',
             transition: 'width 0.3s',
+            bgcolor: 'background.paper',
           },
         }}
       >
@@ -615,19 +665,25 @@ const App: React.FC = () => {
         </Toolbar>
         {!isSidebarCollapsed && (
           <ShoppingListManager
+            key={listManagerKey}
             token={authToken!}
             onListSelect={handleListSelect}
             selectedListId={selectedListId}
             onDataChange={fetchDataForSelectedList}
+            onOpenCreateDialog={() => setIsCreateListDialogOpen(true)}
           />
         )}
         {isSidebarCollapsed && (
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2 }}>
-            <AddIcon color="primary" />
+            <Tooltip title="Create New List">
+                <IconButton color="primary" onClick={() => setIsCreateListDialogOpen(true)}>
+                    <AddIcon/>
+                </IconButton>
+            </Tooltip>
           </Box>
         )}
       </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default' }}>
         <Toolbar />
         {error && (
           <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
@@ -640,11 +696,23 @@ const App: React.FC = () => {
           </Box>
         ) : (
           <>
-            {selectedList && (
-              <Typography variant="h4" component="h2" sx={{ mb: 3, color: 'text.primary' }}>
-                {selectedList.name}
-              </Typography>
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
+                  {selectedList?.name || 'Shopping List'}
+                </Typography>
+                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
+                    Add Item
+                </Button>
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1, bgcolor: 'background.paper', borderRadius: 1 }}>
+                <Typography variant="body2">{totalItems} items</Typography>
+                <Typography variant="body2" color="text.secondary">
+                    <span style={{ color: 'green' }}>✓</span> {completedItems} completed
+                </Typography>
+                <LinearProgress variant="determinate" value={completionPercentage} sx={{ flexGrow: 1, height: '10px', borderRadius: '5px' }}/>
+                <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
+            </Box>
+
             <ShoppingList
               items={shoppingList}
               listId={selectedListId || 'default'}
@@ -653,20 +721,13 @@ const App: React.FC = () => {
               onEditItem={handleOpenEditModal}
               onRemoveCategory={handleRemoveCategory}
               onRemoveCheckedItems={handleRemoveCheckedItems}
+              onAddItem={handleOpenAddItemModal}
             />
-            <Fab
-              color="primary"
-              aria-label="add"
-              onClick={handleOpenAddItemModal}
-              sx={{ position: 'fixed', bottom: 16, right: 16 }}
-            >
-              <AddIcon />
-            </Fab>
           </>
         )}
       </Box>
     </Box>
-  );
+  )};
 
   return (
     <ThemeProvider theme={theme}>
@@ -830,6 +891,34 @@ const App: React.FC = () => {
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
         {!authToken ? renderAuthForm() : renderShoppingList()}
       </Container>
+       {/* Create List Dialog */}
+      <Dialog open={isCreateListDialogOpen} onClose={() => !isLoading && setIsCreateListDialogOpen(false)}>
+        <DialogTitle>Create New Shopping List</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="List Name"
+            fullWidth
+            value={newListName}
+            onChange={(e) => setNewListName(e.target.value)}
+            disabled={isLoading}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsCreateListDialogOpen(false)} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleCreateList} 
+            variant="contained" 
+            color="primary"
+            disabled={isLoading || !newListName.trim()}
+          >
+            {isLoading ? 'Creating...' : 'Create'}
+          </Button>
+        </DialogActions>
+      </Dialog>
       {isAddItemModalOpen && (
         <AddItemForm
           isOpen={isAddItemModalOpen}

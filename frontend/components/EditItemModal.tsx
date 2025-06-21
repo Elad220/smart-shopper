@@ -18,8 +18,6 @@ import {
   IconButton,
   SelectChangeEvent,
 } from '@mui/material';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -42,6 +40,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
   const [categoryError, setCategoryError] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
+  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
+  const [notes, setNotes] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -67,6 +67,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       setNameError('');
       setUnits(item.units || UNIT_OPTIONS[0]);
       setAmount(item.amount);
+      setPriority(item.priority || 'Medium');
+      setNotes(item.notes || '');
       setImageUrl(item.imageUrl || undefined);
 
       const isStandard = Object.values(StandardCategory).some(v => v === item.category);
@@ -155,6 +157,8 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
       category: finalCategory,
       units: units,
       amount,
+      priority,
+      notes,
       imageUrl: imageUrl,
     });
     onClose();
@@ -184,9 +188,47 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
             error={!!nameError}
             helperText={nameError}
           />
+           <Box sx={{ my: 2 }}>
+            <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Item Image (Optional)</InputLabel>
+            <Button
+                variant="outlined"
+                component="label" 
+                startIcon={<PhotoCamera />}
+                fullWidth
+            >
+                Click to upload image
+                <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleImageChange}
+                ref={fileInputRef}
+                />
+            </Button>
+            <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 0.5}}>
+                Max 2MB, JPG/PNG
+            </Typography>
+          </Box>
+          {imageUrl && (
+            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain', margin: '0 auto' }}
+              />
+               <IconButton 
+                aria-label="remove image" 
+                onClick={handleRemoveImage}
+                size="small"
+                sx={{position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.7)'}}
+              >
+                <ClearIcon fontSize="small"/>
+              </IconButton>
+            </Box>
+          )}
 
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : '100%' } }}>
+            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <FormControl fullWidth margin="normal">
                 <InputLabel id="edit-category-label">Category</InputLabel>
                 <Select
@@ -194,6 +236,13 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                   value={selectedCategory}
                   onChange={handleCategoryChange}
                   label="Category"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      },
+                    },
+                  }}
                 >
                   {sortedCategories.map((cat) => (
                     <MenuItem key={cat} value={cat}>
@@ -218,51 +267,51 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
                 </Select>
               </FormControl>
             </Box>
-            {showCustomCategoryInput && (
-              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  label="Custom Category"
-                  value={customCategoryName}
-                  onChange={(e) => setCustomCategoryName(e.target.value)}
-                  error={!!categoryError}
-                  helperText={categoryError}
-                />
-              </Box>
-            )}
+             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+               <FormControl fullWidth margin="normal">
+                 <InputLabel id="priority-label">Priority</InputLabel>
+                 <Select
+                  labelId="priority-label"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
+                  label="Priority"
+                >
+                  <MenuItem value="Low">Low</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                </Select>
+               </FormControl>
+            </Box>
           </Box>
           
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}>
             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <InputLabel shrink htmlFor="edit-amount-input" sx={{mb:0.5, fontSize: '0.9rem'}}>Amount</InputLabel>
-              <Box display="flex" alignItems="center">
-                <IconButton onClick={() => handleAmountChange(amount - 1)} disabled={amount <= 1} aria-label="Decrease amount" size="small">
-                  <RemoveCircleOutlineIcon />
-                </IconButton>
-                <TextField
+               <TextField
                   id="edit-amount-input"
                   type="number"
                   value={amount}
                   onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                  inputProps={{ min: 1, style: { textAlign: 'center', width: '40px', MozAppearance: 'textfield' } }}
-                  sx={{ mx: 0.5, '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 } }}
+                  inputProps={{ min: 1 }} 
                   size="small"
+                  fullWidth
                 />
-                <IconButton onClick={() => handleAmountChange(amount + 1)} aria-label="Increase amount" size="small">
-                  <AddCircleOutlineIcon />
-                </IconButton>
-              </Box>
             </Box>
             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <FormControl fullWidth margin="normal" sx={{mt:0}}>
-                <InputLabel id="edit-units-label">Units</InputLabel>
+                <InputLabel id="edit-units-label">Unit</InputLabel>
                 <Select
                   labelId="edit-units-label"
                   value={units}
                   onChange={(e) => setUnits(e.target.value)}
-                  label="Units"
+                  label="Unit"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300, // Prevent the menu from getting too tall
+                      },
+                    },
+                  }}
                 >
                   {UNIT_OPTIONS.map(unit => (
                     <MenuItem key={unit} value={unit}>{unit}</MenuItem>
@@ -271,46 +320,19 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
               </FormControl>
             </Box>
           </Box>
-          
-          <Box sx={{ my: 2 }}>
-            <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Image (Optional)</InputLabel>
-            <Button
-                variant="outlined"
-                component="label"
-                startIcon={<PhotoCamera />}
-                fullWidth
-            >
-                Change Image
-                <input
-                    type="file"
-                    hidden
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    ref={fileInputRef}
-                />
-            </Button>
-            <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 0.5}}>
-                Max file size: 2MB.
-            </Typography>
-          </Box>
 
-          {imageUrl && (
-            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
-              <img 
-                src={imageUrl} 
-                alt="Preview" 
-                style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain', margin: '0 auto' }}
-              />
-               <IconButton 
-                aria-label="remove image" 
-                onClick={handleRemoveImage}
-                size="small"
-                sx={{position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.7)'}}
-              >
-                <ClearIcon fontSize="small"/>
-              </IconButton>
-            </Box>
-          )}
+          <TextField
+            margin="normal"
+            fullWidth
+            id="notes"
+            label="Notes (Optional)"
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            multiline
+            rows={3}
+            placeholder="Any additional notes..."
+          />
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: '16px 24px' }}>

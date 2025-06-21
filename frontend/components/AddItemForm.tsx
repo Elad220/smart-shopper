@@ -13,8 +13,6 @@ import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import IconButton from '@mui/material/IconButton';
-import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
-import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import Box from '@mui/material/Box';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -38,6 +36,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
   const [categoryError, setCategoryError] = useState('');
   const [units, setUnits] = useState(UNIT_OPTIONS[0]);
   const [amount, setAmount] = useState<number>(1);
+  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
+  const [notes, setNotes] = useState('');
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined); // Will store base64 data URL
   const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -65,6 +65,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         setCategoryError('');
         setUnits(UNIT_OPTIONS[0]);
         setAmount(1);
+        setPriority('Medium');
+        setNotes('');
         setImageUrl(undefined);
         setShowCustomCategoryInput(false);
         if (fileInputRef.current) {
@@ -136,6 +138,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       category: finalCategory,
       units: units,
       amount,
+      priority,
+      notes,
       image: imageUrl,
     });
     onClose(); 
@@ -165,12 +169,51 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g., Whole Milk"
+            placeholder="e.g., Milk, Bread, Apples"
             error={!!nameError}
             helperText={nameError}
           />
+           <Box sx={{ my: 2 }}>
+            <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Item Image (Optional)</InputLabel>
+            <Button
+                variant="outlined"
+                component="label" 
+                startIcon={<PhotoCamera />}
+                fullWidth
+            >
+                Click to upload image
+                <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleImageChange}
+                ref={fileInputRef}
+                />
+            </Button>
+            <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 0.5}}>
+                Max 2MB, JPG/PNG
+            </Typography>
+          </Box>
+          {imageUrl && (
+            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
+              <img 
+                src={imageUrl} 
+                alt="Preview" 
+                style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain', margin: '0 auto' }}
+              />
+              <IconButton 
+                aria-label="remove image" 
+                onClick={handleRemoveImage}
+                size="small"
+                sx={{position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.7)'}}
+              >
+                <ClearIcon fontSize="small"/>
+              </IconButton>
+            </Box>
+          )}
+
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : '100%' } }}>
+            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <FormControl fullWidth margin="normal">
                 <InputLabel id="category-label">Category</InputLabel>
                 <Select
@@ -209,51 +252,44 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                 </Select>
               </FormControl>
             </Box>
-            {showCustomCategoryInput && (
-              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                <TextField
-                  margin="normal"
-                  required
-                  fullWidth
-                  label="Custom Category"
-                  value={customCategoryName}
-                  onChange={(e) => setCustomCategoryName(e.target.value)}
-                  error={!!categoryError}
-                  helperText={categoryError}
-                />
-              </Box>
-            )}
+             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+               <FormControl fullWidth margin="normal">
+                 <InputLabel id="priority-label">Priority</InputLabel>
+                 <Select
+                  labelId="priority-label"
+                  value={priority}
+                  onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
+                  label="Priority"
+                >
+                  <MenuItem value="Low">Low</MenuItem>
+                  <MenuItem value="Medium">Medium</MenuItem>
+                  <MenuItem value="High">High</MenuItem>
+                </Select>
+               </FormControl>
+            </Box>
           </Box>
-
+          
           <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2, alignItems: 'center' }}>
             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <InputLabel shrink htmlFor="amount-input" sx={{mb:0.5, fontSize: '0.9rem'}}>Amount</InputLabel>
-              <Box display="flex" alignItems="center">
-                <IconButton onClick={() => handleAmountChange(amount - 1)} disabled={amount <= 1} aria-label="Decrease amount" size="small">
-                  <RemoveCircleOutlineIcon />
-                </IconButton>
-                <TextField
+              <TextField
                   id="amount-input"
                   type="number"
                   value={amount}
                   onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                  inputProps={{ min: 1, style: { textAlign: 'center', width: '40px',MozAppearance: 'textfield' } }} 
-                  sx={{ mx: 0.5, '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 } }} 
+                  inputProps={{ min: 1 }} 
                   size="small"
+                  fullWidth
                 />
-                <IconButton onClick={() => handleAmountChange(amount + 1)} aria-label="Increase amount" size="small">
-                  <AddCircleOutlineIcon />
-                </IconButton>
-              </Box>
             </Box>
             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
               <FormControl fullWidth margin="normal" sx={{mt:0}}>
-                <InputLabel id="units-label">Units</InputLabel>
+                <InputLabel id="units-label">Unit</InputLabel>
                 <Select
                   labelId="units-label"
                   value={units}
                   onChange={(e) => setUnits(e.target.value)}
-                  label="Units"
+                  label="Unit"
                   MenuProps={{
                     PaperProps: {
                       style: {
@@ -271,46 +307,19 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
               </FormControl>
             </Box>
           </Box>
-          
-          <Box sx={{ my: 2 }}>
-            <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Image (Optional)</InputLabel>
-            <Button
-                variant="outlined"
-                component="label" // Makes the button act as a label for the hidden input
-                startIcon={<PhotoCamera />}
-                fullWidth
-            >
-                Upload Image
-                <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleImageChange}
-                ref={fileInputRef}
-                />
-            </Button>
-            <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 0.5}}>
-                Max file size: 2MB.
-            </Typography>
-          </Box>
 
-          {imageUrl && (
-            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
-              <img 
-                src={imageUrl} 
-                alt="Preview" 
-                style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain', margin: '0 auto' }}
-              />
-              <IconButton 
-                aria-label="remove image" 
-                onClick={handleRemoveImage}
-                size="small"
-                sx={{position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.7)'}}
-              >
-                <ClearIcon fontSize="small"/>
-              </IconButton>
-            </Box>
-          )}
+          <TextField
+            margin="normal"
+            fullWidth
+            id="notes"
+            label="Notes (Optional)"
+            name="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            multiline
+            rows={3}
+            placeholder="Any additional notes..."
+          />
         </Box>
       </DialogContent>
       <DialogActions sx={{ p: '16px 24px' }}>

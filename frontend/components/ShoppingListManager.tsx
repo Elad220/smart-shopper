@@ -39,6 +39,7 @@ interface ShoppingListManagerProps {
   onListSelect: (listId: string) => void;
   selectedListId: string | null;
   onDataChange: () => void;
+  onOpenCreateDialog: () => void;
 }
 
 const SORT_MODES = [
@@ -52,13 +53,13 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   onListSelect,
   selectedListId,
   onDataChange,
+  onOpenCreateDialog,
 }) => {
   const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
   const [customOrder, setCustomOrder] = useState<string[]>(JSON.parse(localStorage.getItem('shoppingListCustomOrder') || '[]'));
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [editingList, setEditingList] = useState<ShoppingList | null>(null);
@@ -110,28 +111,6 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     } catch (error: any) {
       setError(error.message || 'Failed to load shopping lists');
       console.error('Error loading shopping lists:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleCreateList = async () => {
-    if (!newListName.trim()) {
-      setError('List name cannot be empty');
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    try {
-      const newList = await createShoppingList(token, newListName.trim());
-      setNewListName('');
-      setIsCreateDialogOpen(false);
-      await loadLists();
-      onListSelect(newList._id); // Select the newly created list
-    } catch (error: any) {
-      setError(error.message || 'Failed to create shopping list');
-      console.error('Error creating shopping list:', error);
     } finally {
       setIsLoading(false);
     }
@@ -284,7 +263,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         <Tooltip title="Create New List">
             <IconButton
               color="primary"
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={onOpenCreateDialog}
               size="medium"
               disabled={isLoading}
               sx={{ ml: 1 }}
@@ -472,37 +451,6 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           ))
         )}
       </Box>
-
-      {/* Create List Dialog */}
-      <Dialog open={isCreateDialogOpen} onClose={() => !isLoading && setIsCreateDialogOpen(false)}>
-        <DialogTitle>Create New Shopping List</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="List Name"
-            fullWidth
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            disabled={isLoading}
-            error={!!error}
-            helperText={error}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsCreateDialogOpen(false)} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCreateList} 
-            variant="contained" 
-            color="primary"
-            disabled={isLoading || !newListName.trim()}
-          >
-            {isLoading ? 'Creating...' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Edit List Dialog */}
       <Dialog open={isEditDialogOpen} onClose={() => !isLoading && setIsEditDialogOpen(false)}>

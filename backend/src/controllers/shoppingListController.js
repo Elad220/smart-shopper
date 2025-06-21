@@ -374,6 +374,8 @@ exports.importList = async (req, res) => {
       amount: item.amount,
       completed: item.completed || false,
       image: item.imageUrl || item.image,
+      priority: item.priority || 'Medium',
+      notes: item.notes || '',
       userId: userId,
       _id: new mongoose.Types.ObjectId(), // Ensure new ID
     }));

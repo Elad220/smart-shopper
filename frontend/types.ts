@@ -21,6 +21,8 @@ export interface ShoppingItem {
   category: Category;
   units: string;
   amount: number;
+  priority: 'Low' | 'Medium' | 'High';
+  notes: string;
   imageUrl?: string; // For backward compatibility
   image?: string;    // New property for image URL
   completed: boolean;
