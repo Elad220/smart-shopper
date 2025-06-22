@@ -8,31 +8,24 @@ import * as api from './src/services/api'; // Import API service
 import { BASE_URL, fetchUserCategories } from './src/services/api';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
+import AuthHeader from './components/AuthHeader';
 
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import Container from '@mui/material/Container';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
-import MenuIcon from '@mui/icons-material/Menu';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Alert from '@mui/material/Alert';
-import AppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
-import Tooltip from '@mui/material/Tooltip';
-import LogoutIcon from '@mui/icons-material/Logout';
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CssBaseline from '@mui/material/CssBaseline';
 import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import Brightness4Icon from '@mui/icons-material/Brightness4';
-import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from '@mui/material';
 
 interface User {
@@ -55,7 +48,6 @@ const App: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isAddItemModalOpen, setIsAddItemModalOpen] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showUserEmail, setShowUserEmail] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [mode, setMode] = useState<'light' | 'dark'>(
     () => (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
@@ -75,37 +67,31 @@ const App: React.FC = () => {
           mode,
           ...(mode === 'light'
             ? {
-                // Light mode palette
+                // Light mode palette from Auth pages
                 primary: {
-                  main: '#90CAF9',
-                  light: '#BBDEFB',
-                  dark: '#64B5F6',
-                },
-                secondary: {
-                  main: '#A5D6A7',
-                  light: '#C8E6C9',
-                  dark: '#81C784',
+                  main: '#0c7ff2',
                 },
                 background: {
-                  default: '#fafafa',
+                  default: '#f8fafc',
                   paper: '#ffffff',
                 },
+                text: {
+                    primary: '#0d141c',
+                    secondary: '#49739c'
+                }
               }
             : {
-                // Dark mode palette
+                // Dark mode palette from Auth pages
                 primary: {
-                  main: '#90CAF9',
-                },
-                secondary: {
-                  main: '#81C784',
+                  main: '#dce8f3',
                 },
                 background: {
-                  default: '#121212',
-                  paper: '#1e1e1e',
+                  default: '#141a1f',
+                  paper: '#1f272e',
                 },
                 text: {
                   primary: '#ffffff',
-                  secondary: 'rgba(255, 255, 255, 0.7)',
+                  secondary: '#9daebe',
                 },
               }),
         },
@@ -519,324 +505,197 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  if (!authToken || !currentUser) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        {isRegistering ? (
-          <RegisterPage
-            onRegister={handleRegister}
-            onSwitchToLogin={() => {
-                setIsRegistering(false);
-                setError(null); // Clear error when switching
-            }}
-            setUsername={setUsername}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            setConfirmPassword={setConfirmPassword}
-            isLoading={isLoading}
-            username={username}
-            email={email}
-            password={password}
-            confirmPassword={confirmPassword}
-            error={error}
-          />
-        ) : (
-          <LoginPage
-            onLogin={handleLogin}
-            onSwitchToRegister={() => {
-                setIsRegistering(true);
-                setError(null); // Clear error when switching
-            }}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            isLoading={isLoading}
-            email={email}
-            password={password}
-            error={error}
-            successMessage={successMessage}
-          />
-        )}
-      </ThemeProvider>
-    );
-  }
-
-  const renderShoppingList = () => {
+  
+    if (!authToken || !currentUser) {
+        return (
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <AuthHeader
+                mode={mode}
+                setMode={setMode}
+                isLoggedIn={false}
+            />
+            {isRegistering ? (
+              <RegisterPage
+                onRegister={handleRegister}
+                onSwitchToLogin={() => {
+                    setIsRegistering(false);
+                    setError(null);
+                }}
+                setUsername={setUsername}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                setConfirmPassword={setConfirmPassword}
+                isLoading={isLoading}
+                username={username}
+                email={email}
+                password={password}
+                confirmPassword={confirmPassword}
+                error={error}
+              />
+            ) : (
+              <LoginPage
+                onLogin={handleLogin}
+                onSwitchToRegister={() => {
+                    setIsRegistering(true);
+                    setError(null);
+                }}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                isLoading={isLoading}
+                email={email}
+                password={password}
+                error={error}
+                successMessage={successMessage}
+              />
+            )}
+          </ThemeProvider>
+        );
+    }
+    
     const completedItems = shoppingList.filter(item => item.completed).length;
     const totalItems = shoppingList.length;
     const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-    
+  
     return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? isDrawerOpen : !isSidebarCollapsed}
-        onClose={() => setIsDrawerOpen(false)}
-        sx={{
-          width: isSidebarCollapsed ? 56 : 280,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: isSidebarCollapsed ? 56 : 280,
-            boxSizing: 'border-box',
-            overflowX: 'hidden',
-            transition: 'width 0.3s',
-            bgcolor: 'background.paper',
-          },
-        }}
-      >
-        <Toolbar sx={{ minHeight: 48, px: 1, justifyContent: isSidebarCollapsed ? 'center' : 'flex-end' }}>
-          <IconButton onClick={handleToggleSidebar} size="small">
-            {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-          </IconButton>
-        </Toolbar>
-        {!isSidebarCollapsed && (
-          <ShoppingListManager
-            key={listManagerKey}
-            token={authToken!}
-            onListSelect={handleListSelect}
-            selectedListId={selectedListId}
-            onDataChange={fetchDataForSelectedList}
-            onOpenCreateDialog={() => setIsCreateListDialogOpen(true)}
-          />
-        )}
-        {isSidebarCollapsed && (
-          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2 }}>
-            <Tooltip title="Create New List">
-                <IconButton color="primary" onClick={() => setIsCreateListDialogOpen(true)}>
-                    <AddIcon/>
-                </IconButton>
-            </Tooltip>
-          </Box>
-        )}
-      </Drawer>
-      <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.paper' }}>
-        <Toolbar />
-        {error && (
-          <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <>
-            <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
-                  {selectedList?.name || 'Shopping List'}
-                </Typography>
-                <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
-                    Add Item
-                </Button>
-            </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                <Typography variant="body2">{totalItems} items</Typography>
-                <Typography variant="body2" color="text.secondary">
-                    <span style={{ color: 'green' }}>✓</span> {completedItems} completed
-                </Typography>
-                <LinearProgress variant="determinate" value={completionPercentage} sx={{ flexGrow: 1, height: '10px', borderRadius: '5px' }}/>
-                <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
-            </Box>
-
-            <ShoppingList
-              items={shoppingList}
-              listId={selectedListId || 'default'}
-              onToggleComplete={handleToggleComplete}
-              onDeleteItem={handleDeleteItem}
-              onEditItem={handleOpenEditModal}
-              onRemoveCategory={handleRemoveCategory}
-              onRemoveCheckedItems={handleRemoveCheckedItems}
-              onAddItem={handleOpenAddItemModal}
-            />
-          </>
-        )}
-      </Box>
-    </Box>
-  )};
-
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AppBar position="fixed" elevation={1}>
-        <Toolbar sx={{ 
-          minHeight: 56, // Standard mobile toolbar height
-          px: { xs: 1, sm: 2 }, // Horizontal padding
-          justifyContent: 'space-between', // Space between elements
-          alignItems: 'center', // Center items vertically
-          '&.MuiToolbar-root': {
-            minHeight: 56,
-          }
-        }}>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center',
-            width: { xs: 40, sm: 'auto' }, // Fixed width for mobile to prevent layout shift
-            justifyContent: 'flex-start'
-          }}>
-            {isMobile && (
-              <IconButton
-                color="inherit"
-                edge="start"
-                onClick={() => setIsDrawerOpen(true)}
-                sx={{ 
-                  ml: 0,
-                  mr: 1,
-                  p: 1
-                }}
-              >
-                <MenuIcon />
-              </IconButton>
-            )}
-          </Box>
-          
-          <Typography 
-            variant="h6" 
-            component="h1" 
-            sx={{ 
-              flexGrow: 1,
-              textAlign: 'center',
-              fontSize: { xs: '1.1rem', sm: '1.25rem' },
-              fontWeight: 500,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              px: 1
-            }}
-          >
-            Ticklist
-          </Typography>
-          
-          <Box sx={{ 
-            width: 'auto',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: 1,
-            alignItems: 'center'
-          }}>
-            {authToken && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
-                  {theme.palette.mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
-                </IconButton>
-                <Tooltip 
-                  title={currentUser?.email || 'User'}
-                  placement="bottom-end"
-                  arrow
-                >
-                  <Box 
-                    onClick={() => setShowUserEmail(prev => !prev)}
-                    sx={{ 
-                      display: 'flex',
-                      alignItems: 'center',
-                      color: 'white',
-                      cursor: 'pointer',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                        borderRadius: 1
-                      },
-                      px: { xs: 0.5, sm: 1 },
-                      py: 0.5,
-                      position: 'relative'
-                    }}
-                  >
-                    <AccountCircleIcon sx={{ 
-                      mr: { xs: 0, sm: 1 },
-                      fontSize: { xs: '1.25rem', sm: '1.5rem' }
-                    }} />
-                    <Typography 
-                      variant="body2" 
-                      noWrap
-                      sx={{
-                        display: { 
-                          xs: showUserEmail ? 'block' : 'none', 
-                          sm: 'block' 
-                        },
-                        position: { xs: 'absolute', sm: 'static' },
-                        right: { xs: '100%', sm: 'auto' },
-                        mr: { xs: 1, sm: 0 },
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                        px: 1,
-                        borderRadius: 1,
-                        maxWidth: { xs: '150px', sm: 'none' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis'
-                      }}
-                    >
-                      {currentUser?.email?.split('@')[0] || 'User'}
-                    </Typography>
-                  </Box>
-                </Tooltip>
-                <IconButton 
-                  color="inherit" 
-                  onClick={handleLogout}
-                  size="small"
+        <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Box sx={{ display: 'flex' }}>
+                <AuthHeader
+                  mode={mode}
+                  setMode={setMode}
+                  isLoggedIn={true}
+                  currentUser={currentUser}
+                  handleLogout={handleLogout}
+                  isMobile={isMobile}
+                  onDrawerOpen={() => setIsDrawerOpen(true)}
+                />
+                <Drawer
+                  variant={isMobile ? "temporary" : "permanent"}
+                  open={isMobile ? isDrawerOpen : !isSidebarCollapsed}
+                  onClose={() => setIsDrawerOpen(false)}
                   sx={{
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    }
+                    width: isSidebarCollapsed ? 56 : 280,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                      width: isSidebarCollapsed ? 56 : 280,
+                      boxSizing: 'border-box',
+                      overflowX: 'hidden',
+                      transition: 'width 0.3s',
+                    },
                   }}
                 >
-                  <LogoutIcon fontSize="small" />
-                </IconButton>
-              </Box>
+                  <Toolbar />
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'flex-end', p: 1 }}>
+                    <IconButton onClick={handleToggleSidebar} size="small">
+                      {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+                    </IconButton>
+                  </Box>
+                  {!isSidebarCollapsed && (
+                    <ShoppingListManager
+                      key={listManagerKey}
+                      token={authToken!}
+                      onListSelect={handleListSelect}
+                      selectedListId={selectedListId}
+                      onDataChange={fetchDataForSelectedList}
+                      onOpenCreateDialog={() => setIsCreateListDialogOpen(true)}
+                    />
+                  )}
+                </Drawer>
+                <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default' }}>
+                  <Toolbar />
+                  {error && (
+                    <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+                      {error}
+                    </Alert>
+                  )}
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                      <CircularProgress />
+                    </Box>
+                  ) : (
+                    <>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                          <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
+                            {selectedList?.name || 'Shopping List'}
+                          </Typography>
+                          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
+                              Add Item
+                          </Button>
+                      </Box>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                          <Typography variant="body2">{totalItems} items</Typography>
+                          <Typography variant="body2" color="text.secondary">
+                              <span style={{ color: 'green' }}>✓</span> {completedItems} completed
+                          </Typography>
+                          <LinearProgress variant="determinate" value={completionPercentage} sx={{ flexGrow: 1, height: '10px', borderRadius: '5px' }}/>
+                          <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
+                      </Box>
+        
+                      <ShoppingList
+                        items={shoppingList}
+                        listId={selectedListId || 'default'}
+                        onToggleComplete={handleToggleComplete}
+                        onDeleteItem={handleDeleteItem}
+                        onEditItem={handleOpenEditModal}
+                        onRemoveCategory={handleRemoveCategory}
+                        onRemoveCheckedItems={handleRemoveCheckedItems}
+                        onAddItem={handleOpenAddItemModal}
+                      />
+                    </>
+                  )}
+                </Box>
+            </Box>
+        
+             {/* Dialogs */}
+            <Dialog open={isCreateListDialogOpen} onClose={() => !isLoading && setIsCreateListDialogOpen(false)}>
+              <DialogTitle>Create New Shopping List</DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="List Name"
+                  fullWidth
+                  value={newListName}
+                  onChange={(e) => setNewListName(e.target.value)}
+                  disabled={isLoading}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setIsCreateListDialogOpen(false)} disabled={isLoading}>
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateList} 
+                  variant="contained" 
+                  color="primary"
+                  disabled={isLoading || !newListName.trim()}
+                >
+                  {isLoading ? 'Creating...' : 'Create'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+            {isAddItemModalOpen && (
+              <AddItemForm
+                isOpen={isAddItemModalOpen}
+                onClose={handleCloseAddItemModal}
+                onAddItem={handleAddItemAndCloseModal}
+                categories={categories}
+                onDeleteCategory={handleDeleteCategory}
+              />
             )}
-          </Box>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        {!authToken ? renderAuthForm() : renderShoppingList()}
-      </Container>
-       {/* Create List Dialog */}
-      <Dialog open={isCreateListDialogOpen} onClose={() => !isLoading && setIsCreateListDialogOpen(false)}>
-        <DialogTitle>Create New Shopping List</DialogTitle>
-        <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="List Name"
-            fullWidth
-            value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
-            disabled={isLoading}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setIsCreateListDialogOpen(false)} disabled={isLoading}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleCreateList} 
-            variant="contained" 
-            color="primary"
-            disabled={isLoading || !newListName.trim()}
-          >
-            {isLoading ? 'Creating...' : 'Create'}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      {isAddItemModalOpen && (
-        <AddItemForm
-          isOpen={isAddItemModalOpen}
-          onClose={handleCloseAddItemModal}
-          onAddItem={handleAddItemAndCloseModal}
-          categories={categories}
-          onDeleteCategory={handleDeleteCategory}
-        />
-      )}
-      {isEditModalOpen && itemToEdit && (
-        <EditItemModal
-          isOpen={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          onSave={handleSaveItem}
-          item={itemToEdit}
-          categories={categories}
-          onDeleteCategory={handleDeleteCategory}
-        />
-      )}
-    </ThemeProvider>
-  );
+            {isEditModalOpen && itemToEdit && (
+              <EditItemModal
+                isOpen={isEditModalOpen}
+                onClose={handleCloseEditModal}
+                onSave={handleSaveItem}
+                item={itemToEdit}
+                categories={categories}
+                onDeleteCategory={handleDeleteCategory}
+              />
+            )}
+        </ThemeProvider>
+    );
 };
 
 export default App;
