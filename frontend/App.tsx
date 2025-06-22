@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
 import EditItemModal from './components/EditItemModal';
@@ -26,7 +26,7 @@ import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, LinearProgress, Zoom } from '@mui/material';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
@@ -58,6 +58,26 @@ const App: React.FC = () => {
   const [newListName, setNewListName] = useState('');
   const [listManagerKey, setListManagerKey] = useState(0);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
+  const [showFab, setShowFab] = useState(false);
+  const addItemButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (addItemButtonRef.current) {
+        const { bottom } = addItemButtonRef.current.getBoundingClientRect();
+        if (bottom < 0) {
+          setShowFab(true);
+        } else {
+          setShowFab(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
@@ -633,9 +653,9 @@ const App: React.FC = () => {
                               startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
                               sx={{ mr: 2 }}
                             >
-                              {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+                              {areAllCollapsed ? 'Expand' : 'Collapse'}
                           </Button>
-                          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
+                          <Button ref={addItemButtonRef} variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
                               Add Item
                           </Button>
                       </Box>
@@ -711,6 +731,21 @@ const App: React.FC = () => {
                 onDeleteCategory={handleDeleteCategory}
               />
             )}
+
+            <Zoom in={showFab}>
+              <Fab
+                color="primary"
+                aria-label="add"
+                sx={{
+                  position: 'fixed',
+                  bottom: 16,
+                  right: 16,
+                }}
+                onClick={handleOpenAddItemModal}
+              >
+                <AddIcon />
+              </Fab>
+            </Zoom>
         </ThemeProvider>
     );
 };
