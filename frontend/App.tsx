@@ -6,6 +6,9 @@ import { ShoppingListManager } from './components/ShoppingListManager';
 import { ShoppingItem, Category, StandardCategory } from './types';
 import * as api from './src/services/api'; // Import API service
 import { BASE_URL, fetchUserCategories } from './src/services/api';
+import LoginPage from './components/LoginPage';
+import RegisterPage from './components/RegisterPage';
+
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Container from '@mui/material/Container';
@@ -123,10 +126,12 @@ const App: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Auth form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
 
@@ -205,6 +210,7 @@ const App: React.FC = () => {
     e?.preventDefault();
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       let loginPayload: any;
       if (isEmail(email)) {
@@ -212,36 +218,33 @@ const App: React.FC = () => {
       } else {
         loginPayload = { username: email, password };
       }
-      console.log('Login payload:', loginPayload);
+
       const data = await api.loginUserFlexible(loginPayload);
-      console.log('Login response:', data);
-      
       const userData = { 
         id: data.userId, 
         email: data.email || data.user?.email || email 
       };
       
-      console.log('Setting user data:', userData);
+      // Set auth token first to ensure subsequent API calls are authenticated
       setAuthToken(data.token);
       setCurrentUser(userData);
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      // After login, fetch lists and set the first one as active
+      const lists = await api.fetchShoppingLists(data.token);
+      if (lists.length > 0) {
+        setSelectedListId(lists[0]._id);
+        localStorage.setItem('selectedListId', lists[0]._id);
+      } else {
+        // Handle case with no lists
+        setSelectedListId(null);
+        localStorage.removeItem('selectedListId');
+      }
+
       setEmail('');
       setPassword('');
       
-      // Verify the data was set
-      console.log('Current user after set:', JSON.parse(localStorage.getItem('currentUser') || '{}'));
-      
-      // Initialize list selection after login
-      try {
-        const lists = await api.fetchShoppingLists(data.token);
-        if (lists.length > 0) {
-          setSelectedListId(lists[0]._id);
-          localStorage.setItem('selectedListId', lists[0]._id);
-        }
-      } catch (listError: any) {
-        console.error('Error fetching initial lists:', listError);
-      }
     } catch (err: any) {
       setError(err.message || 'Login failed.');
     } finally {
@@ -251,12 +254,20 @@ const App: React.FC = () => {
 
   const handleRegister = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    if(password !== confirmPassword){
+        setError("Passwords do not match.");
+        return;
+    }
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
     try {
       await api.registerUser(username, email, password);
-      setError('Registration successful! Please log in.');
-      setIsRegistering(false);
+      setSuccessMessage('Registration successful! Please log in.');
+      setIsRegistering(false); // This will switch to the login view
+      // Clear fields for login
+      setUsername('');
+      setConfirmPassword('');
     } catch (err: any) {
       setError(err.message || 'Registration failed.');
     } finally {
@@ -509,126 +520,44 @@ const App: React.FC = () => {
     }
   };
 
-  const renderAuthForm = () => (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 4 }}>
-        <Box
-            component="img"
-            sx={{
-                width: '80%',
-                maxWidth: 250,
-                height: 'auto',
-                display: 'block',
-                mx: 'auto',
-                mb: 4,
-            }}
-            alt="Ticklist Logo"
-            src="/Logo - Ticklist.png"
-        />
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        {isRegistering ? 'Create Account' : 'Welcome Back'}
-      </Typography>
-      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-      <form onSubmit={isRegistering ? handleRegister : handleLogin}>
-        {isRegistering && (
-          <>
-            <TextField
-              fullWidth
-              label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              margin="normal"
-              required
-            />
-            <TextField
-              fullWidth
-              label="Email"
-              placeholder="Enter your email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              margin="normal"
-              required
-            />
-          </>
-        )}
-        {!isRegistering && (
-          <TextField
-            fullWidth
-            label="Username or Email"
-            placeholder="Enter your username or email"
-            type="text"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            margin="normal"
-            required
-          />
-        )}
-        <TextField
-          fullWidth
-          label="Password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          margin="normal"
-          required
-        />
-        <Button
-          fullWidth
-          variant="contained"
-          color="primary"
-          type="submit"
-          disabled={isLoading}
-          sx={{ mt: 2 }}
-        >
-          {isLoading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : isRegistering ? (
-            'Register'
-          ) : (
-            'Login'
-          )}
-        </Button>
-        <Button
-          fullWidth
-          color="primary"
-          onClick={() => setIsRegistering(!isRegistering)}
-          sx={{ mt: 1 }}
-        >
-          {isRegistering ? 'Already have an account? Login' : 'Need an account? Register'}
-        </Button>
-      </form>
-    </Box>
-  );
-
   if (!authToken || !currentUser) {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box sx={{ 
-          flex: 1,
-          width: '100%',
-          minHeight: '100vh',
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          bgcolor: 'background.default',
-          p: { xs: 2, sm: 4 }
-        }}>
-          <Box sx={{ 
-            width: '100%', 
-            maxWidth: 400,
-            bgcolor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-            p: { xs: 3, sm: 4 },
-            position: 'relative',
-            overflow: 'hidden',
-            border: '1px solid',
-            borderColor: 'divider'
-          }}>
-            {renderAuthForm()}
-          </Box>
-        </Box>
+        {isRegistering ? (
+          <RegisterPage
+            onRegister={handleRegister}
+            onSwitchToLogin={() => {
+                setIsRegistering(false);
+                setError(null); // Clear error when switching
+            }}
+            setUsername={setUsername}
+            setEmail={setEmail}
+            setPassword={setPassword}
+            setConfirmPassword={setConfirmPassword}
+            isLoading={isLoading}
+            username={username}
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            error={error}
+          />
+        ) : (
+          <LoginPage
+            onLogin={handleLogin}
+            onSwitchToRegister={() => {
+                setIsRegistering(true);
+                setError(null); // Clear error when switching
+            }}
+            setEmail={setEmail}
+            setPassword={setPassword}
+            isLoading={isLoading}
+            email={email}
+            password={password}
+            error={error}
+            successMessage={successMessage}
+          />
+        )}
       </ThemeProvider>
     );
   }
