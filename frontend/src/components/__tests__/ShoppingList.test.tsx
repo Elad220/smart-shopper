@@ -30,6 +30,7 @@ describe('ShoppingList Component', () => {
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
         onAddItem={mockFn}
+        areAllCollapsed={false}
       />
     );
     expect(screen.getByText('Milk')).toBeInTheDocument();
@@ -47,6 +48,7 @@ describe('ShoppingList Component', () => {
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
         onAddItem={mockFn}
+        areAllCollapsed={false}
       />
     );
     const categories = screen.getAllByRole('heading', { level: 6 });
@@ -57,4 +59,4 @@ describe('ShoppingList Component', () => {
   });
 
   // Add more tests as needed, always passing all required props as mockFn
-}); 
+});

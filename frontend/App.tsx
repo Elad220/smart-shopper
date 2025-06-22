@@ -27,6 +27,8 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Dialog, DialogActions, DialogContent, DialogTitle, LinearProgress } from '@mui/material';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
 interface User {
   id: string;
@@ -55,6 +57,7 @@ const App: React.FC = () => {
   const [isCreateListDialogOpen, setIsCreateListDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [listManagerKey, setListManagerKey] = useState(0);
+  const [areAllCollapsed, setAreAllCollapsed] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
@@ -505,6 +508,10 @@ const App: React.FC = () => {
       setIsLoading(false);
     }
   };
+
+  const toggleAllCategories = () => {
+    setAreAllCollapsed(!areAllCollapsed);
+  };
   
     if (!authToken || !currentUser) {
         return (
@@ -619,6 +626,15 @@ const App: React.FC = () => {
                           <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
                             {selectedList?.name || 'Shopping List'}
                           </Typography>
+                          <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={toggleAllCategories}
+                              startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
+                              sx={{ mr: 2 }}
+                            >
+                              {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+                          </Button>
                           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
                               Add Item
                           </Button>
@@ -641,6 +657,7 @@ const App: React.FC = () => {
                         onRemoveCategory={handleRemoveCategory}
                         onRemoveCheckedItems={handleRemoveCheckedItems}
                         onAddItem={handleOpenAddItemModal}
+                        areAllCollapsed={areAllCollapsed}
                       />
                     </>
                   )}

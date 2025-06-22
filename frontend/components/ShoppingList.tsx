@@ -18,17 +18,19 @@ interface ShoppingListProps {
   onRemoveCategory: (categoryName: Category) => void;
   onRemoveCheckedItems: () => Promise<void>;
   onAddItem: () => void;
+  areAllCollapsed: boolean;
 }
 
-const ShoppingList: React.FC<ShoppingListProps> = ({ 
-  items, 
+const ShoppingList: React.FC<ShoppingListProps> = ({
+  items,
   listId,
-  onToggleComplete, 
-  onDeleteItem, 
+  onToggleComplete,
+  onDeleteItem,
   onEditItem,
-  onRemoveCategory
+  onRemoveCategory,
+  onAddItem,
+  areAllCollapsed
 }) => {
-  const [allCollapsed] = useState(false);
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
 
   // Load custom order from localStorage
@@ -65,7 +67,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
         <Typography color="text.secondary" sx={{ mb: 3 }}>
           Add your first item to get started
         </Typography>
-        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => {}} sx={{ mb: 2 }}>
+        <Button variant="outlined" startIcon={<AddIcon />} onClick={onAddItem} sx={{ mb: 2 }}>
           Add First Item
         </Button>
       </Box>
@@ -138,7 +140,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
                       onDeleteItem={onDeleteItem}
                       onEditItem={onEditItem}
                       onRemoveCategory={onRemoveCategory}
-                      defaultCollapsed={allCollapsed}
+                      defaultCollapsed={areAllCollapsed}
                     />
                   </div>
                 )}
