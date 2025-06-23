@@ -9,11 +9,13 @@ import { BASE_URL, fetchUserCategories } from './src/services/api';
 import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AuthHeader from './components/AuthHeader';
+import SmartAssistant from './components/SmartAssistant';
 
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import Button from '@mui/material/Button';
@@ -40,11 +42,6 @@ interface User {
 const isValidObjectId = (id: string | null) => !!id && /^[a-fA-F0-9]{24}$/.test(id);
 
 const App: React.FC = () => {
-  useEffect(() => {
-    // Log the current API URL for debugging
-    console.log('Current API URL:', import.meta.env.VITE_API_URL);
-  }, []);
-
   const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [selectedListId, setSelectedListId] = useState<string | null>(localStorage.getItem('selectedListId'));
   const [itemToEdit, setItemToEdit] = useState<ShoppingItem | null>(null);
@@ -60,24 +57,17 @@ const App: React.FC = () => {
   const [listManagerKey, setListManagerKey] = useState(0);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
   const [showFab, setShowFab] = useState(false);
-  const addItemButtonRef = useRef<HTMLButtonElement>(null);
+  const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
 
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
     !isMobile && localStorage.getItem('sidebarCollapsed') === 'true'
   );
 
-
   useEffect(() => {
     const handleScroll = () => {
-      if (addItemButtonRef.current) {
-        const { bottom } = addItemButtonRef.current.getBoundingClientRect();
-        if (bottom < 0) {
-          setShowFab(true);
-        } else {
-          setShowFab(false);
-        }
-      }
+      const shouldShow = window.scrollY > 150;
+      setShowFab(shouldShow);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -97,9 +87,11 @@ const App: React.FC = () => {
           mode,
           ...(mode === 'light'
             ? {
-                // Light mode palette from Auth pages
                 primary: {
                   main: '#0c7ff2',
+                },
+                secondary: {
+                  main: '#9c27b0',
                 },
                 background: {
                   default: '#f8fafc',
@@ -111,9 +103,11 @@ const App: React.FC = () => {
                 }
               }
             : {
-                // Dark mode palette from Auth pages
                 primary: {
                   main: '#dce8f3',
+                },
+                secondary: {
+                    main: '#ce93d8',
                 },
                 background: {
                   default: '#141a1f',
@@ -137,14 +131,12 @@ const App: React.FC = () => {
   const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('authToken'));
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const user = localStorage.getItem('currentUser');
-    console.log('Initializing currentUser from localStorage:', user);
     return user ? JSON.parse(user) : null;
   });
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Auth form states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -199,7 +191,6 @@ const App: React.FC = () => {
     }
   }, [authToken, selectedListId]);
 
-  // Fetch items when authenticated and list is selected
   useEffect(() => {
     if (authToken && selectedListId) {
       localStorage.setItem('authToken', authToken);
@@ -214,8 +205,6 @@ const App: React.FC = () => {
     }
   }, [authToken, currentUser, selectedListId, fetchDataForSelectedList]);
 
-  const isEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
   const handleLogin = async (e?: React.FormEvent) => {
     e?.preventDefault();
     setIsLoading(true);
@@ -223,7 +212,7 @@ const App: React.FC = () => {
     setSuccessMessage(null);
     try {
       let loginPayload: any;
-      if (isEmail(email)) {
+      if (email.includes('@')) {
         loginPayload = { email, password };
       } else {
         loginPayload = { username: email, password };
@@ -272,8 +261,7 @@ const App: React.FC = () => {
     try {
       await api.registerUser(username, email, password);
       setSuccessMessage('Registration successful! Please log in.');
-      setIsRegistering(false); // This will switch to the login view
-      // Clear fields for login
+      setIsRegistering(false);
       setUsername('');
       setConfirmPassword('');
     } catch (err: any) {
@@ -290,7 +278,6 @@ const App: React.FC = () => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
   };
-
 
   const handleAddItem = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
@@ -313,7 +300,7 @@ const App: React.FC = () => {
 
   const handleAddItemAndCloseModal = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     await handleAddItem(newItemData);
-    if (!error) { // Only close modal if add was successful (or at least no immediate error)
+    if (!error) {
         handleCloseAddItemModal();
     }
   }, [handleAddItem, error]);
@@ -366,22 +353,15 @@ const App: React.FC = () => {
       setError("Authentication and list selection required.");
       return;
     }
-  
-    // Close the modal first for a better user experience.
+    
     handleCloseEditModal();
   
     try {
       const { id, ...updatePayload } = updatedItem;
-  
-      // Call the API to save the item.
       const savedItem = await api.updateShoppingItem(authToken, selectedListId, id, updatePayload);
-  
-      // After a successful save, update the local state with the returned item.
       setShoppingList(prevList =>
         prevList.map(item => (item.id === savedItem.id ? savedItem : item))
       );
-  
-      // Also update the categories list if a new custom category was added.
       if (!categories.includes(savedItem.category)) {
         setCategories(prev => [...prev, savedItem.category].sort());
       }
@@ -515,6 +495,50 @@ const App: React.FC = () => {
     setAreAllCollapsed(!areAllCollapsed);
   };
   
+  const handleAddGeneratedItems = (items: { name: string; category: string }[]) => {
+    items.forEach(item => {
+      handleAddItem({
+        ...item,
+        units: 'pcs',
+        amount: 1,
+        priority: 'Medium',
+        notes: '',
+        image: undefined,
+      });
+    });
+  };
+
+  const handleToggleCategoryComplete = useCallback(async (categoryName: string, shouldBeCompleted: boolean) => {
+    if (!authToken || !selectedListId) {
+      setError("Authentication and list selection required.");
+      return;
+    }
+  
+    const itemsToUpdate = shoppingList.filter(item => item.category === categoryName);
+    if (itemsToUpdate.length === 0) return;
+  
+    const originalList = [...shoppingList];
+  
+    const newList = shoppingList.map(item => {
+      if (item.category === categoryName) {
+        return { ...item, completed: shouldBeCompleted };
+      }
+      return item;
+    });
+    setShoppingList(newList);
+  
+    try {
+      await Promise.all(
+        itemsToUpdate.map(item =>
+          api.updateShoppingItem(authToken, selectedListId, item.id, { completed: shouldBeCompleted })
+        )
+      );
+    } catch (err: any) {
+      setError(err.message || 'Failed to update category items.');
+      setShoppingList(originalList);
+    }
+  }, [authToken, selectedListId, shoppingList]);
+
   if (!authToken || !currentUser) {
     return (
       <ThemeProvider theme={theme}>
@@ -643,7 +667,7 @@ const App: React.FC = () => {
                         >
                           {areAllCollapsed ? 'Expand' : 'Collapse'}
                       </Button>
-                      <Button ref={addItemButtonRef} variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
+                      <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
                           Add Item
                       </Button>
                   </Box>
@@ -666,6 +690,7 @@ const App: React.FC = () => {
                     onRemoveCheckedItems={handleRemoveCheckedItems}
                     onAddItem={handleOpenAddItemModal}
                     areAllCollapsed={areAllCollapsed}
+                    onToggleCategoryComplete={handleToggleCategoryComplete}
                   />
                 </>
               )}
@@ -719,7 +744,22 @@ const App: React.FC = () => {
             onDeleteCategory={handleDeleteCategory}
           />
         )}
-
+        
+        {/* Corrected Floating Action Buttons with Visibility Toggle */}
+        <Zoom in={showFab}>
+            <Fab
+                color="secondary"
+                aria-label="smart assistant"
+                sx={{
+                position: 'fixed',
+                bottom: 16,
+                left: 16,
+                }}
+                onClick={() => setIsSmartAssistantOpen(true)}
+            >
+                <AutoAwesomeIcon />
+            </Fab>
+        </Zoom>
         <Zoom in={showFab}>
           <Fab
             color="primary"
@@ -734,6 +774,12 @@ const App: React.FC = () => {
             <AddIcon />
           </Fab>
         </Zoom>
+        
+        <SmartAssistant
+          open={isSmartAssistantOpen}
+          onClose={() => setIsSmartAssistantOpen(false)}
+          onAddItems={handleAddGeneratedItems}
+        />
     </ThemeProvider>
   );
 };

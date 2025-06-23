@@ -7,6 +7,7 @@ import IconButton from '@mui/material/IconButton';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import Checkbox from '@mui/material/Checkbox';
 
 interface CategorySectionProps {
   categoryName: Category;
@@ -15,6 +16,7 @@ interface CategorySectionProps {
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onRemoveCategory: (categoryName: Category) => void;
+  onToggleCategoryComplete: (categoryName: Category, completed: boolean) => void; // New prop
   defaultCollapsed?: boolean;
   dragHandleProps?: any;
 }
@@ -44,6 +46,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   onToggleComplete,
   onDeleteItem,
   onEditItem,
+  onToggleCategoryComplete,
   defaultCollapsed = false,
   dragHandleProps,
 }) => {
@@ -59,6 +62,14 @@ const CategorySection: React.FC<CategorySectionProps> = ({
   const totalItems = items.length;
   const categoryTitle = typeof categoryName === 'string' ? categoryName : 'Unknown Category';
   const categoryEmoji = getCategoryEmoji(categoryName);
+
+  const isAllChecked = totalItems > 0 && completedItems === totalItems;
+  const isIndeterminate = completedItems > 0 && completedItems < totalItems;
+
+  const handleToggleAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    onToggleCategoryComplete(categoryName, event.target.checked);
+  };
+
 
   return (
     <Box
@@ -93,6 +104,15 @@ const CategorySection: React.FC<CategorySectionProps> = ({
         <Typography variant="body2" sx={{ mr: 1, color: 'text.secondary', bgcolor: 'action.hover', px: 1.5, py: 0.5, borderRadius: '12px' }}>
           {totalItems}
         </Typography>
+        {/* The new Checkbox */}
+        <Checkbox
+          size="small"
+          checked={isAllChecked}
+          indeterminate={isIndeterminate}
+          onChange={handleToggleAll}
+          onClick={(e) => e.stopPropagation()} // Prevents the click from toggling the collapse state
+          inputProps={{ 'aria-label': 'toggle all items in category' }}
+        />
         <IconButton
           size="small"
           onClick={(e) => {

@@ -19,6 +19,7 @@ interface ShoppingListProps {
   onRemoveCheckedItems: () => Promise<void>;
   onAddItem: () => void;
   areAllCollapsed: boolean;
+  onToggleCategoryComplete: (categoryName: Category, completed: boolean) => void; // New prop
 }
 
 const ShoppingList: React.FC<ShoppingListProps> = ({
@@ -29,7 +30,8 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   onEditItem,
   onRemoveCategory,
   onAddItem,
-  areAllCollapsed
+  areAllCollapsed,
+  onToggleCategoryComplete, // Destructure new prop
 }) => {
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
 
@@ -140,6 +142,7 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
                       onDeleteItem={onDeleteItem}
                       onEditItem={onEditItem}
                       onRemoveCategory={onRemoveCategory}
+                      onToggleCategoryComplete={onToggleCategoryComplete} // Pass handler down
                       defaultCollapsed={areAllCollapsed}
                     />
                   </div>
