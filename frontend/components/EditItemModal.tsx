@@ -23,6 +23,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ClearIcon from '@mui/icons-material/Clear';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 
 interface EditItemModalProps {
   item: ShoppingItem | null;
@@ -308,17 +310,45 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, on
           </Box>
           
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
-              <TextField
-                  id="edit-amount-input"
-                  label="Amount"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                  inputProps={{ min: 1 }}
-              />
-            </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+                <TextField
+                    id="edit-amount-input"
+                    label="Amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
+                    inputProps={{ min: 1 }}
+                    sx={{
+                        flexGrow: 1,
+                        // Hide the default browser spinners for a cleaner look
+                        '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                            '-webkit-appearance': 'none',
+                             margin: 0,
+                        },
+                        '& input[type=number]': {
+                            '-moz-appearance': 'textfield',
+                        },
+                    }}
+                />
+                <Box sx={{ display: 'flex', flexDirection: 'column', ml: 0.5 }}>
+                    <IconButton
+                        aria-label="increase amount"
+                        onClick={() => handleAmountChange(amount + 1)}
+                        size="small"
+                    >
+                        <ArrowDropUpIcon />
+                    </IconButton>
+                    <IconButton
+                        aria-label="decrease amount"
+                        onClick={() => handleAmountChange(amount - 1)}
+                        size="small"
+                        disabled={amount <= 1}
+                    >
+                        <ArrowDropDownIcon />
+                    </IconButton>
+                </Box>
+            </Box>
+            <FormControl fullWidth margin="normal" sx={{ mt: 0, flex: 1 }}>
                 <InputLabel id="edit-units-label">Unit</InputLabel>
                 <Select
                   labelId="edit-units-label"
