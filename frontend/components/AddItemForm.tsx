@@ -2,24 +2,31 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { ShoppingItem, StandardCategory, Category } from '../types';
 import { UNIT_OPTIONS } from '../constants';
 
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogTitle from '@mui/material/DialogTitle';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import Select, { SelectChangeEvent } from '@mui/material/Select';
-import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
-import InputLabel from '@mui/material/InputLabel';
-import IconButton from '@mui/material/IconButton';
-import Box from '@mui/material/Box';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Box,
+  Typography,
+  IconButton,
+  SelectChangeEvent,
+  FormHelperText,
+  OutlinedInput,
+  InputAdornment,
+} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import ClearIcon from '@mui/icons-material/Clear';
-import Typography from '@mui/material/Typography';
 import DeleteIcon from '@mui/icons-material/Delete';
-import FormHelperText from '@mui/material/FormHelperText';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 interface AddItemFormProps {
   isOpen: boolean;
@@ -290,17 +297,49 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           </Box>
           
           <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
-              <TextField
-                  id="amount-input"
-                  label="Amount"
+            <FormControl variant="outlined" sx={{ flex: 1, mt: 2 }}>
+              <InputLabel htmlFor="add-amount-input">Amount</InputLabel>
+              <OutlinedInput
+                  id="add-amount-input"
                   type="number"
                   value={amount}
                   onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                  inputProps={{ min: 1 }}
+                  inputProps={{ min: 1, style: { textAlign: 'center' } }}
+                  sx={{
+                    '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
+                        display: 'none',
+                    },
+                    '& input[type=number]': {
+                        '-moz-appearance': 'textfield',
+                    },
+                  }}
+                  label="Amount"
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <IconButton
+                        aria-label="decrease amount"
+                        onClick={() => handleAmountChange(amount - 1)}
+                        edge="start"
+                        disabled={amount <= 1}
+                      >
+                        <KeyboardArrowDownIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="increase amount"
+                        onClick={() => handleAmountChange(amount + 1)}
+                        edge="end"
+                      >
+                        <KeyboardArrowUpIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
               />
             </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ mt: 0 }}>
+            <FormControl fullWidth margin="normal" sx={{ mt: 2, flex: 1 }}>
                 <InputLabel id="units-label">Unit</InputLabel>
                 <Select
                   labelId="units-label"
