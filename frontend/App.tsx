@@ -62,6 +62,12 @@ const App: React.FC = () => {
   const [showFab, setShowFab] = useState(false);
   const addItemButtonRef = useRef<HTMLButtonElement>(null);
 
+  const isMobile = useMediaQuery('(max-width:600px)');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
+    !isMobile && localStorage.getItem('sidebarCollapsed') === 'true'
+  );
+
+
   useEffect(() => {
     const handleScroll = () => {
       if (addItemButtonRef.current) {
@@ -147,12 +153,6 @@ const App: React.FC = () => {
 
   const [selectedList, setSelectedList] = useState<any | null>(null);
 
-  const isMobile = useMediaQuery('(max-width:600px)');
-
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
-    localStorage.getItem('sidebarCollapsed') === 'true'
-  );
-  
   const fetchDataForSelectedList = useCallback(async () => {
     if (!authToken || !selectedListId) return;
 
@@ -235,12 +235,12 @@ const App: React.FC = () => {
         email: data.user?.email || email,
         username: data.user?.username,
       };
-
+      
       setAuthToken(data.token);
       setCurrentUser(userData as User);
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(userData));
-
+      
       const lists = await api.fetchShoppingLists(data.token);
       if (lists.length > 0) {
         setSelectedListId(lists[0]._id);
@@ -252,7 +252,7 @@ const App: React.FC = () => {
 
       setEmail('');
       setPassword('');
-
+      
     } catch (err: any) {
       setError(err.message || 'Login failed.');
     } finally {
@@ -377,7 +377,6 @@ const App: React.FC = () => {
       const savedItem = await api.updateShoppingItem(authToken, selectedListId, id, updatePayload);
   
       // After a successful save, update the local state with the returned item.
-      // This ensures the UI is in sync with the database, including the new image URL.
       setShoppingList(prevList =>
         prevList.map(item => (item.id === savedItem.id ? savedItem : item))
       );
@@ -387,8 +386,6 @@ const App: React.FC = () => {
         setCategories(prev => [...prev, savedItem.category].sort());
       }
     } catch (err: any) {
-      // If the API call fails, we ideally should revert the optimistic UI changes.
-      // For now, we'll just log the error and show a message.
       setError(err.message || 'Failed to save item.');
       console.error("Failed to save item:", err);
     }
@@ -412,7 +409,6 @@ const App: React.FC = () => {
       setShoppingList(prevList => prevList.filter(item => !item.completed));
       try {
         await api.deleteCheckedItems(authToken, selectedListId);
-        // Refresh the shopping list after successful deletion
         if (selectedListId) {
           const updatedList = await api.fetchShoppingList(authToken, selectedListId);
           setShoppingList(updatedList);
@@ -434,14 +430,9 @@ const App: React.FC = () => {
     const itemsToRemove = shoppingList.filter(item => item.category === categoryName);
     if (itemsToRemove.length === 0) return;
 
-    console.log('Removing category:', categoryName);
-    console.log('Items to remove:', itemsToRemove);
-
-    // Optimistically update the UI
     const updatedList = shoppingList.filter(item => item.category !== categoryName);
     setShoppingList(updatedList);
     
-    // Update the selected list to maintain consistency
     if (selectedList) {
       setSelectedList({
         ...selectedList,
@@ -450,19 +441,9 @@ const App: React.FC = () => {
     }
     
     try {
-      console.log('Calling deleteCategoryItems with:', { selectedListId, categoryName });
-      // Remove from backend
       await api.deleteCategoryItems(authToken, selectedListId, categoryName);
-      console.log('Successfully deleted category items');
     } catch (err: any) {
-      console.error('Error removing category:', {
-        error: err,
-        message: err.message,
-        stack: err.stack,
-        response: err.response
-      });
       setError(err.message || 'Failed to remove category items.');
-      // Revert to original list on error
       setShoppingList(originalList);
       if (selectedList) {
         setSelectedList({
@@ -486,7 +467,6 @@ const App: React.FC = () => {
     if (window.confirm(`Are you sure you want to delete the category "${categoryToDelete}"? This cannot be undone.`)) {
         try {
             await api.deleteUserCategory(authToken, categoryToDelete);
-            // On success, update the local state
             setCategories(prev => prev.filter(cat => cat !== categoryToDelete));
         } catch (err: any) {
             setError(err.message || "Failed to delete category.");
@@ -495,10 +475,15 @@ const App: React.FC = () => {
   }, [authToken]);
 
   const handleToggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => {
-      localStorage.setItem('sidebarCollapsed', String(!prev));
-      return !prev;
-    });
+    if (isMobile) {
+      setIsDrawerOpen(false);
+    } else {
+      setIsSidebarCollapsed((prev) => {
+        const newState = !prev;
+        localStorage.setItem('sidebarCollapsed', String(newState));
+        return newState;
+      });
+    }
   };
 
   const handleCreateList = async () => {
@@ -514,11 +499,9 @@ const App: React.FC = () => {
       setNewListName('');
       setIsCreateListDialogOpen(false);
       
-      // Update the selected list ID to the newly created list
       setSelectedListId(newList._id);
       localStorage.setItem('selectedListId', newList._id);
       
-      // Force the list manager to re-fetch and update
       setListManagerKey(prevKey => prevKey + 1);
     } catch (error: any) {
       setError(error.message || 'Failed to create shopping list');
@@ -532,221 +515,227 @@ const App: React.FC = () => {
     setAreAllCollapsed(!areAllCollapsed);
   };
   
-    if (!authToken || !currentUser) {
-        return (
-          <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <AuthHeader
-                mode={mode}
-                setMode={setMode}
-                isLoggedIn={false}
-            />
-            {isRegistering ? (
-              <RegisterPage
-                onRegister={handleRegister}
-                onSwitchToLogin={() => {
-                    setIsRegistering(false);
-                    setError(null);
-                }}
-                setUsername={setUsername}
-                setEmail={setEmail}
-                setPassword={setPassword}
-                setConfirmPassword={setConfirmPassword}
-                isLoading={isLoading}
-                username={username}
-                email={email}
-                password={password}
-                confirmPassword={confirmPassword}
-                error={error}
-              />
-            ) : (
-              <LoginPage
-                onLogin={handleLogin}
-                onSwitchToRegister={() => {
-                    setIsRegistering(true);
-                    setError(null);
-                }}
-                setEmail={setEmail}
-                setPassword={setPassword}
-                isLoading={isLoading}
-                email={email}
-                password={password}
-                error={error}
-                successMessage={successMessage}
-              />
-            )}
-          </ThemeProvider>
-        );
-    }
-    
-    const completedItems = shoppingList.filter(item => item.completed).length;
-    const totalItems = shoppingList.length;
-    const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-  
+  if (!authToken || !currentUser) {
     return (
-        <ThemeProvider theme={theme}>
-            <CssBaseline />
-            <Box sx={{ display: 'flex' }}>
-                <AuthHeader
-                  mode={mode}
-                  setMode={setMode}
-                  isLoggedIn={true}
-                  currentUser={currentUser}
-                  handleLogout={handleLogout}
-                  isMobile={isMobile}
-                  onDrawerOpen={() => setIsDrawerOpen(true)}
-                />
-                <Drawer
-                  variant={isMobile ? "temporary" : "permanent"}
-                  open={isMobile ? isDrawerOpen : !isSidebarCollapsed}
-                  onClose={() => setIsDrawerOpen(false)}
-                  sx={{
-                    width: isSidebarCollapsed ? 56 : 280,
-                    flexShrink: 0,
-                    '& .MuiDrawer-paper': {
-                      width: isSidebarCollapsed ? 56 : 280,
-                      boxSizing: 'border-box',
-                      overflowX: 'hidden',
-                      transition: 'width 0.3s',
-                    },
-                  }}
-                >
-                  <Toolbar />
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'flex-end', p: 1 }}>
-                    <IconButton onClick={handleToggleSidebar} size="small">
-                      {isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
-                    </IconButton>
-                  </Box>
-                  {!isSidebarCollapsed && (
-                    <ShoppingListManager
-                      key={listManagerKey}
-                      token={authToken!}
-                      onListSelect={handleListSelect}
-                      selectedListId={selectedListId}
-                      onDataChange={fetchDataForSelectedList}
-                      onOpenCreateDialog={() => setIsCreateListDialogOpen(true)}
-                    />
-                  )}
-                </Drawer>
-                <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default' }}>
-                  <Toolbar />
-                  {error && (
-                    <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
-                      {error}
-                    </Alert>
-                  )}
-                  {isLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                      <CircularProgress />
-                    </Box>
-                  ) : (
-                    <>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
-                            {selectedList?.name || 'Shopping List'}
-                          </Typography>
-                          <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={toggleAllCategories}
-                              startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
-                              sx={{ mr: 2 }}
-                            >
-                              {areAllCollapsed ? 'Expand' : 'Collapse'}
-                          </Button>
-                          <Button ref={addItemButtonRef} variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
-                              Add Item
-                          </Button>
-                      </Box>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
-                          <Typography variant="body2">{totalItems} items</Typography>
-                          <Typography variant="body2" color="text.secondary">
-                              <span style={{ color: 'green' }}>✓</span> {completedItems} completed
-                          </Typography>
-                          <LinearProgress variant="determinate" value={completionPercentage} sx={{ flexGrow: 1, height: '10px', borderRadius: '5px' }}/>
-                          <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
-                      </Box>
-        
-                      <ShoppingList
-                        items={shoppingList}
-                        listId={selectedListId || 'default'}
-                        onToggleComplete={handleToggleComplete}
-                        onDeleteItem={handleDeleteItem}
-                        onEditItem={handleOpenEditModal}
-                        onRemoveCategory={handleRemoveCategory}
-                        onRemoveCheckedItems={handleRemoveCheckedItems}
-                        onAddItem={handleOpenAddItemModal}
-                        areAllCollapsed={areAllCollapsed}
-                      />
-                    </>
-                  )}
-                </Box>
-            </Box>
-        
-             {/* Dialogs */}
-            <Dialog open={isCreateListDialogOpen} onClose={() => !isLoading && setIsCreateListDialogOpen(false)}>
-              <DialogTitle>Create New Shopping List</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="List Name"
-                  fullWidth
-                  value={newListName}
-                  onChange={(e) => setNewListName(e.target.value)}
-                  disabled={isLoading}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={() => setIsCreateListDialogOpen(false)} disabled={isLoading}>
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateList} 
-                  variant="contained" 
-                  color="primary"
-                  disabled={isLoading || !newListName.trim()}
-                >
-                  {isLoading ? 'Creating...' : 'Create'}
-                </Button>
-              </DialogActions>
-            </Dialog>
-            {isAddItemModalOpen && (
-              <AddItemForm
-                isOpen={isAddItemModalOpen}
-                onClose={handleCloseAddItemModal}
-                onAddItem={handleAddItemAndCloseModal}
-                categories={categories}
-                onDeleteCategory={handleDeleteCategory}
-              />
-            )}
-            {isEditModalOpen && itemToEdit && (
-              <EditItemModal
-                isOpen={isEditModalOpen}
-                onClose={handleCloseEditModal}
-                onSave={handleSaveItem}
-                item={itemToEdit}
-                categories={categories}
-                onDeleteCategory={handleDeleteCategory}
-              />
-            )}
-
-            <Zoom in={showFab}>
-              <Fab
-                color="primary"
-                aria-label="add"
-                sx={{
-                  position: 'fixed',
-                  bottom: 16,
-                  right: 16,
-                }}
-                onClick={handleOpenAddItemModal}
-              >
-                <AddIcon />
-              </Fab>
-            </Zoom>
-        </ThemeProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <AuthHeader
+            mode={mode}
+            setMode={setMode}
+            isLoggedIn={false}
+        />
+        {isRegistering ? (
+          <RegisterPage
+            onRegister={handleRegister}
+            onSwitchToLogin={() => {
+                setIsRegistering(false);
+                setError(null);
+            }}
+            setUsername={setUsername}
+            setEmail={setEmail}
+            setPassword={setPassword}
+            setConfirmPassword={setConfirmPassword}
+            isLoading={isLoading}
+            username={username}
+            email={email}
+            password={password}
+            confirmPassword={confirmPassword}
+            error={error}
+          />
+        ) : (
+          <LoginPage
+            onLogin={handleLogin}
+            onSwitchToRegister={() => {
+                setIsRegistering(true);
+                setError(null);
+            }}
+            setEmail={setEmail}
+            setPassword={setPassword}
+            isLoading={isLoading}
+            email={email}
+            password={password}
+            error={error}
+            successMessage={successMessage}
+          />
+        )}
+      </ThemeProvider>
     );
+  }
+    
+  const completedItems = shoppingList.filter(item => item.completed).length;
+  const totalItems = shoppingList.length;
+  const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+  
+  const drawerWidth = (isSidebarCollapsed && !isMobile) ? 56 : 280;
+  const showDrawerContents = !isSidebarCollapsed || isMobile;
+
+  return (
+    <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Box sx={{ display: 'flex' }}>
+            <AuthHeader
+              mode={mode}
+              setMode={setMode}
+              isLoggedIn={true}
+              currentUser={currentUser}
+              handleLogout={handleLogout}
+              isMobile={isMobile}
+              onDrawerOpen={() => setIsDrawerOpen(true)}
+            />
+            <Drawer
+              variant={isMobile ? "temporary" : "permanent"}
+              open={isMobile ? isDrawerOpen : true}
+              onClose={() => setIsDrawerOpen(false)}
+              sx={{
+                width: drawerWidth,
+                flexShrink: 0,
+                '& .MuiDrawer-paper': {
+                  width: drawerWidth,
+                  boxSizing: 'border-box',
+                  overflowX: 'hidden',
+                  transition: (theme) => theme.transitions.create('width', {
+                    easing: theme.transitions.easing.sharp,
+                    duration: theme.transitions.duration.enteringScreen,
+                  }),
+                },
+              }}
+            >
+              <Toolbar />
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: (isSidebarCollapsed && !isMobile) ? 'center' : 'flex-end', p: 1 }}>
+                <IconButton onClick={handleToggleSidebar}>
+                  {isMobile ? <ChevronLeftIcon /> : (isSidebarCollapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />)}
+                </IconButton>
+              </Box>
+              {showDrawerContents && (
+                <ShoppingListManager
+                  key={listManagerKey}
+                  token={authToken!}
+                  onListSelect={handleListSelect}
+                  selectedListId={selectedListId}
+                  onDataChange={fetchDataForSelectedList}
+                  onOpenCreateDialog={() => setIsCreateListDialogOpen(true)}
+                />
+              )}
+            </Drawer>
+            <Box component="main" sx={{ flexGrow: 1, p: 3, bgcolor: 'background.default' }}>
+              <Toolbar />
+              {error && (
+                <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+              {isLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                      <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
+                        {selectedList?.name || 'Shopping List'}
+                      </Typography>
+                      <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={toggleAllCategories}
+                          startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
+                          sx={{ mr: 2 }}
+                        >
+                          {areAllCollapsed ? 'Expand' : 'Collapse'}
+                      </Button>
+                      <Button ref={addItemButtonRef} variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
+                          Add Item
+                      </Button>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
+                      <Typography variant="body2">{totalItems} items</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                          <span style={{ color: 'green' }}>✓</span> {completedItems} completed
+                      </Typography>
+                      <LinearProgress variant="determinate" value={completionPercentage} sx={{ flexGrow: 1, height: '10px', borderRadius: '5px' }}/>
+                      <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
+                  </Box>
+    
+                  <ShoppingList
+                    items={shoppingList}
+                    listId={selectedListId || 'default'}
+                    onToggleComplete={handleToggleComplete}
+                    onDeleteItem={handleDeleteItem}
+                    onEditItem={handleOpenEditModal}
+                    onRemoveCategory={handleRemoveCategory}
+                    onRemoveCheckedItems={handleRemoveCheckedItems}
+                    onAddItem={handleOpenAddItemModal}
+                    areAllCollapsed={areAllCollapsed}
+                  />
+                </>
+              )}
+            </Box>
+        </Box>
+    
+         {/* Dialogs */}
+        <Dialog open={isCreateListDialogOpen} onClose={() => !isLoading && setIsCreateListDialogOpen(false)}>
+          <DialogTitle>Create New Shopping List</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="List Name"
+              fullWidth
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              disabled={isLoading}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsCreateListDialogOpen(false)} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateList} 
+              variant="contained" 
+              color="primary"
+              disabled={isLoading || !newListName.trim()}
+            >
+              {isLoading ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+        {isAddItemModalOpen && (
+          <AddItemForm
+            isOpen={isAddItemModalOpen}
+            onClose={handleCloseAddItemModal}
+            onAddItem={handleAddItemAndCloseModal}
+            categories={categories}
+            onDeleteCategory={handleDeleteCategory}
+          />
+        )}
+        {isEditModalOpen && itemToEdit && (
+          <EditItemModal
+            isOpen={isEditModalOpen}
+            onClose={handleCloseEditModal}
+            onSave={handleSaveItem}
+            item={itemToEdit}
+            categories={categories}
+            onDeleteCategory={handleDeleteCategory}
+          />
+        )}
+
+        <Zoom in={showFab}>
+          <Fab
+            color="primary"
+            aria-label="add"
+            sx={{
+              position: 'fixed',
+              bottom: 16,
+              right: 16,
+            }}
+            onClick={handleOpenAddItemModal}
+          >
+            <AddIcon />
+          </Fab>
+        </Zoom>
+    </ThemeProvider>
+  );
 };
 
 export default App;
