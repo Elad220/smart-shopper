@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
 import EditItemModal from './components/EditItemModal';
@@ -28,7 +28,7 @@ import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, LinearProgress, Zoom } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, LinearProgress } from '@mui/material';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
@@ -56,25 +56,12 @@ const App: React.FC = () => {
   const [newListName, setNewListName] = useState('');
   const [listManagerKey, setListManagerKey] = useState(0);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
-  const [showFab, setShowFab] = useState(false);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
 
   const isMobile = useMediaQuery('(max-width:600px)');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
     !isMobile && localStorage.getItem('sidebarCollapsed') === 'true'
   );
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const shouldShow = window.scrollY > 150;
-      setShowFab(shouldShow);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
@@ -745,35 +732,33 @@ const App: React.FC = () => {
           />
         )}
         
-        {/* Corrected Floating Action Buttons with Visibility Toggle */}
-        <Zoom in={showFab}>
-            <Fab
-                color="secondary"
-                aria-label="smart assistant"
-                sx={{
-                position: 'fixed',
-                bottom: 16,
-                left: 16,
-                }}
-                onClick={() => setIsSmartAssistantOpen(true)}
-            >
-                <AutoAwesomeIcon />
-            </Fab>
-        </Zoom>
-        <Zoom in={showFab}>
-          <Fab
-            color="primary"
-            aria-label="add"
+        {/* Corrected Floating Action Buttons */}
+        <Fab
+            color="secondary"
+            aria-label="smart assistant"
             sx={{
-              position: 'fixed',
-              bottom: 16,
-              right: 16,
+            position: 'fixed',
+            bottom: 16,
+            left: 16,
+            zIndex: 1300
             }}
-            onClick={handleOpenAddItemModal}
-          >
-            <AddIcon />
-          </Fab>
-        </Zoom>
+            onClick={() => setIsSmartAssistantOpen(true)}
+        >
+            <AutoAwesomeIcon />
+        </Fab>
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            zIndex: 1300
+          }}
+          onClick={handleOpenAddItemModal}
+        >
+          <AddIcon />
+        </Fab>
         
         <SmartAssistant
           open={isSmartAssistantOpen}

@@ -30,6 +30,7 @@ describe('ShoppingList Component', () => {
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
         onAddItem={mockFn}
+        onToggleCategoryComplete={mockFn}
         areAllCollapsed={false}
       />
     );
@@ -48,6 +49,7 @@ describe('ShoppingList Component', () => {
         onRemoveCategory={mockFn}
         onRemoveCheckedItems={mockFn}
         onAddItem={mockFn}
+        onToggleCategoryComplete={mockFn}
         areAllCollapsed={false}
       />
     );
