@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -7,6 +7,7 @@ import {
   Box,
   Tooltip,
   SvgIcon,
+  Popover,
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
@@ -28,6 +29,7 @@ const TicklistIcon = () => (
 interface User {
   id: string;
   email: string;
+  username: string;
 }
 
 interface AuthHeaderProps {
@@ -49,6 +51,19 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
   isMobile,
   onDrawerOpen,
 }) => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined;
+
   return (
     <AppBar position="fixed" elevation={1} sx={{ zIndex: (theme) => (isLoggedIn ? theme.zIndex.drawer + 1 : 'auto') }}>
       <Toolbar
@@ -76,33 +91,38 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
           <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
             {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
           {isLoggedIn && currentUser && handleLogout && (
             <>
-              <Tooltip title={currentUser.email || 'User'} placement="bottom-end" arrow>
-                <Box
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: 'inherit',
-                    cursor: 'pointer',
-                    p: 0.5,
-                  }}
+              <Tooltip title={currentUser.username || 'User'} placement="bottom-end" arrow>
+                <IconButton
+                  onClick={handleClick}
+                  color="inherit"
+                  sx={{ ml: 1 }}
                 >
-                  <AccountCircleIcon sx={{ mr: { xs: 0, sm: 1 } }} />
-                  <Typography
-                    variant="body2"
-                    noWrap
-                    sx={{ display: { xs: 'none', sm: 'block' } }}
-                  >
-                    {currentUser.email?.split('@')[0] || 'User'}
-                  </Typography>
-                </Box>
+                  <AccountCircleIcon />
+                </IconButton>
               </Tooltip>
-              <IconButton color="inherit" onClick={handleLogout} size="small">
+              <Popover
+                id={id}
+                open={open}
+                anchorEl={anchorEl}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'center',
+                }}
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'center',
+                }}
+              >
+                <Typography sx={{ p: 2 }}>{currentUser.username}</Typography>
+              </Popover>
+              <IconButton color="inherit" onClick={handleLogout} size="small" sx={{ ml: 1 }}>
                 <LogoutIcon fontSize="small" />
               </IconButton>
             </>

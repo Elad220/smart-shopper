@@ -33,6 +33,7 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 interface User {
   id: string;
   email: string;
+  username: string;
 }
 
 // Utility to check for valid MongoDB ObjectId
@@ -229,31 +230,29 @@ const App: React.FC = () => {
       }
 
       const data = await api.loginUserFlexible(loginPayload);
-      const userData = { 
-        id: data.userId, 
-        email: data.email || data.user?.email || email 
+      const userData = {
+        id: data.userId,
+        email: data.user?.email || email,
+        username: data.user?.username,
       };
-      
-      // Set auth token first to ensure subsequent API calls are authenticated
+
       setAuthToken(data.token);
-      setCurrentUser(userData);
+      setCurrentUser(userData as User);
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(userData));
-      
-      // After login, fetch lists and set the first one as active
+
       const lists = await api.fetchShoppingLists(data.token);
       if (lists.length > 0) {
         setSelectedListId(lists[0]._id);
         localStorage.setItem('selectedListId', lists[0]._id);
       } else {
-        // Handle case with no lists
         setSelectedListId(null);
         localStorage.removeItem('selectedListId');
       }
 
       setEmail('');
       setPassword('');
-      
+
     } catch (err: any) {
       setError(err.message || 'Login failed.');
     } finally {
