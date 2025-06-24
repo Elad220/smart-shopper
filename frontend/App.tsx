@@ -1,3 +1,4 @@
+// frontend/App.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
@@ -10,7 +11,7 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AuthHeader from './components/AuthHeader';
 import SmartAssistant from './components/SmartAssistant';
-
+import Footer from './components/Footer'; // Import the Footer component
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
@@ -569,6 +570,7 @@ const App: React.FC = () => {
             successMessage={successMessage}
           />
         )}
+        <Footer />
       </ThemeProvider>
     );
   }
@@ -583,7 +585,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Box sx={{ display: 'flex' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AuthHeader
               mode={mode}
               setMode={setMode}
@@ -593,6 +595,7 @@ const App: React.FC = () => {
               isMobile={isMobile}
               onDrawerOpen={() => setIsDrawerOpen(true)}
             />
+             <Box sx={{ display: 'flex', flexGrow: 1 }}>
             <Drawer
               variant={isMobile ? "temporary" : "permanent"}
               open={isMobile ? isDrawerOpen : true}
@@ -682,6 +685,8 @@ const App: React.FC = () => {
                 </>
               )}
             </Box>
+            </Box>
+        <Footer />
         </Box>
     
          {/* Dialogs */}
