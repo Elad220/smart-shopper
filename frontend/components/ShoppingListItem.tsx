@@ -1,3 +1,4 @@
+// frontend/components/ShoppingListItem.tsx
 import React, { useState } from 'react';
 import { ShoppingItem } from '../types';
 
@@ -14,12 +15,14 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { Grow } from '@mui/material';
 
 interface ShoppingListItemProps {
   item: ShoppingItem;
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
+  timeout?: number;
 }
 
 const StyledListItem = styled(ListItem, {
@@ -42,7 +45,8 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({
   item, 
   onToggleComplete, 
   onDeleteItem, 
-  onEditItem 
+  onEditItem,
+  timeout = 300 
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -70,58 +74,60 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({
 
   return (
     <>
-      <StyledListItem
-        completed={item.completed}
-        secondaryAction={
-          <IconButton 
-            edge="end" 
-            aria-label="more options"
-            aria-controls={open ? 'item-menu' : undefined}
-            aria-haspopup="true"
-            aria-expanded={open ? 'true' : undefined}
-            onClick={handleMenuClick}
-            sx={{ padding: '8px' }}
-          >
-            <MoreVertIcon />
-          </IconButton>
-        }
-        disablePadding
-      >
-        <ListItemIcon sx={{minWidth: 'auto', mr: 1.5}}>
-          <Checkbox
-            edge="start"
-            checked={item.completed}
-            onChange={() => onToggleComplete(item.id)}
-            tabIndex={-1}
-            disableRipple
-            color="primary"
-          />
-        </ListItemIcon>
-        {imageUrl ? (
-          <Avatar 
-            src={imageUrl} 
-            alt={item.name} 
-            variant="rounded"
-            sx={{ 
-              width: 48, 
-              height: 48, 
-              mr: 1.5, 
-              bgcolor: 'grey.200',
-              '& img': {
-                objectFit: 'cover'
-              }
-            }}
-          />
-        ) : null}
-        <ListItemText 
-          primary={
-              <Typography variant="body1" sx={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'text.disabled' : 'text.primary' }}>
-                  {item.name}
-              </Typography>
+      <Grow in={true} timeout={timeout}>
+        <StyledListItem
+          completed={item.completed}
+          secondaryAction={
+            <IconButton 
+              edge="end" 
+              aria-label="more options"
+              aria-controls={open ? 'item-menu' : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              onClick={handleMenuClick}
+              sx={{ padding: '8px' }}
+            >
+              <MoreVertIcon />
+            </IconButton>
           }
-          secondary={secondaryText} 
-        />
-      </StyledListItem>
+          disablePadding
+        >
+          <ListItemIcon sx={{minWidth: 'auto', mr: 1.5}}>
+            <Checkbox
+              edge="start"
+              checked={item.completed}
+              onChange={() => onToggleComplete(item.id)}
+              tabIndex={-1}
+              disableRipple
+              color="primary"
+            />
+          </ListItemIcon>
+          {imageUrl ? (
+            <Avatar 
+              src={imageUrl} 
+              alt={item.name} 
+              variant="rounded"
+              sx={{ 
+                width: 48, 
+                height: 48, 
+                mr: 1.5, 
+                bgcolor: 'grey.200',
+                '& img': {
+                  objectFit: 'cover'
+                }
+              }}
+            />
+          ) : null}
+          <ListItemText 
+            primary={
+                <Typography variant="body1" sx={{ textDecoration: item.completed ? 'line-through' : 'none', color: item.completed ? 'text.disabled' : 'text.primary' }}>
+                    {item.name}
+                </Typography>
+            }
+            secondary={secondaryText} 
+          />
+        </StyledListItem>
+      </Grow>
       <Menu
         id="item-menu"
         anchorEl={anchorEl}

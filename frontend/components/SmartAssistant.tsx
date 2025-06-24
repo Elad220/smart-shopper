@@ -12,6 +12,7 @@ import {
   Typography,
   List,
   ListItem,
+  ListItemButton,
   ListItemText,
   Paper,
   Alert,
@@ -246,14 +247,16 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
               />
               <List>
                 {generatedItems.map((item, index) => (
-                  <ListItem key={index} dense button onClick={() => handleToggleItem(index)}>
-                     <Checkbox
+                  <ListItem key={index} dense disablePadding>
+                    <ListItemButton onClick={() => handleToggleItem(index)}>
+                      <Checkbox
                         edge="start"
                         checked={selectedItems.has(index)}
                         tabIndex={-1}
                         disableRipple
                       />
-                    <ListItemText primary={item.name} secondary={item.category} />
+                      <ListItemText primary={item.name} secondary={item.category} />
+                    </ListItemButton>
                   </ListItem>
                 ))}
               </List>

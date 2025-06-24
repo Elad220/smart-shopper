@@ -1,3 +1,4 @@
+// frontend/components/CategorySection.tsx
 import React, { useState, useEffect } from 'react';
 import { ShoppingItem, Category, StandardCategory } from '../types';
 import ShoppingListItem from './ShoppingListItem';
@@ -8,6 +9,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Box from '@mui/material/Box';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import Checkbox from '@mui/material/Checkbox';
+import { Collapse } from '@mui/material';
 
 interface CategorySectionProps {
   categoryName: Category;
@@ -124,19 +126,20 @@ const CategorySection: React.FC<CategorySectionProps> = ({
           <ExpandMoreIcon sx={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
         </IconButton>
       </Box>
-      {isOpen && (
+      <Collapse in={isOpen} timeout="auto" unmountOnExit>
         <Box sx={{ pt: 1 }}>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <ShoppingListItem
               key={item.id}
               item={item}
               onToggleComplete={onToggleComplete}
               onDeleteItem={onDeleteItem}
               onEditItem={onEditItem}
+              timeout={150 * (index + 1)}
             />
           ))}
         </Box>
-      )}
+      </Collapse>
     </Box>
   );
 };

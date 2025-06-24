@@ -11,7 +11,7 @@ import LoginPage from './components/LoginPage';
 import RegisterPage from './components/RegisterPage';
 import AuthHeader from './components/AuthHeader';
 import SmartAssistant from './components/SmartAssistant';
-import Footer from './components/Footer'; // Import the Footer component
+import Footer from './components/Footer';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
@@ -29,7 +29,7 @@ import Drawer from '@mui/material/Drawer';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, LinearProgress } from '@mui/material';
+import { Dialog, DialogActions, DialogContent, DialogTitle, Fab, Grow, LinearProgress, Zoom } from '@mui/material';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 
@@ -648,18 +648,38 @@ const App: React.FC = () => {
                       <Typography variant="h5" component="h2" sx={{ color: 'text.primary', flexGrow: 1 }}>
                         {selectedList?.name || 'Shopping List'}
                       </Typography>
-                      <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={toggleAllCategories}
-                          startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
-                          sx={{ mr: 2 }}
-                        >
-                          {areAllCollapsed ? 'Expand' : 'Collapse'}
-                      </Button>
-                      <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenAddItemModal}>
-                          Add Item
-                      </Button>
+                      <Grow in={true}>
+                        <Box>
+                          <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={toggleAllCategories}
+                              startIcon={areAllCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />}
+                              sx={{
+                                mr: 2,
+                                transition: 'transform 0.1s ease-in-out',
+                                '&:active': {
+                                  transform: 'scale(0.95)',
+                                },
+                              }}
+                            >
+                              {areAllCollapsed ? 'Expand' : 'Collapse'}
+                          </Button>
+                          <Button 
+                            variant="contained" 
+                            startIcon={<AddIcon />} 
+                            onClick={handleOpenAddItemModal}
+                            sx={{
+                              transition: 'transform 0.1s ease-in-out',
+                              '&:active': {
+                                transform: 'scale(0.95)',
+                              },
+                            }}
+                          >
+                              Add Item
+                          </Button>
+                        </Box>
+                      </Grow>
                   </Box>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2, p: 1.5, bgcolor: 'action.hover', borderRadius: 1 }}>
                       <Typography variant="body2">{totalItems} items</Typography>
@@ -737,33 +757,44 @@ const App: React.FC = () => {
           />
         )}
         
-        {/* Corrected Floating Action Buttons */}
-        <Fab
-            color="secondary"
-            aria-label="smart assistant"
+        <Zoom in={true}>
+          <Fab
+              color="secondary"
+              aria-label="smart assistant"
+              sx={{
+                position: 'fixed',
+                bottom: 16,
+                left: 16,
+                zIndex: 1300,
+                transition: 'transform 0.1s ease-in-out',
+                '&:active': {
+                  transform: 'scale(0.95)',
+                },
+              }}
+              onClick={() => setIsSmartAssistantOpen(true)}
+          >
+              <AutoAwesomeIcon />
+          </Fab>
+        </Zoom>
+        <Zoom in={true}>
+          <Fab
+            color="primary"
+            aria-label="add"
             sx={{
-            position: 'fixed',
-            bottom: 16,
-            left: 16,
-            zIndex: 1300
+              position: 'fixed',
+              bottom: 16,
+              right: 16,
+              zIndex: 1300,
+              transition: 'transform 0.1s ease-in-out',
+              '&:active': {
+                transform: 'scale(0.95)',
+              },
             }}
-            onClick={() => setIsSmartAssistantOpen(true)}
-        >
-            <AutoAwesomeIcon />
-        </Fab>
-        <Fab
-          color="primary"
-          aria-label="add"
-          sx={{
-            position: 'fixed',
-            bottom: 16,
-            right: 16,
-            zIndex: 1300
-          }}
-          onClick={handleOpenAddItemModal}
-        >
-          <AddIcon />
-        </Fab>
+            onClick={handleOpenAddItemModal}
+          >
+            <AddIcon />
+          </Fab>
+        </Zoom>
         
         <SmartAssistant
           open={isSmartAssistantOpen}
