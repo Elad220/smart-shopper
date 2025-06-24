@@ -1,3 +1,4 @@
+// frontend/components/ShoppingList.tsx
 import React, { useState, useEffect } from 'react';
 import { ShoppingItem, Category, StandardCategory } from '../types';
 import CategorySection from './CategorySection';
@@ -86,12 +87,27 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
     return acc;
   }, {} as Record<Category, ShoppingItem[]>);
 
+  // Define priority order
+  const priorityOrder = {
+    'High': 1,
+    'Medium': 2,
+    'Low': 3,
+  };
+
   // Sort items within each category
   Object.keys(groupedItems).forEach(category => {
     groupedItems[category].sort((a, b) => {
+      // 1. By completion status (incomplete items first)
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
+      // 2. By priority
+      const priorityA = priorityOrder[a.priority] || 4;
+      const priorityB = priorityOrder[b.priority] || 4;
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      // 3. Alphabetically by name
       return a.name.localeCompare(b.name);
     });
   });
