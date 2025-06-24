@@ -1,9 +1,4 @@
-import React, { useState, useMemo } from 'react';
-import { 
-  GoogleGenerativeAI, 
-  HarmCategory, 
-  HarmBlockThreshold 
-} from '@google/generative-ai';
+import React, { useState, useEffect } from 'react';
 import {
   Button,
   Dialog,
@@ -18,58 +13,65 @@ import {
   ListItem,
   ListItemText,
   Paper,
-  Alert
+  Alert,
 } from '@mui/material';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
 
 interface SmartAssistantProps {
   open: boolean;
   onClose: () => void;
   onAddItems: (items: { name: string; category: string }[]) => void;
+  token: string | null;
 }
 
-const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems }) => {
+const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
+
+const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
   const [prompt, setPrompt] = useState('');
+  const [apiKey, setApiKey] = useState('');
+  const [hasApiKey, setHasApiKey] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [generatedItems, setGeneratedItems] = useState<{ name: string; category: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  // Safely get the API key and initialize the model only when needed
-  const model = useMemo(() => {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      return null;
+  useEffect(() => {
+    // When the dialog opens, fetch the API key status
+    if (open && token) {
+      // Reset local states
+      setError(null);
+      setSuccess(null);
+      setApiKey('');
+      setGeneratedItems([]);
+      setIsCheckingStatus(true);
+
+      const fetchStatus = async () => {
+        try {
+          const { hasApiKey: keyExists } = await checkApiKeyStatus(token);
+          setHasApiKey(keyExists);
+          // If a key exists, pre-fill the input with the placeholder
+          if (keyExists) {
+            setApiKey(API_KEY_PLACEHOLDER);
+          }
+        } catch (err) {
+          setError("Could not verify API key status.");
+          setHasApiKey(false);
+        } finally {
+          setIsCheckingStatus(false);
+        }
+      };
+
+      fetchStatus();
     }
-    const genAI = new GoogleGenerativeAI(apiKey);
-
-    // Add these safety settings to avoid overly aggressive blocking
-    const safetySettings = [
-      {
-        category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-      {
-        category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-        threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-      },
-    ];
-
-    return genAI.getGenerativeModel({ model: "gemini-2.0-flash", safetySettings });
-  }, []);
+  }, [open, token]);
 
   const handleGenerate = async () => {
-    if (!model) {
-      setError("Gemini API key not found. Please make sure VITE_GEMINI_API_KEY is set in your .env.local file.");
-      return;
+    if (!token) {
+        setError("You must be logged in to use the smart assistant.");
+        return;
     }
-
     if (!prompt.trim()) {
       setError("Please enter a theme for your shopping list.");
       return;
@@ -80,22 +82,8 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     setGeneratedItems([]);
 
     try {
-      const fullPrompt = `Based on the theme "${prompt}", generate a list of 5-10 shopping items. For each item, suggest a relevant category from the following list: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other. Format the output as a JSON array of objects, where each object has a "name" and "category" property. For example: [{"name": "Taco Shells", "category": "Pantry"}]`;
-
-      const result = await model.generateContent(fullPrompt);
-      const response = await result.response;
-      
-      // Check if the response was blocked
-      if (!response.text) {
-          throw new Error("The response was blocked for safety reasons. Please try a different theme.");
-      }
-      
-      const text = await response.text();
-      
-      const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-      const items = JSON.parse(jsonText);
+      const items = await generateItemsFromApi(token, prompt);
       setGeneratedItems(items);
-
     } catch (err: any) {
       console.error("Error generating items:", err);
       setError(err.message || "Failed to generate items. Please check your API key and try again.");
@@ -104,21 +92,105 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     }
   };
   
+  const handleSaveApiKey = async () => {
+    if (!token) {
+        setError("You must be logged in to save an API key.");
+        return;
+    }
+    // Prevent saving the placeholder text as a key
+    if (!apiKey.trim() || apiKey === API_KEY_PLACEHOLDER) {
+        setError("API Key cannot be empty.");
+        return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+        await saveApiKey(token, apiKey);
+        setSuccess("API Key saved successfully!");
+        setHasApiKey(true); 
+        setApiKey(API_KEY_PLACEHOLDER); // Show placeholder after successful save
+    } catch (err: any) {
+        setError(err.message || "Failed to save API key.");
+    } finally {
+        setIsLoading(false);
+    }
+  }
+
+  const handleRemoveApiKey = async () => {
+    if (!token) {
+      setError("You must be logged in to remove an API key.");
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+    try {
+      await removeApiKey(token);
+      setSuccess("API Key removed successfully!");
+      setHasApiKey(false);
+      setApiKey(''); // Clear the input field
+    } catch (err: any) {
+      setError(err.message || "Failed to remove API key.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleAddClick = () => {
     onAddItems(generatedItems);
     onClose();
+  };
+
+  const handleApiKeyFocus = () => {
+    // Clear the placeholder text when the user focuses the input
+    if (apiKey === API_KEY_PLACEHOLDER) {
+      setApiKey('');
+    }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Smart Assistant</DialogTitle>
       <DialogContent>
-        {!model && (
-           <Alert severity="error" sx={{ mb: 2 }}>
-            Smart Assistant is not configured. Please add your `VITE_GEMINI_API_KEY` to the .env.local file and restart the server.
-          </Alert>
-        )}
-        <Typography variant="body1" sx={{ mb: 2 }}>
+        <Box sx={{ minHeight: '60px', mb: 2 }}>
+            {isCheckingStatus ? (
+                <CircularProgress size={24} />
+            ) : hasApiKey ? (
+                <Alert severity="success" icon={<CheckCircleOutlineIcon fontSize="inherit" />}>
+                    An API key is saved to your account. You can enter a new key to overwrite it.
+                </Alert>
+            ) : (
+                <Alert severity="info">
+                    No API key found. Please enter a key to use the Smart Assistant.
+                </Alert>
+            )}
+        </Box>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          Enter your Gemini API Key. It will be stored securely for future use.
+        </Typography>
+        <TextField
+          margin="dense"
+          label="Gemini API Key"
+          fullWidth
+          value={apiKey}
+          onChange={(e) => setApiKey(e.target.value)}
+          onFocus={handleApiKeyFocus}
+          disabled={isLoading}
+          type="password"
+          placeholder={hasApiKey ? "" : "Enter your API Key"}
+        />
+        <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+            <Button onClick={handleSaveApiKey} variant="outlined" disabled={isLoading}>
+              Save Key
+            </Button>
+            <Button onClick={handleRemoveApiKey} color="error" variant="outlined" disabled={isLoading || !hasApiKey}>
+              Remove Key
+            </Button>
+        </Box>
+        {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
+        
+        <Typography variant="body1" sx={{ mt: 4, mb: 2 }}>
           Enter a theme (e.g., "Taco Night", "Pasta Dinner", "Beach Picnic") and the assistant will generate a list of suggested items.
         </Typography>
         <TextField
@@ -128,10 +200,10 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           fullWidth
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          disabled={isLoading || !model}
+          disabled={isLoading || !hasApiKey}
         />
         {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        {isLoading ? (
+        {isLoading && !success ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
             <CircularProgress />
           </Box>
@@ -152,10 +224,10 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button onClick={handleGenerate} variant="outlined" disabled={isLoading || !model}>
+        <Button onClick={handleGenerate} variant="outlined" disabled={isLoading || !hasApiKey}>
           Generate
         </Button>
-        <Button onClick={handleAddClick} variant="contained" disabled={isLoading || generatedItems.length === 0 || !model}>
+        <Button onClick={handleAddClick} variant="contained" disabled={isLoading || generatedItems.length === 0}>
           Add Items to List
         </Button>
       </DialogActions>

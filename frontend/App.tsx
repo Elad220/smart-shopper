@@ -764,6 +764,7 @@ const App: React.FC = () => {
           open={isSmartAssistantOpen}
           onClose={() => setIsSmartAssistantOpen(false)}
           onAddItems={handleAddGeneratedItems}
+          token={authToken}
         />
     </ThemeProvider>
   );

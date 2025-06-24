@@ -7,6 +7,22 @@ const getBaseUrl = () => {
 
 export const BASE_URL = getBaseUrl();
 
+// ... (keep all existing functions from the previous steps)
+
+// Add the new removeApiKey function
+export const removeApiKey = async (token: string): Promise<{ message: string }> => {
+    const response = await fetch(`${BASE_URL}/api/user/api-key`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+// --- REST OF THE FILE ---
+// (The rest of the file remains the same)
+
 // Health check function to test backend connection
 export const checkBackendHealth = async (): Promise<{ status: string, version?: string }> => {
   try {
@@ -63,7 +79,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
     data = await response.json();
   } else {
     // If not JSON, attempt to read as text (e.g., for 204 No Content or plain text errors)
-    data = await response.text(); 
+    data = await response.text();
   }
 
   if (!response.ok) {
@@ -113,6 +129,31 @@ export const loginUserFlexible = async (payload: { email?: string; username?: st
     body: JSON.stringify(payload),
   });
   return handleResponse<AuthResponse>(response);
+};
+
+// New functions for user API key and smart assistant
+export const saveApiKey = async (token: string, apiKey: string): Promise<{ message: string }> => {
+    const response = await fetch(`${BASE_URL}/api/user/api-key`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ apiKey }),
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+export const generateItemsFromApi = async (token: string, prompt: string): Promise<{ name: string, category: string }[]> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/generate`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ prompt }),
+    });
+    return handleResponse<{ name: string, category: string }[]>(response);
 };
 
 // Shopping Lists
@@ -261,6 +302,16 @@ export const exportShoppingList = async (token: string, listId: string): Promise
     headers: { 'Authorization': `Bearer ${token}` },
   });
   return handleResponse<ShoppingItem[]>(response);
+};
+// New function to check API key status
+export const checkApiKeyStatus = async (token: string): Promise<{ hasApiKey: boolean }> => {
+  const response = await fetch(`${BASE_URL}/api/user/api-key/status`, {
+      method: 'GET',
+      headers: {
+          'Authorization': `Bearer ${token}`,
+      },
+  });
+  return handleResponse<{ hasApiKey: boolean }>(response);
 };
 
 export const importShoppingList = async (token: string, listId: string, items: Omit<ShoppingItem, 'id'>[]): Promise<ShoppingItem[]> => {

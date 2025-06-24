@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  apiKey: { // New field for Gemini API Key
+    type: String,
+    trim: true,
+  },
   createdAt: {
     type: Date,
     default: Date.now
