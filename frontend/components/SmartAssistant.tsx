@@ -1,3 +1,4 @@
+// frontend/components/SmartAssistant.tsx
 import React, { useState, useEffect } from 'react';
 import {
   Button,
@@ -14,6 +15,8 @@ import {
   ListItemText,
   Paper,
   Alert,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
@@ -33,25 +36,24 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [generatedItems, setGeneratedItems] = useState<{ name: string; category: string }[]>([]);
+  const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
-    // When the dialog opens, fetch the API key status
     if (open && token) {
-      // Reset local states
       setError(null);
       setSuccess(null);
       setApiKey('');
       setGeneratedItems([]);
+      setSelectedItems(new Set());
       setIsCheckingStatus(true);
 
       const fetchStatus = async () => {
         try {
           const { hasApiKey: keyExists } = await checkApiKeyStatus(token);
           setHasApiKey(keyExists);
-          // If a key exists, pre-fill the input with the placeholder
           if (keyExists) {
             setApiKey(API_KEY_PLACEHOLDER);
           }
@@ -69,8 +71,8 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
 
   const handleGenerate = async () => {
     if (!token) {
-        setError("You must be logged in to use the smart assistant.");
-        return;
+      setError("You must be logged in to use the smart assistant.");
+      return;
     }
     if (!prompt.trim()) {
       setError("Please enter a theme for your shopping list.");
@@ -80,10 +82,13 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     setIsLoading(true);
     setError(null);
     setGeneratedItems([]);
+    setSelectedItems(new Set());
 
     try {
       const items = await generateItemsFromApi(token, prompt);
       setGeneratedItems(items);
+      // Pre-select all generated items
+      setSelectedItems(new Set(items.map((_, index) => index)));
     } catch (err: any) {
       console.error("Error generating items:", err);
       setError(err.message || "Failed to generate items. Please check your API key and try again.");
@@ -91,13 +96,12 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       setIsLoading(false);
     }
   };
-  
+
   const handleSaveApiKey = async () => {
     if (!token) {
         setError("You must be logged in to save an API key.");
         return;
     }
-    // Prevent saving the placeholder text as a key
     if (!apiKey.trim() || apiKey === API_KEY_PLACEHOLDER) {
         setError("API Key cannot be empty.");
         return;
@@ -108,14 +112,14 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     try {
         await saveApiKey(token, apiKey);
         setSuccess("API Key saved successfully!");
-        setHasApiKey(true); 
-        setApiKey(API_KEY_PLACEHOLDER); // Show placeholder after successful save
+        setHasApiKey(true);
+        setApiKey(API_KEY_PLACEHOLDER);
     } catch (err: any) {
         setError(err.message || "Failed to save API key.");
     } finally {
         setIsLoading(false);
     }
-  }
+  };
 
   const handleRemoveApiKey = async () => {
     if (!token) {
@@ -129,7 +133,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       await removeApiKey(token);
       setSuccess("API Key removed successfully!");
       setHasApiKey(false);
-      setApiKey(''); // Clear the input field
+      setApiKey('');
     } catch (err: any) {
       setError(err.message || "Failed to remove API key.");
     } finally {
@@ -137,13 +141,33 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     }
   };
 
-  const handleAddClick = () => {
-    onAddItems(generatedItems);
-    onClose();
+  const handleToggleItem = (index: number) => {
+    setSelectedItems(prev => {
+      const newSelected = new Set(prev);
+      if (newSelected.has(index)) {
+        newSelected.delete(index);
+      } else {
+        newSelected.add(index);
+      }
+      return newSelected;
+    });
   };
 
+  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.checked) {
+      setSelectedItems(new Set(generatedItems.map((_, index) => index)));
+    } else {
+      setSelectedItems(new Set());
+    }
+  };
+  
+  const handleAddClick = () => {
+    const itemsToAdd = generatedItems.filter((_, index) => selectedItems.has(index));
+    onAddItems(itemsToAdd);
+    onClose();
+  };
+  
   const handleApiKeyFocus = () => {
-    // Clear the placeholder text when the user focuses the input
     if (apiKey === API_KEY_PLACEHOLDER) {
       setApiKey('');
     }
@@ -210,10 +234,25 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
         ) : (
           generatedItems.length > 0 && (
             <Paper elevation={2} sx={{ mt: 2, p: 2 }}>
-              <Typography variant="h6" sx={{ mb: 1 }}>Generated Items:</Typography>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={selectedItems.size === generatedItems.length}
+                    indeterminate={selectedItems.size > 0 && selectedItems.size < generatedItems.length}
+                    onChange={handleSelectAll}
+                  />
+                }
+                label="Select All"
+              />
               <List>
                 {generatedItems.map((item, index) => (
-                  <ListItem key={index}>
+                  <ListItem key={index} dense button onClick={() => handleToggleItem(index)}>
+                     <Checkbox
+                        edge="start"
+                        checked={selectedItems.has(index)}
+                        tabIndex={-1}
+                        disableRipple
+                      />
                     <ListItemText primary={item.name} secondary={item.category} />
                   </ListItem>
                 ))}
@@ -228,7 +267,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           Generate
         </Button>
         <Button onClick={handleAddClick} variant="contained" disabled={isLoading || generatedItems.length === 0}>
-          Add Items to List
+          Add Selected Items
         </Button>
       </DialogActions>
     </Dialog>
