@@ -210,133 +210,136 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
             px: { xs: 2, sm: 3 }
           }}
         >
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Card
-              sx={{
-                mb: 3,
-                borderRadius: '16px',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-                border: `1px solid ${theme.palette.divider}`,
-              }}
-            >
-              <CardContent sx={{ p: 2.5 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                    <IconButton
-                      onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                      sx={{ 
-                        display: { md: 'none' },
-                        p: 1
-                      }}
-                    >
-                      <Menu size={18} />
-                    </IconButton>
-                                         <Box sx={{ minWidth: 0 }}>
-                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                         {currentListName}
-                       </Typography>
-                       <Typography variant="caption" color="text.secondary">
-                         {totalItems} items • {completedItems} completed
-                       </Typography>
-                     </Box>
-                  </Box>
+          {/* Loading State */}
+          {isLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              >
+                <Package size={40} color={theme.palette.primary.main} />
+              </motion.div>
+            </Box>
+          ) : (
+            <>
+              {/* Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card
+                  sx={{
+                    mb: 3,
+                    borderRadius: '16px',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                    border: `1px solid ${theme.palette.divider}`,
+                  }}
+                >
+                  <CardContent sx={{ p: 2.5 }}>
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                        <IconButton
+                          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+                          sx={{ 
+                            display: { md: 'none' },
+                            p: 1
+                          }}
+                        >
+                          <Menu size={18} />
+                        </IconButton>
+                                             <Box sx={{ minWidth: 0 }}>
+                           <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                             {currentListName}
+                           </Typography>
+                           <Typography variant="caption" color="text.secondary">
+                             {totalItems} items • {completedItems} completed
+                           </Typography>
+                         </Box>
+                      </Box>
+                      
+                      <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                        {completedItems > 0 && (
+                          <Button
+                            variant="text"
+                            size="small"
+                            onClick={handleClearCompleted}
+                            sx={{ 
+                              borderRadius: '8px', 
+                              textTransform: 'none',
+                              color: theme.palette.error.main,
+                              minWidth: 'auto',
+                              px: 1.5,
+                              fontSize: '0.75rem',
+                              '&:hover': {
+                                background: alpha(theme.palette.error.main, 0.1),
+                              },
+                            }}
+                          >
+                            Clear
+                          </Button>
+                        )}
+                        <IconButton
+                          onClick={() => setIsAddModalOpen(true)}
+                          sx={{
+                            borderRadius: '8px',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                            color: 'white',
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                            },
+                          }}
+                        >
+                          <Plus size={18} />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => setIsSmartAssistantOpen(true)}
+                          sx={{ 
+                            borderRadius: '8px',
+                            border: `1px solid ${theme.palette.divider}`,
+                            '&:hover': {
+                              background: alpha(theme.palette.primary.main, 0.1),
+                            },
+                          }}
+                        >
+                          <Brain size={18} />
+                        </IconButton>
+                      </Stack>
+                    </Stack>
                   
-                  <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                    {completedItems > 0 && (
-                      <Button
-                        variant="text"
-                        size="small"
-                        onClick={handleClearCompleted}
-                        sx={{ 
-                          borderRadius: '8px', 
-                          textTransform: 'none',
-                          color: theme.palette.error.main,
-                          minWidth: 'auto',
-                          px: 1.5,
-                          fontSize: '0.75rem',
-                          '&:hover': {
-                            background: alpha(theme.palette.error.main, 0.1),
+                  {totalItems > 0 && (
+                    <Box sx={{ mt: 3 }}>
+                      <LinearProgress
+                        variant="determinate"
+                        value={completionPercentage}
+                        sx={{
+                          height: 8,
+                          borderRadius: 4,
+                          backgroundColor: `${theme.palette.primary.main}20`,
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 4,
+                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                           },
                         }}
-                      >
-                        Clear
-                      </Button>
-                    )}
-                    <IconButton
-                      onClick={() => setIsAddModalOpen(true)}
-                      sx={{
-                        borderRadius: '8px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                        color: 'white',
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                        },
-                      }}
-                    >
-                      <Plus size={18} />
-                    </IconButton>
-                    <IconButton
-                      onClick={() => setIsSmartAssistantOpen(true)}
-                      sx={{ 
-                        borderRadius: '8px',
-                        border: `1px solid ${theme.palette.divider}`,
-                        '&:hover': {
-                          background: alpha(theme.palette.primary.main, 0.1),
-                        },
-                      }}
-                    >
-                      <Brain size={18} />
-                    </IconButton>
-                  </Stack>
-                </Stack>
-              
-              {totalItems > 0 && (
-                <Box sx={{ mt: 3 }}>
-                  <LinearProgress
-                    variant="determinate"
-                    value={completionPercentage}
-                    sx={{
-                      height: 8,
-                      borderRadius: 4,
-                      backgroundColor: `${theme.palette.primary.main}20`,
-                      '& .MuiLinearProgress-bar': {
-                        borderRadius: 4,
-                        background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                      },
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                    {completionPercentage}% complete
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Shopping List */}
-        {isLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            >
-              <Package size={40} color={theme.palette.primary.main} />
+                      />
+                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        {completionPercentage}% complete
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
             </motion.div>
-          </Box>
-        ) : (
-          <ShoppingListView
-            items={items}
-            onToggleComplete={handleToggleComplete}
-            onDeleteItem={handleDeleteItem}
-            onEditItem={handleEditItem}
-            onAddItem={() => setIsAddModalOpen(true)}
-          />
+
+            {/* Shopping List */}
+            <ShoppingListView
+              items={items}
+              onToggleComplete={handleToggleComplete}
+              onDeleteItem={handleDeleteItem}
+              onEditItem={handleEditItem}
+              onAddItem={() => setIsAddModalOpen(true)}
+            />
+          </>
         )}
 
         {/* Floating Action Button */}
