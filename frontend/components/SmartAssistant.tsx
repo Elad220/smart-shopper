@@ -19,7 +19,6 @@ import {
   Checkbox,
   FormControlLabel,
   Stack,
-  useTheme,
   IconButton,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
@@ -36,7 +35,6 @@ interface SmartAssistantProps {
 const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
-  const theme = useTheme();
   const [prompt, setPrompt] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -188,14 +186,14 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       PaperProps={{
         sx: {
           borderRadius: '20px',
-          background: theme.palette.mode === 'dark'
+          background: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.7)'
             : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(32px)',
-          border: theme.palette.mode === 'dark' 
+          border: (theme) => theme.palette.mode === 'dark' 
             ? '1px solid rgba(255, 255, 255, 0.15)'
             : '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: theme.palette.mode === 'dark'
+          boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
         }
@@ -332,7 +330,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           sx={{
             borderRadius: '8px',
             textTransform: 'none',
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
           }}
         >
           Add Selected Items

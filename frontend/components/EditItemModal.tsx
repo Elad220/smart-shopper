@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Stack, MenuItem, Box, useTheme,
+  TextField, Button, Stack, MenuItem, Box,
   FormControl, InputLabel, OutlinedInput,
   InputAdornment, IconButton, Typography
 } from '@mui/material';
@@ -39,7 +39,6 @@ interface EditItemModalProps {
 }
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, item }) => {
-  const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     category: 'Other',
@@ -164,14 +163,14 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
       PaperProps={{
         sx: {
           borderRadius: '20px',
-          background: theme.palette.mode === 'dark'
+          background: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.7)'
             : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(32px)',
-          border: theme.palette.mode === 'dark' 
+          border: (theme) => theme.palette.mode === 'dark' 
             ? '1px solid rgba(255, 255, 255, 0.15)'
             : '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: theme.palette.mode === 'dark'
+          boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
         }
