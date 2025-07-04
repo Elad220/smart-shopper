@@ -190,13 +190,10 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-          // Mobile responsiveness: Constrain dialog size properly
-          maxHeight: isMobile ? '95vh' : '85vh',
-          height: isMobile ? '95vh' : 'auto',
+          // Mobile responsiveness: Simplified dialog constraints
+          maxHeight: isMobile ? '90vh' : '85vh',
           margin: isMobile ? '16px' : '32px',
           width: isMobile ? 'calc(100% - 32px)' : 'auto',
-          display: 'flex',
-          flexDirection: 'column',
           position: 'relative',
         }
       }}
@@ -222,12 +219,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       <DialogContent 
         dividers
         sx={{
-          // Mobile responsiveness: Make content scrollable
-          flex: '1 1 auto',
+          // Mobile responsiveness: Make content scrollable with explicit constraints
+          maxHeight: isMobile ? '60vh' : '50vh', // Force a height constraint
           overflowY: 'auto',
           overflowX: 'hidden',
           paddingBottom: '16px',
-          minHeight: 0, // Critical for flex scrolling
           WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
           '&::-webkit-scrollbar': {
             width: '8px',
@@ -447,10 +443,45 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
-            rows={3}
+            rows={4}
             placeholder="Any additional notes..."
             sx={{ mb: 2 }}
           />
+          
+          {/* Add extra content to ensure scrolling is needed */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Tips for better shopping:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              • Add specific quantities to avoid over-purchasing
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Set priority levels to organize your shopping
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Use notes for specific brands or preferences
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Upload images for items that are hard to describe
+            </Typography>
+          </Box>
+          
+          {/* Additional test content */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Additional information:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              • All fields marked with * are required
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Custom categories will be saved for future use
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Images are stored locally and not uploaded to servers
+            </Typography>
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions 
