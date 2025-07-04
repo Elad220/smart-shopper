@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, TextField, Button, Link, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AuthLayout from './AuthLayout';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -32,43 +33,81 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const commonTextFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: '12px',
-      backgroundColor: theme.palette.background.paper,
+      backgroundColor: theme.palette.mode === 'dark' ? '#2a2a2a' : theme.palette.background.paper,
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
       '& fieldset': {
-        borderColor: theme.palette.divider,
+        borderColor: theme.palette.mode === 'dark' ? '#404040' : theme.palette.divider,
       },
       '&:hover fieldset': {
-        borderColor: theme.palette.action.hover,
+        borderColor: theme.palette.mode === 'dark' ? '#505050' : theme.palette.action.hover,
       },
       '&.Mui-focused fieldset': {
-        borderColor: theme.palette.primary.main,
+        borderColor: theme.palette.mode === 'dark' ? '#606060' : theme.palette.primary.main,
+        borderWidth: '1px',
       },
     },
     '& .MuiInputBase-input': {
       color: theme.palette.text.primary,
       transition: 'color 0.2s ease-in-out',
-    },
-     '& .MuiInputLabel-root': {
+      '&::placeholder': {
         color: theme.palette.text.secondary,
-        transition: 'color 0.2s ease-in-out',
+        opacity: 0.7,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: theme.palette.text.secondary,
+      transition: 'color 0.2s ease-in-out',
+      '&.Mui-focused': {
+        color: theme.palette.mode === 'dark' ? theme.palette.text.primary : theme.palette.primary.main,
+      },
     },
   };
 
   return (
     <AuthLayout>
       <Box component="form" onSubmit={onLogin} noValidate>
+        <Box sx={{ textAlign: 'center', mb: 3, pt: 3 }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: 3,
+              bgcolor: theme.palette.primary.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto',
+              mb: 3,
+            }}
+          >
+            <ShoppingCartIcon sx={{ color: 'white', fontSize: 40 }} />
+          </Box>
+        </Box>
+
         <Typography
           variant="h4"
           sx={{
             color: theme.palette.text.primary,
             fontWeight: 'bold',
             textAlign: 'center',
-            pb: 3,
-            pt: 5,
+            pb: 2,
+            pt: 0,
             transition: 'color 0.2s ease-in-out',
           }}
         >
-          Welcome back
+          Welcome Back!
+        </Typography>
+
+        <Typography
+          variant="body1"
+          sx={{
+            color: theme.palette.text.secondary,
+            textAlign: 'center',
+            pb: 3,
+            transition: 'color 0.2s ease-in-out',
+          }}
+        >
+          Sign in to your Smart Shopper account
         </Typography>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -120,18 +159,24 @@ const LoginPage: React.FC<LoginPageProps> = ({
             sx={{
               borderRadius: '9999px',
               height: 48,
-              bgcolor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
+              backgroundColor: '#3b82f6 !important',
+              color: '#ffffff !important',
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               transition: 'all 0.2s ease-in-out',
-               '&:hover': {
-                bgcolor: theme.palette.primary.dark,
+              '&:hover': {
+                backgroundColor: '#2563eb !important',
+                color: '#ffffff !important',
+              },
+              '&:disabled': {
+                backgroundColor: '#6b7280 !important',
+                color: '#ffffff !important',
+                opacity: 0.7,
               }
             }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Login'}
+            {isLoading ? <CircularProgress size={24} sx={{ color: '#ffffff' }} /> : 'Sign In →'}
           </Button>
         </Box>
         <Typography
@@ -154,7 +199,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
               transition: 'color 0.2s ease-in-out',
             }}
           >
-            Sign up
+            Create one here
           </Link>
         </Typography>
       </Box>
