@@ -172,8 +172,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       onClose={onClose} 
       maxWidth="sm" 
       fullWidth
-      fullScreen={isMobile}
-      scroll="paper"
+      fullScreen={false}
+      scroll="body"
       disableScrollLock={false}
       disableEscapeKeyDown={false}
       keepMounted={false}
@@ -192,11 +192,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
           // Mobile responsiveness: Set max height and ensure dialog fits on screen
           maxHeight: isMobile ? '100vh' : '90vh',
-          height: isMobile ? '100vh' : 'auto',
           margin: isMobile ? '0px' : '32px',
           width: isMobile ? '100%' : 'auto',
-          display: 'flex',
-          flexDirection: 'column',
           position: 'relative',
         }
       }}
@@ -217,11 +214,9 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         dividers
         sx={{
           // Mobile responsiveness: Make content scrollable
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
           paddingBottom: '16px',
           WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
+          // With scroll="body", the entire content should be scrollable
           '&::-webkit-scrollbar': {
             width: '8px',
           },
@@ -440,17 +435,21 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
-            rows={2}
+            rows={4}
             placeholder="Any additional notes..."
             sx={{ mb: 2 }}
           />
+          
+          {/* Add some extra content to ensure scrolling is triggered on mobile */}
+          <Box sx={{ height: '20px' }} /> {/* Spacer */}
+          <Box sx={{ height: '20px' }} /> {/* Spacer */}
+          <Box sx={{ height: '20px' }} /> {/* Spacer */}
         </Box>
       </DialogContent>
       <DialogActions 
         sx={{ 
           p: '16px 24px',
           // Mobile responsiveness: Ensure buttons remain visible and accessible
-          flexShrink: 0,
           backgroundColor: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.95)'
             : 'rgba(255, 255, 255, 0.95)',
