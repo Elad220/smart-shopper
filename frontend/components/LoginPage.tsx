@@ -159,19 +159,20 @@ const LoginPage: React.FC<LoginPageProps> = ({
             sx={{
               borderRadius: '9999px',
               height: 48,
-              bgcolor: theme.palette.primary.main,
-              color: '#ffffff',
+              backgroundColor: '#3b82f6 !important',
+              color: '#ffffff !important',
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               transition: 'all 0.2s ease-in-out',
               '&:hover': {
-                bgcolor: theme.palette.primary.dark,
-                color: '#ffffff',
+                backgroundColor: '#2563eb !important',
+                color: '#ffffff !important',
               },
               '&:disabled': {
-                bgcolor: theme.palette.action.disabled,
-                color: '#ffffff',
+                backgroundColor: '#6b7280 !important',
+                color: '#ffffff !important',
+                opacity: 0.7,
               }
             }}
           >
