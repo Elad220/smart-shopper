@@ -9,18 +9,24 @@ export const useTheme = () => {
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
     
-    // Apply CSS custom properties for immediate theme switching
+    // Update data attributes for CSS-based styling
     const root = document.documentElement;
+    const body = document.body;
+    
+    body.setAttribute('data-theme', mode);
+    root.setAttribute('data-theme', mode);
+    
+    // Set CSS custom properties for immediate theme switching
     if (mode === 'dark') {
-      root.style.setProperty('--bg-color', '#111827');
-      root.style.setProperty('--text-color', '#f9fafb');
-      root.style.setProperty('--paper-color', '#1f2937');
-      root.style.setProperty('--border-color', '#374151');
+      root.style.setProperty('--bg-color', '#000000');
+      root.style.setProperty('--text-color', '#ffffff');
+      root.style.setProperty('--paper-color', '#0a0a0a');
+      root.style.setProperty('--border-color', '#1a1a1a');
     } else {
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
       root.style.setProperty('--paper-color', '#f8fafc');
-      root.style.setProperty('--border-color', '#e5e7eb');
+      root.style.setProperty('--border-color', '#e2e8f0');
     }
   }, [mode]);
 
@@ -54,28 +60,28 @@ export const useTheme = () => {
         }
       } : {
         primary: { 
-          main: '#3b82f6',
-          light: '#60a5fa',
-          dark: '#2563eb'
+          main: '#60a5fa',
+          light: '#93c5fd',
+          dark: '#3b82f6'
         },
         secondary: { 
-          main: '#8b5cf6',
-          light: '#a78bfa',
-          dark: '#7c3aed'
+          main: '#a78bfa',
+          light: '#c4b5fd',
+          dark: '#8b5cf6'
         },
         background: { 
-          default: '#111827', 
-          paper: '#1f2937' 
+          default: '#000000', 
+          paper: '#0a0a0a' 
         },
         text: { 
-          primary: '#f9fafb', 
+          primary: '#ffffff', 
           secondary: '#d1d5db' 
         },
-        divider: '#374151',
+        divider: '#1a1a1a',
         action: {
-          hover: '#1f2937',
-          selected: '#374151',
-          disabled: '#6b7280'
+          hover: '#1a1a1a',
+          selected: '#2a2a2a',
+          disabled: '#404040'
         }
       })
     },
@@ -92,8 +98,8 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? '#ffffff !important' : '#111827 !important',
-            color: mode === 'light' ? '#111827 !important' : '#f9fafb !important',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#000000',
+            color: mode === 'light' ? '#111827' : '#ffffff',
             transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
           },
           '*': {
@@ -101,11 +107,14 @@ export const useTheme = () => {
               width: '8px',
             },
             '&::-webkit-scrollbar-track': {
-              background: mode === 'light' ? '#f3f4f6' : '#1f2937',
+              background: mode === 'light' ? '#f1f5f9' : '#0a0a0a',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: mode === 'light' ? '#d1d5db' : '#6b7280',
+              background: mode === 'light' ? '#cbd5e1' : '#404040',
               borderRadius: '4px',
+              '&:hover': {
+                background: mode === 'light' ? '#94a3b8' : '#606060',
+              }
             },
           }
         }
@@ -113,24 +122,69 @@ export const useTheme = () => {
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#1f2937',
-            border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+              border: '1px solid #1a1a1a !important',
+            }),
+            transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
           }
         }
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#1f2937',
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+            }),
             backgroundImage: 'none',
+            transition: 'background-color 0.2s ease-in-out',
           }
         }
       },
       MuiDialog: {
         styleOverrides: {
           paper: {
-            backgroundColor: mode === 'light' ? '#ffffff' : '#1f2937',
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+            }),
             backgroundImage: 'none',
+            transition: 'background-color 0.2s ease-in-out',
+          }
+        }
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+            backdropFilter: 'blur(20px)',
+            transition: 'background-color 0.2s ease-in-out',
+          }
+        }
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            transition: 'all 0.2s ease-in-out',
+          }
+        }
+      },
+      MuiTextField: {
+        styleOverrides: {
+          root: {
+            '& .MuiOutlinedInput-root': {
+              ...(mode === 'dark' && {
+                backgroundColor: '#0a0a0a !important',
+                '& fieldset': {
+                  borderColor: '#1a1a1a !important',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#2a2a2a !important',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#60a5fa !important',
+                },
+              }),
+            },
           }
         }
       }
@@ -138,17 +192,7 @@ export const useTheme = () => {
   }), [mode]);
 
   const toggleMode = useCallback(() => {
-    setMode(prev => {
-      const newMode = prev === 'light' ? 'dark' : 'light';
-      
-      // Force immediate DOM updates
-      setTimeout(() => {
-        const event = new CustomEvent('themeChange', { detail: { mode: newMode } });
-        window.dispatchEvent(event);
-      }, 0);
-      
-      return newMode;
-    });
+    setMode(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
   return { theme, mode, setMode, toggleMode };

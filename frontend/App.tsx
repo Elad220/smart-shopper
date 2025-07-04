@@ -1,5 +1,5 @@
 // frontend/App.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
@@ -9,24 +9,10 @@ import MainApp from './components/app/MainApp';
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const { theme, mode } = useTheme();
-  const [themeKey, setThemeKey] = useState<number>(0);
-
-  // Force re-render when theme changes
-  useEffect(() => {
-    setThemeKey((prev: number) => prev + 1);
-    
-    // Listen for custom theme change events
-    const handleThemeChange = () => {
-      setThemeKey((prev: number) => prev + 1);
-    };
-    
-    window.addEventListener('themeChange', handleThemeChange);
-    return () => window.removeEventListener('themeChange', handleThemeChange);
-  }, [mode]);
+  const { theme } = useTheme();
 
   return (
-    <ThemeProvider theme={theme} key={`theme-${themeKey}`}>
+    <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
       <Toaster 
         position="top-right"
@@ -54,9 +40,9 @@ const App: React.FC = () => {
         }}
       />
       {isAuthenticated && user ? (
-        <MainApp user={user} key={`main-${themeKey}`} />
+        <MainApp user={user} />
       ) : (
-        <AuthFlow key={`auth-${themeKey}`} />
+        <AuthFlow />
       )}
     </ThemeProvider>
   );
