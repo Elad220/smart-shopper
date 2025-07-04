@@ -587,7 +587,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             <Stack direction="row" spacing={2} alignItems="center">
               <TextField
                 size="small"
-                placeholder="Search items..."
+                placeholder="Search"
                 value={searchQuery}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
                 sx={{ 
