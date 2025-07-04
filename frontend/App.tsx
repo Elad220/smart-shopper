@@ -9,10 +9,10 @@ import MainApp from './components/app/MainApp';
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const { theme, mode } = useTheme();
+  const { theme } = useTheme();
 
   return (
-    <ThemeProvider theme={theme} key={`theme-${mode}`}>
+    <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
       <Toaster 
         position="top-right"
@@ -40,9 +40,9 @@ const App: React.FC = () => {
         }}
       />
       {isAuthenticated && user ? (
-        <MainApp user={user} key={`main-${mode}`} />
+        <MainApp user={user} />
       ) : (
-        <AuthFlow key={`auth-${mode}`} />
+        <AuthFlow />
       )}
     </ThemeProvider>
   );

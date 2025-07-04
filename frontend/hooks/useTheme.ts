@@ -9,38 +9,24 @@ export const useTheme = () => {
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
     
-    // Immediately update CSS custom properties for instant theme switching
+    // Update data attributes for CSS-based styling
     const root = document.documentElement;
     const body = document.body;
     
-    // Add data attributes for immediate CSS updates
     body.setAttribute('data-theme', mode);
     root.setAttribute('data-theme', mode);
     
+    // Set CSS custom properties for immediate theme switching
     if (mode === 'dark') {
       root.style.setProperty('--bg-color', '#000000');
       root.style.setProperty('--text-color', '#ffffff');
       root.style.setProperty('--paper-color', '#0a0a0a');
       root.style.setProperty('--border-color', '#1a1a1a');
-      body.style.backgroundColor = '#000000';
-      body.style.color = '#ffffff';
-      root.style.backgroundColor = '#000000';
     } else {
-      // Light mode - completely clear all overrides and let Material-UI take control
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
       root.style.setProperty('--paper-color', '#f8fafc');
       root.style.setProperty('--border-color', '#e2e8f0');
-      
-      // Clear ALL inline styles completely
-      body.style.removeProperty('background-color');
-      body.style.removeProperty('color');
-      root.style.removeProperty('background-color');
-      root.style.removeProperty('color');
-      
-      // Also clear the style attribute completely if empty
-      if (!body.style.cssText) body.removeAttribute('style');
-      if (!root.style.cssText) root.removeAttribute('style');
     }
   }, [mode]);
 
@@ -112,16 +98,9 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
-            color: mode === 'light' ? 'inherit' : '#ffffff !important',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#000000',
+            color: mode === 'light' ? '#111827' : '#ffffff',
             transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
-          },
-          html: {
-            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
-          },
-          '#root': {
-            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
-            minHeight: '100vh',
           },
           '*': {
             '&::-webkit-scrollbar': {
@@ -213,47 +192,7 @@ export const useTheme = () => {
   }), [mode]);
 
   const toggleMode = useCallback(() => {
-    setMode(prev => {
-      const newMode = prev === 'light' ? 'dark' : 'light';
-      
-      // Force immediate DOM updates
-      requestAnimationFrame(() => {
-        const body = document.body;
-        const root = document.documentElement;
-        
-        // Update data attributes immediately
-        body.setAttribute('data-theme', newMode);
-        root.setAttribute('data-theme', newMode);
-        
-        if (newMode === 'dark') {
-          body.style.backgroundColor = '#000000';
-          body.style.color = '#ffffff';
-          root.style.backgroundColor = '#000000';
-          root.style.setProperty('--bg-color', '#000000');
-          root.style.setProperty('--text-color', '#ffffff');
-          root.style.setProperty('--paper-color', '#0a0a0a');
-          root.style.setProperty('--border-color', '#1a1a1a');
-        } else {
-          // Light mode - completely clear all overrides
-          root.style.setProperty('--bg-color', '#ffffff');
-          root.style.setProperty('--text-color', '#111827');
-          root.style.setProperty('--paper-color', '#f8fafc');
-          root.style.setProperty('--border-color', '#e2e8f0');
-          
-          // Remove all inline style overrides
-          body.style.removeProperty('background-color');
-          body.style.removeProperty('color');
-          root.style.removeProperty('background-color');
-          root.style.removeProperty('color');
-          
-          // Clear style attributes if empty
-          if (!body.style.cssText) body.removeAttribute('style');
-          if (!root.style.cssText) root.removeAttribute('style');
-        }
-      });
-      
-      return newMode;
-    });
+    setMode(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
   return { theme, mode, setMode, toggleMode };

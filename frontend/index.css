@@ -1,4 +1,4 @@
-/* Global styles for immediate theme switching */
+/* Global styles for theme switching */
 body {
   margin: 0;
   padding: 0;
@@ -15,57 +15,14 @@ html {
   transition: background-color 0.2s ease-in-out;
 }
 
-/* Dark mode overrides - force dark colors immediately */
-[data-theme="dark"] body,
-body[data-theme="dark"] {
+/* Dark mode overrides for immediate visual feedback */
+[data-theme="dark"] body {
   background-color: #000000 !important;
   color: #ffffff !important;
 }
 
-[data-theme="dark"] html,
-html[data-theme="dark"] {
+[data-theme="dark"] #root {
   background-color: #000000 !important;
-}
-
-[data-theme="dark"] #root,
-#root[data-theme="dark"] {
-  background-color: #000000 !important;
-  color: #ffffff !important;
-}
-
-/* Material-UI component overrides for dark mode */
-[data-theme="dark"] .MuiPaper-root,
-[data-theme="dark"] .MuiCard-root,
-[data-theme="dark"] .MuiDialog-paper,
-[data-theme="dark"] .MuiDrawer-paper {
-  background-color: #0a0a0a !important;
-  border-color: #1a1a1a !important;
-}
-
-[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root {
-  background-color: #0a0a0a !important;
-}
-
-[data-theme="dark"] .MuiTextField-root .MuiOutlinedInput-root fieldset {
-  border-color: #1a1a1a !important;
-}
-
-/* Light mode - let Material-UI handle everything naturally */
-[data-theme="light"] body,
-body[data-theme="light"] {
-  background-color: transparent;
-  color: inherit;
-}
-
-[data-theme="light"] html,
-html[data-theme="light"] {
-  background-color: transparent;
-}
-
-[data-theme="light"] #root,
-#root[data-theme="light"] {
-  background-color: transparent;
-  color: inherit;
 }
 
 /* Ensure scrollbars match theme */

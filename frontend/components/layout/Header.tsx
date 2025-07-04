@@ -31,12 +31,12 @@ const Header: React.FC<HeaderProps> = ({
       position="sticky" 
       elevation={0}
       sx={{ 
-        background: mode === 'dark' 
+        background: theme.palette.mode === 'dark' 
           ? 'rgba(0, 0, 0, 0.95)' 
           : 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(20px)',
-        borderBottom: `1px solid ${mode === 'dark' ? '#1a1a1a' : theme.palette.divider}`,
-        color: mode === 'dark' ? '#ffffff' : theme.palette.text.primary,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        color: theme.palette.text.primary,
         transition: 'all 0.2s ease-in-out',
       }}
     >
@@ -47,9 +47,9 @@ const Header: React.FC<HeaderProps> = ({
             edge="start" 
             sx={{ 
               mr: 2,
-              color: mode === 'dark' ? '#ffffff' : theme.palette.text.primary,
+              color: theme.palette.text.primary,
               '&:hover': {
-                backgroundColor: mode === 'dark' ? '#1a1a1a' : theme.palette.action.hover,
+                backgroundColor: theme.palette.action.hover,
               }
             }}
             onClick={onMenuOpen}
@@ -94,7 +94,7 @@ const Header: React.FC<HeaderProps> = ({
             <Typography 
               variant="body2" 
               sx={{ 
-                color: mode === 'dark' ? '#d1d5db' : theme.palette.text.secondary,
+                color: theme.palette.text.secondary,
                 transition: 'color 0.2s ease-in-out',
               }}
             >
@@ -108,11 +108,11 @@ const Header: React.FC<HeaderProps> = ({
           onClick={onToggleMode}
           sx={{ 
             mr: 1,
-            color: mode === 'dark' ? '#ffffff' : theme.palette.text.primary,
-            backgroundColor: mode === 'dark' ? '#1a1a1a' : 'transparent',
-            border: mode === 'dark' ? '1px solid #2a2a2a' : '1px solid transparent',
+            color: theme.palette.text.primary,
+            backgroundColor: 'transparent',
+            border: `1px solid ${theme.palette.divider}`,
             '&:hover': {
-              backgroundColor: mode === 'dark' ? '#2a2a2a' : theme.palette.action.hover,
+              backgroundColor: theme.palette.action.hover,
               transform: 'scale(1.05)',
             },
             transition: 'all 0.2s ease-in-out',
@@ -129,11 +129,11 @@ const Header: React.FC<HeaderProps> = ({
             sx={{
               textTransform: 'none',
               borderRadius: '8px',
-              color: mode === 'dark' ? '#ffffff' : theme.palette.text.primary,
-              backgroundColor: mode === 'dark' ? '#1a1a1a' : 'transparent',
-              border: mode === 'dark' ? '1px solid #2a2a2a' : '1px solid transparent',
+              color: theme.palette.text.primary,
+              backgroundColor: 'transparent',
+              border: `1px solid ${theme.palette.divider}`,
               '&:hover': {
-                backgroundColor: mode === 'dark' ? '#2a2a2a' : theme.palette.action.hover,
+                backgroundColor: theme.palette.action.hover,
               },
               transition: 'all 0.2s ease-in-out',
             }}

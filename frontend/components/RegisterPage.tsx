@@ -32,29 +32,28 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
   successMessage,
 }) => {
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
 
   const commonTextFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: '12px',
-      backgroundColor: isDarkMode ? '#0a0a0a' : '#e7edf4',
+      backgroundColor: theme.palette.background.paper,
       transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
       '& fieldset': {
-        borderColor: isDarkMode ? '#1a1a1a' : 'transparent',
+        borderColor: theme.palette.divider,
       },
       '&:hover fieldset': {
-        borderColor: isDarkMode ? '#2a2a2a' : '#c1d9f0',
+        borderColor: theme.palette.action.hover,
       },
       '&.Mui-focused fieldset': {
-        borderColor: isDarkMode ? '#60a5fa' : '#0c7ff2',
+        borderColor: theme.palette.primary.main,
       },
     },
     '& .MuiInputBase-input': {
-      color: isDarkMode ? '#ffffff' : '#0d141c',
+      color: theme.palette.text.primary,
       transition: 'color 0.2s ease-in-out',
     },
      '& .MuiInputLabel-root': {
-        color: isDarkMode ? '#d1d5db' : '#49739c',
+        color: theme.palette.text.secondary,
         transition: 'color 0.2s ease-in-out',
     },
   };
@@ -65,7 +64,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
         <Typography
           variant="h4"
           sx={{
-            color: isDarkMode ? '#ffffff' : '#0d141c',
+            color: theme.palette.text.primary,
             fontWeight: 'bold',
             textAlign: 'center',
             pb: 3,
@@ -121,14 +120,14 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
             sx={{
               borderRadius: '9999px',
               height: 48,
-              bgcolor: isDarkMode ? '#60a5fa' : '#0c7ff2',
-              color: isDarkMode ? '#000000' : 'white',
+              bgcolor: theme.palette.primary.main,
+              color: theme.palette.primary.contrastText,
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               transition: 'all 0.2s ease-in-out',
                '&:hover': {
-                bgcolor: isDarkMode ? '#3b82f6' : '#0064c4',
+                bgcolor: theme.palette.primary.dark,
               }
             }}
           >
@@ -137,7 +136,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
         </Box>
         <Typography
           sx={{
-            color: isDarkMode ? '#d1d5db' : '#49739c',
+            color: theme.palette.text.secondary,
             textAlign: 'center',
             fontSize: '0.875rem',
             transition: 'color 0.2s ease-in-out',
@@ -149,7 +148,7 @@ const RegisterPage: React.FC<RegisterPageProps> = ({
             type="button"
             onClick={onSwitchToLogin}
             sx={{
-              color: isDarkMode ? '#60a5fa' : '#0c7ff2',
+              color: theme.palette.primary.main,
               textDecoration: 'underline',
               fontWeight: 'medium',
               transition: 'color 0.2s ease-in-out',
