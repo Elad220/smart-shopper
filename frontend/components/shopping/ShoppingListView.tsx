@@ -530,55 +530,58 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                               },
                                             }}
                                           >
-                                            <CardContent sx={{ p: 3 }}>
-                                              <Stack direction="row" alignItems="center" spacing={3}>
-                                                <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                  <Checkbox
-                                                    checked={item.completed}
-                                                    onChange={() => onToggleComplete(item.id)}
-                                                    sx={{
-                                                      color: theme.palette.primary.main,
-                                                      '&.Mui-checked': {
-                                                        color: theme.palette.success.main,
-                                                      },
-                                                      '& .MuiSvgIcon-root': {
-                                                        fontSize: '1.5rem',
-                                                      }
-                                                    }}
-                                                  />
-                                                </motion.div>
+                                            <CardContent sx={{ p: 3, overflow: 'hidden' }}>
+                                              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
+                                                {/* Checkbox */}
+                                                <Box sx={{ flexShrink: 0 }}>
+                                                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                                    <Checkbox
+                                                      checked={item.completed}
+                                                      onChange={() => onToggleComplete(item.id)}
+                                                      sx={{
+                                                        color: theme.palette.primary.main,
+                                                        '&.Mui-checked': {
+                                                          color: theme.palette.success.main,
+                                                        },
+                                                        '& .MuiSvgIcon-root': {
+                                                          fontSize: '1.5rem',
+                                                        }
+                                                      }}
+                                                    />
+                                                  </motion.div>
+                                                </Box>
                                                 
                                                 {/* Enhanced Item Image */}
                                                 {item.imageUrl && (
-                                                  <motion.div
-                                                    whileHover={{ scale: 1.05 }}
-                                                    style={{ marginRight: '16px' }}
-                                                  >
-                                                    <Box
-                                                      sx={{
-                                                        width: '70px',
-                                                        height: '70px',
-                                                        borderRadius: '12px',
-                                                        overflow: 'hidden',
-                                                        position: 'relative',
-                                                        boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.2)}`,
-                                                      }}
-                                                    >
-                                                      <img
-                                                        src={item.imageUrl}
-                                                        alt={item.name}
-                                                        style={{
-                                                          width: '100%',
-                                                          height: '100%',
-                                                          objectFit: 'cover',
+                                                  <Box sx={{ flexShrink: 0 }}>
+                                                    <motion.div whileHover={{ scale: 1.05 }}>
+                                                      <Box
+                                                        sx={{
+                                                          width: '60px',
+                                                          height: '60px',
+                                                          borderRadius: '12px',
+                                                          overflow: 'hidden',
+                                                          position: 'relative',
+                                                          boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.2)}`,
                                                         }}
-                                                      />
-                                                    </Box>
-                                                  </motion.div>
+                                                      >
+                                                        <img
+                                                          src={item.imageUrl}
+                                                          alt={item.name}
+                                                          style={{
+                                                            width: '100%',
+                                                            height: '100%',
+                                                            objectFit: 'cover',
+                                                          }}
+                                                        />
+                                                      </Box>
+                                                    </motion.div>
+                                                  </Box>
                                                 )}
                                                 
-                                                <Box sx={{ flexGrow: 1 }}>
-                                                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 1 }}>
+                                                {/* Content Area */}
+                                                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
+                                                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
                                                     <Typography
                                                       variant="h6"
                                                       sx={{
@@ -586,23 +589,30 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                                         textDecoration: item.completed ? 'line-through' : 'none',
                                                         opacity: item.completed ? 0.7 : 1,
                                                         fontSize: '1.1rem',
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        flexGrow: 1,
                                                       }}
                                                     >
                                                       {item.name}
                                                     </Typography>
-                                                    <motion.div whileHover={{ scale: 1.2 }}>
-                                                      {getPriorityIcon(item.priority)}
-                                                    </motion.div>
+                                                    <Box sx={{ flexShrink: 0 }}>
+                                                      <motion.div whileHover={{ scale: 1.2 }}>
+                                                        {getPriorityIcon(item.priority)}
+                                                      </motion.div>
+                                                    </Box>
                                                   </Stack>
                                                   
-                                                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                                                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" sx={{ gap: 0.5 }}>
                                                     <motion.div whileHover={{ scale: 1.05 }}>
                                                       <Chip
                                                         label={`${item.amount} ${item.units}`}
                                                         size="small"
                                                         sx={{ 
                                                           borderRadius: '12px', 
-                                                          fontSize: '0.8rem',
+                                                          fontSize: '0.75rem',
+                                                          height: '24px',
                                                           background: alpha(theme.palette.primary.main, 0.1),
                                                           color: theme.palette.primary.main,
                                                           border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
@@ -616,10 +626,17 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                                           size="small"
                                                           sx={{ 
                                                             borderRadius: '12px', 
-                                                            fontSize: '0.8rem',
+                                                            fontSize: '0.75rem',
+                                                            height: '24px',
+                                                            maxWidth: '120px',
                                                             background: alpha(theme.palette.secondary.main, 0.1),
                                                             color: theme.palette.secondary.main,
                                                             border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                                                            '& .MuiChip-label': {
+                                                              overflow: 'hidden',
+                                                              textOverflow: 'ellipsis',
+                                                              whiteSpace: 'nowrap',
+                                                            }
                                                           }}
                                                         />
                                                       </motion.div>
@@ -627,40 +644,47 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                                   </Stack>
                                                 </Box>
                                                 
-                                                <Stack direction="row" spacing={1}>
-                                                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                    <IconButton
-                                                      size="small"
-                                                      onClick={() => onEditItem(item)}
-                                                      sx={{ 
-                                                        background: alpha(theme.palette.primary.main, 0.1),
-                                                        color: theme.palette.primary.main,
-                                                        '&:hover': {
-                                                          background: alpha(theme.palette.primary.main, 0.2),
-                                                          boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                                                        },
-                                                      }}
-                                                    >
-                                                      <Edit size={16} />
-                                                    </IconButton>
-                                                  </motion.div>
-                                                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                    <IconButton
-                                                      size="small"
-                                                      onClick={() => onDeleteItem(item.id)}
-                                                      sx={{ 
-                                                        background: alpha(theme.palette.error.main, 0.1),
-                                                        color: theme.palette.error.main,
-                                                        '&:hover': {
-                                                          background: alpha(theme.palette.error.main, 0.2),
-                                                          boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
-                                                        },
-                                                      }}
-                                                    >
-                                                      <Trash2 size={16} />
-                                                    </IconButton>
-                                                  </motion.div>
-                                                </Stack>
+                                                {/* Action Buttons */}
+                                                <Box sx={{ flexShrink: 0, ml: 1 }}>
+                                                  <Stack direction="row" spacing={1}>
+                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                                      <IconButton
+                                                        size="small"
+                                                        onClick={() => onEditItem(item)}
+                                                        sx={{ 
+                                                          width: '36px',
+                                                          height: '36px',
+                                                          background: alpha(theme.palette.primary.main, 0.1),
+                                                          color: theme.palette.primary.main,
+                                                          '&:hover': {
+                                                            background: alpha(theme.palette.primary.main, 0.2),
+                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                                                          },
+                                                        }}
+                                                      >
+                                                        <Edit size={16} />
+                                                      </IconButton>
+                                                    </motion.div>
+                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                                      <IconButton
+                                                        size="small"
+                                                        onClick={() => onDeleteItem(item.id)}
+                                                        sx={{ 
+                                                          width: '36px',
+                                                          height: '36px',
+                                                          background: alpha(theme.palette.error.main, 0.1),
+                                                          color: theme.palette.error.main,
+                                                          '&:hover': {
+                                                            background: alpha(theme.palette.error.main, 0.2),
+                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
+                                                          },
+                                                        }}
+                                                      >
+                                                        <Trash2 size={16} />
+                                                      </IconButton>
+                                                    </motion.div>
+                                                  </Stack>
+                                                </Box>
                                               </Stack>
                                             </CardContent>
                                           </Card>
