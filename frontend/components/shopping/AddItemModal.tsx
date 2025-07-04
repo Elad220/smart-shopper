@@ -129,6 +129,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         name: formData.name.trim(),
       };
       
+
       onAdd(itemData);
       
       // Reset form

@@ -218,6 +218,7 @@ export const addShoppingItem = async (
     },
     body: JSON.stringify(itemData),
   });
+  
   return handleResponse<ShoppingItem>(response);
 };
 

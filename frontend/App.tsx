@@ -10,24 +10,22 @@ import MainApp from './components/app/MainApp';
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { theme, mode } = useTheme();
-  const [forceUpdate, setForceUpdate] = React.useState(0);
+  const [themeKey, setThemeKey] = React.useState(0);
 
   // Force complete re-render when theme changes
   React.useEffect(() => {
-    // Force a style recalculation
+    // Force immediate visual update
     document.documentElement.style.setProperty('--theme-mode', mode);
-    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-    document.body.className = `theme-${mode}`;
+    document.body.style.backgroundColor = mode === 'dark' ? '#141a1f' : '#f8fafc';
+    document.body.style.color = mode === 'dark' ? '#ffffff' : '#0d141c';
+    document.documentElement.setAttribute('data-theme', mode);
     
-    // Force a repaint
-    document.body.offsetHeight;
-    
-    // Force component re-render
-    setForceUpdate((prev: number) => prev + 1);
+    // Force all components to re-render with new theme
+    setThemeKey((prev: number) => prev + 1);
   }, [mode]);
 
   return (
-    <ThemeProvider key={`theme-${mode}-${forceUpdate}`} theme={theme}>
+    <ThemeProvider key={`theme-${mode}-${themeKey}`} theme={theme}>
       <CssBaseline />
       <Toaster 
         position="top-right"
@@ -40,11 +38,11 @@ const App: React.FC = () => {
           },
         }}
       />
-      <div key={`app-${mode}-${forceUpdate}`}>
+      <div key={`app-${mode}-${themeKey}`}>
         {isAuthenticated && user ? (
-          <MainApp key={`${user.id}-${mode}-${forceUpdate}`} user={user} />
+          <MainApp key={`${user.id}-${mode}-${themeKey}`} user={user} />
         ) : (
-          <AuthFlow key={`auth-${mode}-${forceUpdate}`} />
+          <AuthFlow key={`auth-${mode}-${themeKey}`} />
         )}
       </div>
     </ThemeProvider>

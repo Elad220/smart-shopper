@@ -6,12 +6,40 @@ export const useTheme = () => {
     (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
   );
 
+  // Apply theme immediately to DOM
+  const applyThemeToDOM = useCallback((themeMode: 'light' | 'dark') => {
+    const root = document.documentElement;
+    const body = document.body;
+    
+    // Remove existing theme classes
+    root.classList.remove('theme-light', 'theme-dark');
+    body.classList.remove('theme-light', 'theme-dark');
+    
+    // Add new theme class
+    root.classList.add(`theme-${themeMode}`);
+    body.classList.add(`theme-${themeMode}`);
+    
+    // Set CSS custom properties
+    root.style.setProperty('--theme-mode', themeMode);
+    root.setAttribute('data-theme', themeMode);
+    
+    // Apply immediate background colors
+    if (themeMode === 'dark') {
+      body.style.backgroundColor = '#141a1f';
+      body.style.color = '#ffffff';
+    } else {
+      body.style.backgroundColor = '#f8fafc';
+      body.style.color = '#0d141c';
+    }
+    
+    // Force layout recalculation
+    body.offsetHeight;
+  }, []);
+
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
-    // Update DOM attributes for immediate CSS changes
-    document.documentElement.setAttribute('data-theme', mode);
-    document.documentElement.style.setProperty('--theme-mode', mode);
-  }, [mode]);
+    applyThemeToDOM(mode);
+  }, [mode, applyThemeToDOM]);
 
   const theme = useMemo(() => createTheme({
     palette: {
@@ -37,26 +65,15 @@ export const useTheme = () => {
   }), [mode]);
 
   const toggleMode = useCallback(() => {
-    setMode(prev => {
-      const newMode = prev === 'light' ? 'dark' : 'light';
-      
-      // Force immediate DOM updates
-      requestAnimationFrame(() => {
-        document.documentElement.setAttribute('data-theme', newMode);
-        document.documentElement.style.setProperty('--theme-mode', newMode);
-        document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-        document.body.className = `theme-${newMode}`;
-        
-        // Force repaint
-        document.body.offsetHeight;
-        
-        // Update localStorage immediately
-        localStorage.setItem('themeMode', newMode);
-      });
-      
-      return newMode;
-    });
-  }, []);
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    
+    // Apply theme immediately before state update
+    applyThemeToDOM(newMode);
+    localStorage.setItem('themeMode', newMode);
+    
+    // Update state
+    setMode(newMode);
+  }, [mode, applyThemeToDOM]);
 
   return { theme, mode, setMode, toggleMode };
 };
