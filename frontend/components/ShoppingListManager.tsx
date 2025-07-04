@@ -69,7 +69,9 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    loadLists();
+    if (token) {
+      loadLists();
+    }
   }, [token]);
 
   useEffect(() => {

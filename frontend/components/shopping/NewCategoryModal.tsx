@@ -30,6 +30,13 @@ const NewCategoryModal: React.FC<NewCategoryModalProps> = ({ open, onClose, onAd
     onClose();
   };
 
+  // Reset form when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setCategoryName('');
+    }
+  }, [open]);
+
   return (
     <Dialog 
       open={open} 

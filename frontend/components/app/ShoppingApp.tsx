@@ -170,6 +170,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         }}
       >
         <ShoppingListManager
+          key={isDrawerOpen ? 'open' : 'closed'}
           token={user.token}
           selectedListId={selectedListId}
           onListSelect={handleListSelect}
@@ -218,18 +219,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                   </Box>
                   
                   <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                    <IconButton
-                      onClick={() => setIsSmartAssistantOpen(true)}
-                      sx={{ 
-                        borderRadius: '8px',
-                        border: `1px solid ${theme.palette.divider}`,
-                        '&:hover': {
-                          background: alpha(theme.palette.primary.main, 0.1),
-                        },
-                      }}
-                    >
-                      <Brain size={18} />
-                    </IconButton>
                     {completedItems > 0 && (
                       <Button
                         variant="text"
@@ -262,6 +251,18 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                       }}
                     >
                       <Plus size={18} />
+                    </IconButton>
+                    <IconButton
+                      onClick={() => setIsSmartAssistantOpen(true)}
+                      sx={{ 
+                        borderRadius: '8px',
+                        border: `1px solid ${theme.palette.divider}`,
+                        '&:hover': {
+                          background: alpha(theme.palette.primary.main, 0.1),
+                        },
+                      }}
+                    >
+                      <Brain size={18} />
                     </IconButton>
                   </Stack>
                 </Stack>

@@ -15,6 +15,7 @@ const App: React.FC = () => {
   React.useEffect(() => {
     // Force a style recalculation
     document.documentElement.style.setProperty('--theme-mode', mode);
+    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
   }, [mode]);
 
   return (
@@ -31,11 +32,13 @@ const App: React.FC = () => {
           },
         }}
       />
-      {isAuthenticated && user ? (
-        <MainApp key={`${user.id}-${mode}`} user={user} />
-      ) : (
-        <AuthFlow key={`auth-${mode}`} />
-      )}
+      <div key={`app-${mode}`}>
+        {isAuthenticated && user ? (
+          <MainApp key={`${user.id}-${mode}`} user={user} />
+        ) : (
+          <AuthFlow key={`auth-${mode}`} />
+        )}
+      </div>
     </ThemeProvider>
   );
 };

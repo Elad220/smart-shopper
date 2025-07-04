@@ -63,12 +63,23 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
     if (item && open) {
       setFormData({
         name: item.name || '',
-        category: item.category || 'Other',
+        category: item.category || '',
         amount: item.amount || 1,
         units: item.units || 'pcs',
         priority: item.priority || 'Medium',
         notes: item.notes || '',
         imageUrl: item.imageUrl || '',
+      });
+    } else if (open && !item) {
+      // If modal opens without item, reset form
+      setFormData({
+        name: '',
+        category: '',
+        amount: 1,
+        units: 'pcs',
+        priority: 'Medium',
+        notes: '',
+        imageUrl: '',
       });
     }
   }, [item, open]);
@@ -89,7 +100,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
 
   const allCategories = [
     ...standardCategories,
-    ...customCategories.map(cat => ({ value: cat, label: `📁 ${cat}`, emoji: '📁' })),
+    ...customCategories.map(cat => ({ value: cat, label: `� ${cat}`, emoji: '�' })),
   ];
 
   const units = [
