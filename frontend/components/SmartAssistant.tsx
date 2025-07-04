@@ -214,7 +214,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent dividers>
         <Box sx={{ minHeight: '60px', mb: 2 }}>
             {isCheckingStatus ? (
                 <CircularProgress size={24} />
@@ -301,7 +301,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           )
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 3 }}>
+      <DialogActions sx={{ p: '16px 24px' }}>
         <Button 
           onClick={onClose} 
           disabled={isLoading}

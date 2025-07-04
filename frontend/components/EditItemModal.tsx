@@ -190,7 +190,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
       </DialogTitle>
 
       <form onSubmit={handleSubmit}>
-        <DialogContent>
+        <DialogContent dividers>
           <Stack spacing={3} sx={{ mt: 1 }}>
             <TextField
               fullWidth
