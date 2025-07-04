@@ -18,10 +18,10 @@ export const useTheme = () => {
     
     // Set CSS custom properties for immediate theme switching
     if (mode === 'dark') {
-      root.style.setProperty('--bg-color', '#000000');
+      root.style.setProperty('--bg-color', '#0f0f0f');
       root.style.setProperty('--text-color', '#ffffff');
-      root.style.setProperty('--paper-color', '#0a0a0a');
-      root.style.setProperty('--border-color', '#1a1a1a');
+      root.style.setProperty('--paper-color', '#1a1a1a');
+      root.style.setProperty('--border-color', '#2a2a2a');
     } else {
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
@@ -60,28 +60,28 @@ export const useTheme = () => {
         }
       } : {
         primary: { 
-          main: '#60a5fa',
-          light: '#93c5fd',
-          dark: '#3b82f6'
+          main: '#3b82f6',
+          light: '#60a5fa',
+          dark: '#2563eb'
         },
         secondary: { 
-          main: '#a78bfa',
-          light: '#c4b5fd',
-          dark: '#8b5cf6'
+          main: '#8b5cf6',
+          light: '#a78bfa',
+          dark: '#7c3aed'
         },
         background: { 
-          default: '#000000', 
-          paper: '#0a0a0a' 
+          default: '#0f0f0f', 
+          paper: '#1a1a1a' 
         },
         text: { 
           primary: '#ffffff', 
-          secondary: '#d1d5db' 
+          secondary: '#9ca3af' 
         },
-        divider: '#1a1a1a',
+        divider: '#2a2a2a',
         action: {
-          hover: '#1a1a1a',
-          selected: '#2a2a2a',
-          disabled: '#404040'
+          hover: '#2a2a2a',
+          selected: '#374151',
+          disabled: '#4b5563'
         }
       })
     },
@@ -98,7 +98,7 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? '#ffffff' : '#000000',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#0f0f0f',
             color: mode === 'light' ? '#111827' : '#ffffff',
             transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
           },
@@ -107,13 +107,13 @@ export const useTheme = () => {
               width: '8px',
             },
             '&::-webkit-scrollbar-track': {
-              background: mode === 'light' ? '#f1f5f9' : '#0a0a0a',
+              background: mode === 'light' ? '#f1f5f9' : '#1a1a1a',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: mode === 'light' ? '#cbd5e1' : '#404040',
+              background: mode === 'light' ? '#cbd5e1' : '#4b5563',
               borderRadius: '4px',
               '&:hover': {
-                background: mode === 'light' ? '#94a3b8' : '#606060',
+                background: mode === 'light' ? '#94a3b8' : '#6b7280',
               }
             },
           }
@@ -123,8 +123,8 @@ export const useTheme = () => {
         styleOverrides: {
           root: {
             ...(mode === 'dark' && {
-              backgroundColor: '#0a0a0a !important',
-              border: '1px solid #1a1a1a !important',
+              backgroundColor: '#1a1a1a !important',
+              border: '1px solid #2a2a2a !important',
             }),
             transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
           }
@@ -134,7 +134,7 @@ export const useTheme = () => {
         styleOverrides: {
           root: {
             ...(mode === 'dark' && {
-              backgroundColor: '#0a0a0a !important',
+              backgroundColor: '#1a1a1a !important',
             }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
@@ -145,7 +145,7 @@ export const useTheme = () => {
         styleOverrides: {
           paper: {
             ...(mode === 'dark' && {
-              backgroundColor: '#0a0a0a !important',
+              backgroundColor: '#1a1a1a !important',
             }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
@@ -155,7 +155,7 @@ export const useTheme = () => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(0, 0, 0, 0.9)',
+            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 15, 15, 0.9)',
             backdropFilter: 'blur(20px)',
             transition: 'background-color 0.2s ease-in-out',
           }
@@ -173,15 +173,28 @@ export const useTheme = () => {
           root: {
             '& .MuiOutlinedInput-root': {
               ...(mode === 'dark' && {
-                backgroundColor: '#0a0a0a !important',
+                backgroundColor: '#1a1a1a !important',
                 '& fieldset': {
-                  borderColor: '#1a1a1a !important',
-                },
-                '&:hover fieldset': {
                   borderColor: '#2a2a2a !important',
                 },
+                '&:hover fieldset': {
+                  borderColor: '#374151 !important',
+                },
                 '&.Mui-focused fieldset': {
-                  borderColor: '#60a5fa !important',
+                  borderColor: '#3b82f6 !important',
+                },
+              }),
+            },
+            '& .MuiInputBase-input': {
+              ...(mode === 'dark' && {
+                color: '#ffffff !important',
+              }),
+            },
+            '& .MuiInputLabel-root': {
+              ...(mode === 'dark' && {
+                color: '#9ca3af !important',
+                '&.Mui-focused': {
+                  color: '#3b82f6 !important',
                 },
               }),
             },

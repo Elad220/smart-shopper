@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, TextField, Button, Link, Alert } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import AuthLayout from './AuthLayout';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -57,18 +58,48 @@ const LoginPage: React.FC<LoginPageProps> = ({
   return (
     <AuthLayout>
       <Box component="form" onSubmit={onLogin} noValidate>
+        <Box sx={{ textAlign: 'center', mb: 3, pt: 3 }}>
+          <Box
+            sx={{
+              width: 80,
+              height: 80,
+              borderRadius: 3,
+              bgcolor: theme.palette.primary.main,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto',
+              mb: 3,
+            }}
+          >
+            <ShoppingCartIcon sx={{ color: 'white', fontSize: 40 }} />
+          </Box>
+        </Box>
+
         <Typography
           variant="h4"
           sx={{
             color: theme.palette.text.primary,
             fontWeight: 'bold',
             textAlign: 'center',
-            pb: 3,
-            pt: 5,
+            pb: 2,
+            pt: 0,
             transition: 'color 0.2s ease-in-out',
           }}
         >
-          Welcome back
+          Welcome Back!
+        </Typography>
+
+        <Typography
+          variant="body1"
+          sx={{
+            color: theme.palette.text.secondary,
+            textAlign: 'center',
+            pb: 3,
+            transition: 'color 0.2s ease-in-out',
+          }}
+        >
+          Sign in to your Smart Shopper account
         </Typography>
 
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -131,7 +162,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
               }
             }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Login'}
+            {isLoading ? <CircularProgress size={24} /> : 'Sign In →'}
           </Button>
         </Box>
         <Typography
@@ -154,7 +185,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
               transition: 'color 0.2s ease-in-out',
             }}
           >
-            Sign up
+            Create one here
           </Link>
         </Typography>
       </Box>

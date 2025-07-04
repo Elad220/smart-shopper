@@ -17,12 +17,12 @@ html {
 
 /* Dark mode overrides for immediate visual feedback */
 [data-theme="dark"] body {
-  background-color: #000000 !important;
+  background-color: #0f0f0f !important;
   color: #ffffff !important;
 }
 
 [data-theme="dark"] #root {
-  background-color: #000000 !important;
+  background-color: #0f0f0f !important;
 }
 
 /* Ensure scrollbars match theme */
