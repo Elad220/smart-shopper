@@ -8,7 +8,6 @@ interface AuthLayoutProps {
 
 const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
   const theme = useTheme();
-  const isDarkMode = theme.palette.mode === 'dark';
 
   return (
     <Box
