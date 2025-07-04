@@ -33,22 +33,49 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const commonTextFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: '12px',
-      backgroundColor: isDarkMode ? '#1f272e' : '#e7edf4',
+      backgroundColor: isDarkMode ? '#2a3441' : '#ffffff',
+      border: `2px solid ${isDarkMode ? '#404b5a' : '#e1e8ed'}`,
       '& fieldset': {
-        borderColor: isDarkMode ? '#3d4d5c' : 'transparent',
+        border: 'none', // Remove default border since we're using custom border
       },
-      '&:hover fieldset': {
+      '&:hover': {
         borderColor: isDarkMode ? '#567a9a' : '#c1d9f0',
+        backgroundColor: isDarkMode ? '#334155' : '#f8fafc',
       },
-      '&.Mui-focused fieldset': {
+      '&.Mui-focused': {
         borderColor: isDarkMode ? '#90caf9' : '#0c7ff2',
+        backgroundColor: isDarkMode ? '#334155' : '#ffffff',
+        boxShadow: `0 0 0 3px ${isDarkMode ? 'rgba(144, 202, 249, 0.16)' : 'rgba(12, 127, 242, 0.16)'}`,
+      },
+      '&.Mui-error': {
+        borderColor: '#f87171',
+        '&:hover': {
+          borderColor: '#ef4444',
+        },
+        '&.Mui-focused': {
+          borderColor: '#ef4444',
+          boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.16)',
+        },
       },
     },
     '& .MuiInputBase-input': {
-      color: isDarkMode ? 'white' : '#0d141c',
+      color: isDarkMode ? '#f1f5f9' : '#0f172a',
+      fontSize: '16px',
+      padding: '14px 16px',
+      '&::placeholder': {
+        color: isDarkMode ? '#94a3b8' : '#64748b',
+        opacity: 1,
+      },
     },
-     '& .MuiInputLabel-root': {
-        color: isDarkMode ? '#9daebe' : '#49739c',
+    '& .MuiInputLabel-root': {
+      color: isDarkMode ? '#94a3b8' : '#475569',
+      fontSize: '16px',
+      '&.Mui-focused': {
+        color: isDarkMode ? '#90caf9' : '#0c7ff2',
+      },
+      '&.Mui-error': {
+        color: '#f87171',
+      },
     },
   };
 
@@ -61,27 +88,67 @@ const LoginPage: React.FC<LoginPageProps> = ({
             color: isDarkMode ? 'white' : '#0d141c',
             fontWeight: 'bold',
             textAlign: 'center',
-            pb: 3,
-            pt: 5,
+            pb: 1,
+            pt: 2,
           }}
         >
-          Welcome back
+          Welcome Back!
         </Typography>
 
-        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-        {successMessage && <Alert severity="success" sx={{ mb: 2 }}>{successMessage}</Alert>}
+        <Typography
+          sx={{
+            color: isDarkMode ? '#94a3b8' : '#64748b',
+            textAlign: 'center',
+            fontSize: '16px',
+            pb: 4,
+          }}
+        >
+          Sign in to your Smart Shopper account
+        </Typography>
 
-        <Box sx={{ px: 4, py: 1.5 }}>
+        {error && (
+          <Alert 
+            severity="error" 
+            sx={{ 
+              mb: 3, 
+              mx: 4,
+              borderRadius: '12px',
+              '& .MuiAlert-message': {
+                fontSize: '14px',
+              },
+            }}
+          >
+            {error}
+          </Alert>
+        )}
+        {successMessage && (
+          <Alert 
+            severity="success" 
+            sx={{ 
+              mb: 3, 
+              mx: 4,
+              borderRadius: '12px',
+              '& .MuiAlert-message': {
+                fontSize: '14px',
+              },
+            }}
+          >
+            {successMessage}
+          </Alert>
+        )}
+
+        <Box sx={{ px: 4, pb: 3 }}>
            <TextField
                 label="Email or Username"
                 placeholder="Enter your email or username"
                 fullWidth
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                error={error?.toLowerCase().includes('username') || error?.toLowerCase().includes('email')}
                 sx={commonTextFieldStyles}
             />
         </Box>
-        <Box sx={{ px: 4, py: 1.5 }}>
+        <Box sx={{ px: 4, pb: 2 }}>
            <TextField
                 label="Password"
                 placeholder="Enter your password"
@@ -89,51 +156,73 @@ const LoginPage: React.FC<LoginPageProps> = ({
                 fullWidth
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                error={error?.toLowerCase().includes('password')}
                 sx={commonTextFieldStyles}
             />
         </Box>
 
-        <Typography sx={{ px: 4, textAlign: 'right' }}>
+        <Typography sx={{ px: 4, pb: 4, textAlign: 'right' }}>
            <Link
                 component="button"
                 type="button"
                 sx={{
-                color: isDarkMode ? '#9daebe' : '#49739c',
-                fontSize: '0.875rem',
-                textDecoration: 'underline',
+                  color: isDarkMode ? '#94a3b8' : '#475569',
+                  fontSize: '14px',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                    color: isDarkMode ? '#cbd5e1' : '#334155',
+                  },
                 }}
             >
                 Forgot Password?
             </Link>
         </Typography>
         
-        <Box sx={{ px: 4, py: 3 }}>
+        <Box sx={{ px: 4, pb: 4 }}>
           <Button
             type="submit"
             fullWidth
             variant="contained"
             disabled={isLoading}
             sx={{
-              borderRadius: '9999px',
-              height: 48,
-              bgcolor: isDarkMode ? '#dce8f3' : '#0c7ff2',
-              color: isDarkMode ? '#141a1f' : 'white',
-              fontWeight: 'bold',
+              borderRadius: '12px',
+              height: 56,
+              bgcolor: '#0c7ff2',
+              color: 'white',
+              fontWeight: '600',
               textTransform: 'none',
-              fontSize: '1rem',
-               '&:hover': {
-                bgcolor: isDarkMode ? '#b9c8d6' : '#0064c4',
-              }
+              fontSize: '16px',
+              boxShadow: '0 4px 14px 0 rgba(12, 127, 242, 0.39)',
+              border: 'none',
+              '&:hover': {
+                bgcolor: '#0064c4',
+                boxShadow: '0 6px 20px 0 rgba(12, 127, 242, 0.45)',
+                transform: 'translateY(-1px)',
+              },
+              '&:active': {
+                transform: 'translateY(0)',
+                boxShadow: '0 2px 8px 0 rgba(12, 127, 242, 0.35)',
+              },
+              '&:disabled': {
+                bgcolor: isDarkMode ? '#374151' : '#e5e7eb',
+                color: isDarkMode ? '#6b7280' : '#9ca3af',
+                boxShadow: 'none',
+                transform: 'none',
+              },
+              transition: 'all 0.2s ease-in-out',
             }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Login'}
+            {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
           </Button>
         </Box>
+        
         <Typography
           sx={{
-            color: isDarkMode ? '#9daebe' : '#49739c',
+            color: isDarkMode ? '#94a3b8' : '#64748b',
             textAlign: 'center',
-            fontSize: '0.875rem',
+            fontSize: '14px',
+            px: 4,
           }}
         >
           Don't have an account?{' '}
@@ -142,9 +231,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
             type="button"
             onClick={onSwitchToRegister}
             sx={{
-              color: isDarkMode ? '#dce8f3' : '#0c7ff2',
-              textDecoration: 'underline',
-              fontWeight: 'medium',
+              color: '#0c7ff2',
+              textDecoration: 'none',
+              fontWeight: '600',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
             }}
           >
             Sign up
