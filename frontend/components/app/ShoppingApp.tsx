@@ -5,7 +5,7 @@ import {
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from '@mui/material';
-import { Plus, Package, Menu, Brain } from 'lucide-react';
+import { Plus, Package, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
@@ -41,7 +41,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
-  const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
   
   const {
     items,
@@ -181,40 +180,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     }
   };
 
-  // Shopping list action handlers for header
-  const handleSortChange = (mode: string) => {
-    setSortMode(mode);
-    localStorage.setItem('shoppingListSortMode', mode);
-  };
-
-  const handleImportItems = () => {
-    if (!selectedListId) {
-      toast.error('Please select a list to import into.');
-      return;
-    }
-    // Trigger file input click in ShoppingListManager
-    const fileInput = document.querySelector('input[type="file"][accept=".json"]') as HTMLInputElement;
-    fileInput?.click();
-  };
-
-  const handleExportList = async () => {
-    if (!selectedListId) {
-      toast.error('Please select a list to export.');
-      return;
-    }
-    try {
-      const { exportShoppingList } = await import('../../src/services/api');
-      const itemsToExport = await exportShoppingList(user.token, selectedListId);
-      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(itemsToExport, null, 2))}`;
-      const link = document.createElement("a");
-      link.href = jsonString;
-      link.download = "shopping-list.json";
-      link.click();
-      toast.success('List exported successfully! 📄');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to export list.');
-    }
-  };
+  // Shopping list actions are now handled in ShoppingListManager
 
   if (error) {
     return (
@@ -242,13 +208,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
         onLogout={onLogout}
         onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
         isMobile={isMobile}
-        onCreateList={() => setIsCreateDialogOpen(true)}
-        onImportItems={handleImportItems}
-        onExportList={handleExportList}
-        onSortChange={handleSortChange}
-        currentSortMode={sortMode}
-        hasSelectedList={!!selectedListId}
-        isLoading={isLoading}
       />
 
       {/* Main Content Area */}
@@ -277,7 +236,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           selectedListId={selectedListId}
           onListSelect={handleListSelect}
           onDataChange={handleDataChange}
-          sortMode={sortMode}
+          onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
         />
       </Drawer>
 
@@ -328,23 +287,14 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                   <CardContent sx={{ p: 2.5 }}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                        <IconButton
-                          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                          sx={{ 
-                            display: { md: 'none' },
-                            p: 1
-                          }}
-                        >
-                          <Menu size={18} />
-                        </IconButton>
-                                             <Box sx={{ minWidth: 0 }}>
-                           <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                             {currentListName}
-                           </Typography>
-                           <Typography variant="caption" color="text.secondary">
-                             {totalItems} items • {completedItems} completed
-                           </Typography>
-                         </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {currentListName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {totalItems} items • {completedItems} completed
+                          </Typography>
+                        </Box>
                       </Box>
                       
                       <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>

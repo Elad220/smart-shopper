@@ -11,14 +11,22 @@ import {
   TextField,
   Alert,
   Paper,
+  Tooltip,
   Stack,
   useTheme,
+  alpha,
 } from '@mui/material';
 import {
+  Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  UploadFile as ImportIcon,
+  Download as ExportIcon,
 } from '@mui/icons-material';
-import { fetchShoppingLists, updateShoppingList, deleteShoppingList, importShoppingList } from '../src/services/api';
+import SortIcon from '@mui/icons-material/Sort';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
 
 interface ShoppingList {
   _id: string;
@@ -33,19 +41,27 @@ interface ShoppingListManagerProps {
   onListSelect: (listId: string) => void;
   selectedListId: string | null;
   onDataChange: () => void;
-  sortMode: string;
+  onOpenCreateDialog: () => void;
 }
+
+const SORT_MODES = [
+  { key: 'alpha', label: 'Alphabetical (A-Z)' },
+  { key: 'created', label: 'Creation Date (Newest)' },
+  { key: 'custom', label: 'Custom Order' },
+];
 
 export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   token,
   onListSelect,
   selectedListId,
   onDataChange,
-  sortMode,
+  onOpenCreateDialog,
 }) => {
   const theme = useTheme();
   const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
   const [lists, setLists] = useState<ShoppingList[]>([]);
+  const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [editingList, setEditingList] = useState<ShoppingList | null>(null);
@@ -140,6 +156,44 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     setIsEditDialogOpen(true);
   };
 
+  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  
+  const handleSortClose = () => {
+    setAnchorEl(null);
+  };
+  
+  const handleSortChange = (mode: string) => {
+    setSortMode(mode);
+    setAnchorEl(null);
+  };
+
+  const handleExport = async () => {
+    if(!selectedListId) {
+      setError("Please select a list to export.");
+      return;
+    }
+    try {
+      const itemsToExport = await exportShoppingList(token, selectedListId);
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(itemsToExport, null, 2))}`;
+      const link = document.createElement("a");
+      link.href = jsonString;
+      link.download = "shopping-list.json";
+      link.click();
+    } catch (err: any) {
+      setError(err.message || 'Failed to export list.');
+    }
+  };
+  
+  const handleImportClick = () => {
+    if(!selectedListId){
+      setError("Please select a list to import into.");
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
   // Expose import functionality to parent
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if(!selectedListId){
@@ -171,6 +225,80 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
           My Lists
         </Typography>
+        
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Tooltip title="Create New List">
+            <IconButton
+              onClick={onOpenCreateDialog}
+              disabled={isLoading}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Sort Lists">
+            <IconButton
+              onClick={handleSortClick}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <SortIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Import Items">
+            <IconButton
+              onClick={handleImportClick}
+              disabled={isLoading || !selectedListId}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <ImportIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Export Selected List">
+            <IconButton
+              onClick={handleExport}
+              disabled={isLoading || !selectedListId}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <ExportIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
+        <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
+          {SORT_MODES.map(mode => (
+            <MenuItem
+              key={mode.key}
+              selected={sortMode === mode.key}
+              onClick={() => handleSortChange(mode.key)}
+            >
+              {mode.label}
+            </MenuItem>
+          ))}
+        </Menu>
         
         {/* Hidden file input for import functionality */}
         <input
@@ -278,7 +406,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             label="List Name"
             fullWidth
             value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
             disabled={isLoading}
             error={!!error}
             helperText={error}

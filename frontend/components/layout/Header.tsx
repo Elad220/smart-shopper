@@ -1,15 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { 
-  AppBar, Toolbar, Typography, IconButton, Button, Box, useTheme, 
-  Tooltip, Stack, Menu, MenuItem, alpha 
+  AppBar, Toolbar, Typography, IconButton, Button, Box, useTheme 
 } from '@mui/material';
-import { Moon, Sun, ShoppingCart, Menu as MenuIcon, LogOut } from 'lucide-react';
-import {
-  Add as AddIcon,
-  UploadFile as ImportIcon,
-  Download as ExportIcon,
-} from '@mui/icons-material';
-import SortIcon from '@mui/icons-material/Sort';
+import { Moon, Sun, ShoppingCart, Menu, LogOut } from 'lucide-react';
 import { User } from '../../hooks/useAuth';
 
 interface HeaderProps {
@@ -20,21 +13,7 @@ interface HeaderProps {
   onLogout?: () => void;
   onMenuOpen?: () => void;
   isMobile?: boolean;
-  // Shopping list action props
-  onCreateList?: () => void;
-  onImportItems?: () => void;
-  onExportList?: () => void;
-  onSortChange?: (mode: string) => void;
-  currentSortMode?: string;
-  hasSelectedList?: boolean;
-  isLoading?: boolean;
 }
-
-const SORT_MODES = [
-  { key: 'alpha', label: 'Alphabetical (A-Z)' },
-  { key: 'created', label: 'Creation Date (Newest)' },
-  { key: 'custom', label: 'Custom Order' },
-];
 
 const Header: React.FC<HeaderProps> = ({ 
   mode, 
@@ -43,30 +22,9 @@ const Header: React.FC<HeaderProps> = ({
   user, 
   onLogout,
   onMenuOpen,
-  isMobile,
-  onCreateList,
-  onImportItems,
-  onExportList,
-  onSortChange,
-  currentSortMode = 'alpha',
-  hasSelectedList = false,
-  isLoading = false
+  isMobile 
 }) => {
   const theme = useTheme();
-  const [sortAnchorEl, setSortAnchorEl] = useState<null | HTMLElement>(null);
-
-  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
-    setSortAnchorEl(event.currentTarget);
-  };
-
-  const handleSortClose = () => {
-    setSortAnchorEl(null);
-  };
-
-  const handleSortSelect = (mode: string) => {
-    onSortChange?.(mode);
-    setSortAnchorEl(null);
-  };
 
   return (
     <AppBar 
@@ -96,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({
             }}
             onClick={onMenuOpen}
           >
-            <MenuIcon size={24} />
+            <Menu size={24} />
           </IconButton>
         )}
 
@@ -129,84 +87,6 @@ const Header: React.FC<HeaderProps> = ({
             Smart Shopper
           </Typography>
         </Box>
-
-        {/* Shopping List Actions */}
-        {isAuthenticated && (
-          <Stack direction="row" spacing={1} sx={{ mr: 2 }}>
-            <Tooltip title="Create New List">
-              <IconButton
-                onClick={onCreateList}
-                disabled={isLoading}
-                sx={{
-                  borderRadius: '8px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
-              >
-                <AddIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Sort Lists">
-              <IconButton
-                onClick={handleSortClick}
-                sx={{
-                  borderRadius: '8px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
-              >
-                <SortIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Import Items">
-              <IconButton
-                onClick={onImportItems}
-                disabled={isLoading || !hasSelectedList}
-                sx={{
-                  borderRadius: '8px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
-              >
-                <ImportIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Export Selected List">
-              <IconButton
-                onClick={onExportList}
-                disabled={isLoading || !hasSelectedList}
-                sx={{
-                  borderRadius: '8px',
-                  border: `1px solid ${theme.palette.divider}`,
-                  '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.1),
-                  },
-                }}
-              >
-                <ExportIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          </Stack>
-        )}
-
-        {/* Sort Menu */}
-        <Menu anchorEl={sortAnchorEl} open={Boolean(sortAnchorEl)} onClose={handleSortClose}>
-          {SORT_MODES.map(mode => (
-            <MenuItem
-              key={mode.key}
-              selected={currentSortMode === mode.key}
-              onClick={() => handleSortSelect(mode.key)}
-            >
-              {mode.label}
-            </MenuItem>
-          ))}
-        </Menu>
 
         {/* User Info */}
         {isAuthenticated && user && (
