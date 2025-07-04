@@ -278,12 +278,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         <Box
           ref={provided.innerRef}
           {...provided.draggableProps}
-          sx={{
+          style={{
             ...provided.draggableProps.style,
-            transform: `${provided.draggableProps.style?.transform || ''} rotate(${snapshot.isDragging ? 3 : 0}deg) scale(${snapshot.isDragging ? 1.05 : 1})`,
+          }}
+          sx={{
+            // Don't override transform during drag - let the drag library handle it
             transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
-            '&:hover': !globalIsDragging ? {
-              transform: `${provided.draggableProps.style?.transform || ''} translateY(-4px) rotate(0deg) scale(1)`,
+            '&:hover': !snapshot.isDragging && !globalIsDragging ? {
+              transform: 'translateY(-4px)',
             } : {},
           }}
         >
@@ -292,6 +294,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             sx={{
               borderRadius: '20px',
               overflow: 'hidden',
+              // Visual drag effects applied to the card instead of draggable container
+              transform: snapshot.isDragging ? 'rotate(3deg) scale(1.05)' : 'rotate(0deg) scale(1)',
               // Enhanced shadow during drag
               boxShadow: snapshot.isDragging 
                 ? `0 20px 40px ${alpha(theme.palette.primary.main, 0.3)}, 0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
@@ -299,7 +303,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   ? '0 4px 12px rgba(0,0,0,0.1)' 
                   : '0 4px 20px rgba(0,0,0,0.08)',
               // Smooth transition when not dragging
-              transition: snapshot.isDragging ? 'none' : 'box-shadow 0.3s ease',
+              transition: snapshot.isDragging ? 'none' : 'all 0.3s ease',
               // Improved backdrop blur during drag
               backdropFilter: snapshot.isDragging ? 'blur(20px)' : 'blur(10px)',
               // Add border during drag for better visual feedback
