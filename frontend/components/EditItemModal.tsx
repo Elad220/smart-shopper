@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Stack, MenuItem, Box, useTheme,
+  TextField, Button, Stack, MenuItem, Box,
   FormControl, InputLabel, OutlinedInput,
   InputAdornment, IconButton, Typography
 } from '@mui/material';
-import { motion } from 'framer-motion';
-import { Edit, X, Upload, Trash2, Plus, Minus } from 'lucide-react';
+import CloseIcon from '@mui/icons-material/Close';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
+import ClearIcon from '@mui/icons-material/Clear';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 interface EditItemModalProps {
   open: boolean;
@@ -36,7 +39,6 @@ interface EditItemModalProps {
 }
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, item }) => {
-  const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     category: 'Other',
@@ -161,14 +163,14 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
       PaperProps={{
         sx: {
           borderRadius: '20px',
-          background: theme.palette.mode === 'dark'
+          background: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.7)'
             : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(32px)',
-          border: theme.palette.mode === 'dark' 
+          border: (theme) => theme.palette.mode === 'dark' 
             ? '1px solid rgba(255, 255, 255, 0.15)'
             : '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: theme.palette.mode === 'dark'
+          boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
         }
@@ -180,220 +182,180 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
         }
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        <DialogTitle>
-          <Stack direction="row" alignItems="center" spacing={2}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: '8px',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <Edit size={20} color="white" />
-            </Box>
-            Edit Item
-          </Stack>
-        </DialogTitle>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        Edit Item
+        <IconButton aria-label="close" onClick={handleClose}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
 
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Stack spacing={3} sx={{ mt: 1 }}>
-              <TextField
-                fullWidth
-                label="Item Name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                autoFocus
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-              />
+      <form onSubmit={handleSubmit}>
+        <DialogContent dividers>
+          <Stack spacing={3} sx={{ mt: 1 }}>
+            <TextField
+              fullWidth
+              label="Item Name"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              required
+              autoFocus
+            />
 
-              {/* Image Upload Section */}
-              <Box>
-                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
-                  Item Image (Optional)
-                </Typography>
-                {formData.imageUrl ? (
-                  <Box sx={{ position: 'relative', mb: 2 }}>
-                    <img
-                      src={formData.imageUrl}
-                      alt="Item preview"
-                      style={{
-                        width: '100%',
-                        maxHeight: '200px',
-                        objectFit: 'cover',
-                        borderRadius: '12px',
-                      }}
-                    />
-                    <IconButton
-                      onClick={handleRemoveImage}
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                        color: 'white',
-                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
-                      }}
-                    >
-                      <Trash2 size={18} />
-                    </IconButton>
-                  </Box>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    component="label"
-                    fullWidth
-                    startIcon={<Upload size={20} />}
-                    sx={{
+            {/* Image Upload Section */}
+            <Box>
+              <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                Item Image (Optional)
+              </Typography>
+              {formData.imageUrl ? (
+                <Box sx={{ position: 'relative', mb: 2 }}>
+                  <img
+                    src={formData.imageUrl}
+                    alt="Item preview"
+                    style={{
+                      width: '100%',
+                      maxHeight: '200px',
+                      objectFit: 'cover',
                       borderRadius: '12px',
-                      borderStyle: 'dashed',
-                      height: '60px',
-                      color: 'text.secondary',
+                    }}
+                  />
+                  <IconButton
+                    onClick={handleRemoveImage}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      backgroundColor: 'rgba(255, 255, 255, 0.7)',
                     }}
                   >
-                    Upload Image
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      hidden
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                    />
-                  </Button>
-                )}
-              </Box>
-
-              <Stack direction="row" spacing={2}>
-                <FormControl fullWidth>
-                  <InputLabel>Amount</InputLabel>
-                  <OutlinedInput
-                    type="number"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
-                    label="Amount"
-                    inputProps={{ min: 1 }}
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <IconButton
-                          onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
-                          disabled={formData.amount <= 1}
-                        >
-                          <Minus size={16} />
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                    endAdornment={
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
-                        >
-                          <Plus size={16} />
-                        </IconButton>
-                      </InputAdornment>
-                    }
-                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                  />
-                </FormControl>
-
-                <TextField
-                  select
-                  label="Units"
-                  value={formData.units}
-                  onChange={(e) => setFormData({ ...formData, units: e.target.value })}
-                  sx={{ 
-                    width: '140px',
-                    '& .MuiOutlinedInput-root': { borderRadius: '12px' }
+                    <ClearIcon />
+                  </IconButton>
+                </Box>
+              ) : (
+                <Button
+                  variant="outlined"
+                  component="label"
+                  fullWidth
+                  startIcon={<PhotoCamera />}
+                  sx={{
+                    borderRadius: '12px',
+                    borderStyle: 'dashed',
+                    height: '60px',
+                    color: 'text.secondary',
                   }}
                 >
-                  {units.map((unit) => (
-                    <MenuItem key={unit} value={unit}>
-                      {unit}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Stack>
+                  Upload Image
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                  />
+                </Button>
+              )}
+            </Box>
 
-              <Stack direction="row" spacing={2}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Category"
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                >
-                  {allCategories.map((category) => (
-                    <MenuItem key={category.value} value={category.value}>
-                      {category.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-
-                <TextField
-                  select
-                  fullWidth
-                  label="Priority"
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
-                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-                >
-                  {priorities.map((priority) => (
-                    <MenuItem key={priority} value={priority}>
-                      {priority}
-                    </MenuItem>
-                  ))}
-                </TextField>
-              </Stack>
+            <Stack direction="row" spacing={2}>
+              <FormControl fullWidth>
+                <InputLabel>Amount</InputLabel>
+                <OutlinedInput
+                  type="number"
+                  value={formData.amount}
+                  onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
+                  label="Amount"
+                  inputProps={{ min: 1 }}
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <IconButton
+                        onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
+                        disabled={formData.amount <= 1}
+                      >
+                        <KeyboardArrowDownIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
+                      >
+                        <KeyboardArrowUpIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                />
+              </FormControl>
 
               <TextField
-                fullWidth
-                label="Notes (optional)"
-                multiline
-                rows={2}
-                value={formData.notes}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
-              />
+                select
+                label="Units"
+                value={formData.units}
+                onChange={(e) => setFormData({ ...formData, units: e.target.value })}
+                sx={{ 
+                  width: '140px'
+                }}
+              >
+                {units.map((unit) => (
+                  <MenuItem key={unit} value={unit}>
+                    {unit}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Stack>
-          </DialogContent>
 
-          <DialogActions sx={{ p: 3 }}>
-            <Button
-              onClick={handleClose}
-              startIcon={<X size={16} />}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={!formData.name.trim()}
-              startIcon={<Edit size={16} />}
-              sx={{
-                borderRadius: '8px',
-                textTransform: 'none',
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-              }}
-            >
-              Save Changes
-            </Button>
-          </DialogActions>
-        </form>
-      </motion.div>
+            <Stack direction="row" spacing={2}>
+              <TextField
+                select
+                fullWidth
+                label="Category"
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              >
+                {allCategories.map((category) => (
+                  <MenuItem key={category.value} value={category.value}>
+                    {category.label}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                select
+                fullWidth
+                label="Priority"
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+              >
+                {priorities.map((priority) => (
+                  <MenuItem key={priority} value={priority}>
+                    {priority}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Stack>
+
+            <TextField
+              fullWidth
+              label="Notes (optional)"
+              multiline
+              rows={2}
+              value={formData.notes}
+              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+            />
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ p: '16px 24px' }}>
+          <Button onClick={handleClose} color="inherit">Cancel</Button>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={!formData.name.trim()}
+            color="primary"
+          >
+            Save Changes
+          </Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 };
