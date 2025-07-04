@@ -158,9 +158,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
                     fontSize: '1.1rem',
                     fontWeight: 600,
                     py: 1.5,
+                    color: '#ffffff',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    '&:hover': {
+                      color: '#ffffff',
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                    },
                     '&:disabled': {
                       background: theme.palette.action.disabledBackground,
+                      color: '#ffffff !important',
+                      opacity: 0.7,
                     },
                   }}
                 >

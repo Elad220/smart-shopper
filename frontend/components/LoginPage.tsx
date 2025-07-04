@@ -172,7 +172,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
               '&:disabled': {
                 backgroundColor: '#6b7280 !important',
                 color: '#ffffff !important',
-                opacity: 0.7,
+                opacity: 0.8,
               }
             }}
           >
