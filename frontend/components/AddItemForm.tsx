@@ -174,6 +174,9 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       fullWidth
       fullScreen={isMobile}
       scroll="paper"
+      disableScrollLock={false}
+      disableEscapeKeyDown={false}
+      keepMounted={false}
       PaperProps={{
         sx: {
           borderRadius: isMobile ? '0px' : '20px',
@@ -194,6 +197,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           width: isMobile ? '100%' : 'auto',
           display: 'flex',
           flexDirection: 'column',
+          position: 'relative',
         }
       }}
       BackdropProps={{
@@ -215,7 +219,9 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           // Mobile responsiveness: Make content scrollable
           flex: 1,
           overflowY: 'auto',
+          overflowX: 'hidden',
           paddingBottom: '16px',
+          WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
           '&::-webkit-scrollbar': {
             width: '8px',
           },
