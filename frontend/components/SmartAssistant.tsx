@@ -185,11 +185,23 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       fullWidth
       PaperProps={{
         sx: {
-          borderRadius: '16px',
+          borderRadius: '20px',
           background: theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.05)'
+            ? 'rgba(42, 42, 42, 0.95)'
             : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(20px)',
+          backdropFilter: 'blur(24px)',
+          border: theme.palette.mode === 'dark' 
+            ? '1px solid rgba(255, 255, 255, 0.1)'
+            : '1px solid rgba(0, 0, 0, 0.05)',
+          boxShadow: theme.palette.mode === 'dark'
+            ? '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+            : '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+        }
+      }}
+      BackdropProps={{
+        sx: {
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backdropFilter: 'blur(8px)',
         }
       }}
     >

@@ -77,33 +77,67 @@ const CategorySection: React.FC<CategorySectionProps> = ({
     <Box
       sx={{
         backgroundColor: 'background.paper',
-        borderRadius: 2,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        p: 2,
-        mb: 2,
+        borderRadius: 3,
+        boxShadow: (theme) => theme.palette.mode === 'dark'
+          ? '0 4px 16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+          : '0 4px 16px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04)',
+        p: 2.5,
+        mb: 2.5,
         border: '1px solid',
         borderColor: 'divider',
+        backdropFilter: 'blur(10px)',
+        transition: 'all 0.2s ease-in-out',
+        '&:hover': {
+          transform: 'translateY(-1px)',
+          boxShadow: (theme) => theme.palette.mode === 'dark'
+            ? '0 6px 20px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08)'
+            : '0 6px 20px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06)',
+        }
       }}
     >
       <Box
-        sx={{ display: 'flex', alignItems: 'center', mb: 1, cursor: 'pointer', userSelect: 'none' }}
+        sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          mb: 1.5, 
+          cursor: 'pointer', 
+          userSelect: 'none',
+          p: 1,
+          borderRadius: 2,
+          transition: 'background-color 0.2s ease-in-out',
+          '&:hover': {
+            bgcolor: 'action.hover',
+          }
+        }}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <span {...dragHandleProps} style={{ cursor: 'grab', display: 'flex', alignItems: 'center', paddingRight: '8px' }}>
+        <span {...dragHandleProps} style={{ cursor: 'grab', display: 'flex', alignItems: 'center', paddingRight: '12px' }}>
           <DragIndicatorIcon color={'disabled'} />
         </span>
-        <Typography variant="h5" component="span" sx={{ mr: 1.5 }}>
+        <Typography variant="h4" component="span" sx={{ mr: 2 }}>
           {categoryEmoji}
         </Typography>
         <Box sx={{ flexGrow: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
             {categoryTitle}
           </Typography>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
             {completedItems} of {totalItems} completed
           </Typography>
         </Box>
-        <Typography variant="body2" sx={{ mr: 1, color: 'text.secondary', bgcolor: 'action.hover', px: 1.5, py: 0.5, borderRadius: '12px' }}>
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            mr: 2, 
+            color: 'text.secondary', 
+            bgcolor: (theme) => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'action.hover',
+            px: 2, 
+            py: 0.75, 
+            borderRadius: '16px',
+            fontWeight: 500,
+            fontSize: '0.8rem'
+          }}
+        >
           {totalItems}
         </Typography>
         {/* The new Checkbox */}
