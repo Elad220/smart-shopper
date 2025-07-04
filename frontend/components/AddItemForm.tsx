@@ -20,6 +20,8 @@ import {
   FormHelperText,
   OutlinedInput,
   InputAdornment,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -37,6 +39,9 @@ interface AddItemFormProps {
 }
 
 const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, categories, onDeleteCategory }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
@@ -167,9 +172,14 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       onClose={onClose} 
       maxWidth="sm" 
       fullWidth
+      fullScreen={false}
+      scroll="paper"
+      disableScrollLock={false}
+      disableEscapeKeyDown={false}
+      keepMounted={false}
       PaperProps={{
         sx: {
-          borderRadius: '20px',
+          borderRadius: isMobile ? '0px' : '20px',
           background: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.7)'
             : 'rgba(255, 255, 255, 0.8)',
@@ -180,6 +190,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+          // Mobile responsiveness: Simplified dialog constraints
+          maxHeight: isMobile ? '90vh' : '85vh',
+          margin: isMobile ? '16px' : '32px',
+          width: isMobile ? 'calc(100% - 32px)' : 'auto',
+          position: 'relative',
         }
       }}
       BackdropProps={{
@@ -189,13 +204,43 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        flexShrink: 0, // Prevent title from shrinking
+        pb: 1 // Reduce bottom padding to save space
+      }}>
         Add New Item
         <IconButton aria-label="close" onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
-      <DialogContent dividers>
+      <DialogContent 
+        dividers
+        sx={{
+          // Mobile responsiveness: Make content scrollable with explicit constraints
+          maxHeight: isMobile ? '60vh' : '50vh', // Force a height constraint
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          paddingBottom: '16px',
+          WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: 'rgba(0, 0, 0, 0.1)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: 'rgba(0, 0, 0, 0.3)',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: 'rgba(0, 0, 0, 0.5)',
+          },
+        }}
+      >
         <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
           <TextField
             margin="normal"
@@ -250,8 +295,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)' } }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 1 : 2, mb: 2 }}>
+            <Box sx={{ width: isMobile ? '100%' : (showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)') }}>
               <FormControl fullWidth margin="normal" error={!!categoryError}>
                 <InputLabel id="category-label" shrink={true}>Category</InputLabel>
                 <Select
@@ -292,7 +337,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
               </FormControl>
             </Box>
             {showCustomCategoryInput && (
-              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+              <Box sx={{ width: isMobile ? '100%' : 'calc(50% - 8px)' }}>
                   <TextField
                       margin="normal"
                       required
@@ -305,7 +350,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                   />
               </Box>
             )}
-            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+            <Box sx={{ width: isMobile ? '100%' : 'calc(50% - 8px)' }}>
               <FormControl fullWidth margin="normal">
                 <InputLabel id="priority-label">Priority</InputLabel>
                 <Select
@@ -322,7 +367,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 1 : 2, mb: 2 }}>
             <FormControl variant="outlined" sx={{ flex: 1, mt: 2 }}>
               <InputLabel htmlFor="add-amount-input">Amount</InputLabel>
               <OutlinedInput
@@ -347,6 +392,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                         onClick={() => handleAmountChange(amount - 1)}
                         edge="start"
                         disabled={amount <= 1}
+                        size="small"
                       >
                         <KeyboardArrowDownIcon />
                       </IconButton>
@@ -358,6 +404,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                         aria-label="increase amount"
                         onClick={() => handleAmountChange(amount + 1)}
                         edge="end"
+                        size="small"
                       >
                         <KeyboardArrowUpIcon />
                       </IconButton>
@@ -396,12 +443,67 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
-            rows={3}
+            rows={4}
             placeholder="Any additional notes..."
+            sx={{ mb: 2 }}
           />
+          
+          {/* Add extra content to ensure scrolling is needed */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Tips for better shopping:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              • Add specific quantities to avoid over-purchasing
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Set priority levels to organize your shopping
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Use notes for specific brands or preferences
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Upload images for items that are hard to describe
+            </Typography>
+          </Box>
+          
+          {/* Additional test content */}
+          <Box sx={{ mb: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              Additional information:
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              • All fields marked with * are required
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Custom categories will be saved for future use
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Images are stored locally and not uploaded to servers
+            </Typography>
+          </Box>
         </Box>
       </DialogContent>
-      <DialogActions sx={{ p: '16px 24px' }}>
+      <DialogActions 
+        sx={{ 
+          p: '16px 24px',
+          // Mobile responsiveness: Ensure buttons remain visible and accessible
+          flexShrink: 0, // Prevent buttons from shrinking
+          backgroundColor: (theme) => theme.palette.mode === 'dark'
+            ? 'rgba(26, 26, 26, 0.95)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(8px)',
+          borderTop: (theme) => `1px solid ${theme.palette.mode === 'dark' 
+            ? 'rgba(255, 255, 255, 0.1)' 
+            : 'rgba(0, 0, 0, 0.1)'}`,
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 1,
+          '& .MuiButton-root': {
+            minHeight: '44px', // Ensure buttons are touch-friendly on mobile
+            width: isMobile ? '100%' : 'auto',
+          }
+        }}
+      >
         <Button onClick={onClose} color="inherit">Cancel</Button>
         <Button onClick={handleSubmit} variant="contained" color="primary">
           Add Item
