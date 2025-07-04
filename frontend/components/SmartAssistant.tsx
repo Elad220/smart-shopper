@@ -195,19 +195,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     >
       <DialogTitle>
         <Stack direction="row" alignItems="center" spacing={2}>
-          <Box
-            sx={{
-              width: 40,
-              height: 40,
-              borderRadius: '8px',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            🤖
-          </Box>
+          <Typography sx={{ fontSize: '1.8rem' }}>🤖</Typography>
           Smart Assistant
         </Stack>
       </DialogTitle>

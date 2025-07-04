@@ -41,7 +41,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     deleteItem,
     toggleComplete,
     clearCompleted
-  } = useShoppingList(user.token);
+  } = useShoppingList(user.token, selectedListId);
 
   const completedItems = items.filter(item => item.completed).length;
   const totalItems = items.length;
@@ -111,8 +111,10 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   };
 
   const handleDataChange = () => {
-    // This will trigger a refresh of the shopping list data
-    window.location.reload();
+    // Trigger a data refresh by updating the list selection
+    if (selectedListId) {
+      setSelectedListId(selectedListId);
+    }
   };
 
   const handleSmartAssistantAddItems = async (aiItems: { name: string; category: string }[]) => {
@@ -330,19 +332,15 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         />
 
         {/* Edit Item Modal */}
-        {editingItem && (
-          <EditItemModal
-            isOpen={isEditModalOpen}
-            onClose={() => {
-              setIsEditModalOpen(false);
-              setEditingItem(null);
-            }}
-            onSave={handleUpdateItem}
-            item={editingItem}
-            categories={['Produce', 'Dairy', 'Fridge', 'Freezer', 'Bakery', 'Pantry', 'Disposable', 'Hygiene', 'Canned Goods', 'Organics', 'Deli', 'Other']}
-            onDeleteCategory={() => {}} // Not implemented in this simplified version
-          />
-        )}
+        <EditItemModal
+          open={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingItem(null);
+          }}
+          onSave={handleUpdateItem}
+          item={editingItem}
+        />
       </Container>
     </Box>
 

@@ -2,14 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import * as api from '../src/services/api';
 import { ShoppingItem } from '../types';
 
-export const useShoppingList = (token: string) => {
+export const useShoppingList = (token: string, listId?: string | null) => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [currentListName, setCurrentListName] = useState<string>('My Shopping List');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState<string | null>(
-    localStorage.getItem('selectedListId')
+    listId || localStorage.getItem('selectedListId')
   );
+
+  // Update selectedListId when listId prop changes
+  useEffect(() => {
+    if (listId !== undefined) {
+      setSelectedListId(listId);
+    }
+  }, [listId]);
 
   const fetchShoppingList = useCallback(async () => {
     if (!token || !selectedListId) return;

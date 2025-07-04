@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse, Button
@@ -240,28 +240,35 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       )}
 
       <DragDropContext onDragEnd={handleDragEnd}>
-        <Droppable droppableId="categories">
-          {(provided) => (
+        <Droppable droppableId="categories" type="CATEGORY">
+          {(provided, snapshot) => (
             <Box
               ref={provided.innerRef}
               {...provided.droppableProps}
+              sx={{
+                minHeight: snapshot.isDraggingOver ? 100 : 'auto',
+                transition: 'min-height 0.2s ease',
+              }}
             >
-              <AnimatePresence>
-                <Stack spacing={3}>
-                  {sortedCategories.map((categoryName, index) => (
-                    <Draggable key={categoryName} draggableId={categoryName} index={index}>
-                      {(provided, snapshot) => (
-                        <motion.div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          layout
-                          style={{
-                            ...provided.draggableProps.style,
-                          }}
-                        >
+              <Stack spacing={3}>
+                {sortedCategories.map((categoryName, index) => (
+                  <Draggable 
+                    key={categoryName} 
+                    draggableId={categoryName} 
+                    index={index}
+                    isDragDisabled={false}
+                  >
+                    {(provided, snapshot) => (
+                      <Box
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                          transform: snapshot.isDragging 
+                            ? `${provided.draggableProps.style?.transform} rotate(2deg)` 
+                            : provided.draggableProps.style?.transform,
+                        }}
+                      >
               <Card
                 sx={{
                   borderRadius: '16px',
@@ -433,19 +440,18 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   </Box>
                 </Collapse>
               </Card>
-                        </motion.div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </Stack>
-              </AnimatePresence>
-            </Box>
-          )}
-        </Droppable>
-      </DragDropContext>
-    </Box>
-  );
+                       </Box>
+                     )}
+                   </Draggable>
+                 ))}
+                 {provided.placeholder}
+               </Stack>
+             </Box>
+           )}
+         </Droppable>
+       </DragDropContext>
+     </Box>
+   );
 };
 
 export default ShoppingListView;

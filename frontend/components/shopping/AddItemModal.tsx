@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Stack, MenuItem, Box, useTheme, Collapse
+  TextField, Button, Stack, MenuItem, Box, useTheme
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Package, X } from 'lucide-react';
+import NewCategoryModal from './NewCategoryModal';
 
 interface AddItemModalProps {
   open: boolean;
@@ -30,9 +31,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     notes: '',
   });
   
-  const [customCategory, setCustomCategory] = useState('');
-  const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState(false);
 
   // Load custom categories from localStorage
   useEffect(() => {
@@ -72,32 +72,30 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     { value: 'Other', label: '📦 Add New Category...', emoji: '📦' },
   ];
 
-  const units = ['pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp'];
+  const units = [
+    'pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp',
+    'packs', 'bottles', 'cans', 'boxes', 'bags', 'loaves', 'bunches',
+    'dozen', 'lbs', 'gallon', 'quart', 'pint'
+  ];
   const priorities = ['Low', 'Medium', 'High'] as const;
 
   const handleCategoryChange = (value: string) => {
-    setFormData({ ...formData, category: value });
-    setShowCustomCategory(value === 'Other');
-    if (value !== 'Other') {
-      setCustomCategory('');
+    if (value === 'Other') {
+      setIsNewCategoryModalOpen(true);
+    } else {
+      setFormData({ ...formData, category: value });
     }
+  };
+
+  const handleNewCategoryAdd = (categoryName: string) => {
+    saveCustomCategory(categoryName);
+    setFormData({ ...formData, category: categoryName });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim()) {
-      let finalCategory = formData.category;
-      
-      // If "Other" is selected and user entered a custom category
-      if (formData.category === 'Other' && customCategory.trim()) {
-        finalCategory = customCategory.trim();
-        saveCustomCategory(finalCategory);
-      }
-      
-      onAdd({
-        ...formData,
-        category: finalCategory,
-      });
+      onAdd(formData);
       
       // Reset form
       setFormData({
@@ -108,8 +106,6 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         priority: 'Medium',
         notes: '',
       });
-      setCustomCategory('');
-      setShowCustomCategory(false);
     }
   };
 
@@ -123,8 +119,6 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
       priority: 'Medium',
       notes: '',
     });
-    setCustomCategory('');
-    setShowCustomCategory(false);
   };
 
   return (
@@ -242,19 +236,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                 </TextField>
               </Stack>
 
-              <Collapse in={showCustomCategory}>
-                <TextField
-                  fullWidth
-                  label="New Category Name"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  placeholder="Enter new category name..."
-                  sx={{ 
-                    '& .MuiOutlinedInput-root': { borderRadius: '12px' },
-                    mt: 1,
-                  }}
-                />
-              </Collapse>
+
 
               <TextField
                 fullWidth
@@ -295,6 +277,12 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
           </DialogActions>
         </form>
       </motion.div>
+      
+      <NewCategoryModal
+        open={isNewCategoryModalOpen}
+        onClose={() => setIsNewCategoryModalOpen(false)}
+        onAdd={handleNewCategoryAdd}
+      />
     </Dialog>
   );
 };
