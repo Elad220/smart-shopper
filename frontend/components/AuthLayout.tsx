@@ -16,9 +16,10 @@ const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
         display: 'flex',
         flexDirection: 'column',
         minHeight: '100vh',
-        bgcolor: isDarkMode ? '#141a1f' : '#f8fafc',
+        bgcolor: theme.palette.background.default,
         fontFamily: '"Spline Sans", "Noto Sans", sans-serif',
         pt: '64px', // Added padding for the header
+        transition: 'background-color 0.2s ease-in-out',
       }}
     >
       <Box

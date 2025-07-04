@@ -26,6 +26,7 @@ export const useTheme = () => {
       body.style.color = '#ffffff';
       root.style.backgroundColor = '#000000';
     } else {
+      // Light mode - use proper light colors
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
       root.style.setProperty('--paper-color', '#f8fafc');
@@ -33,6 +34,19 @@ export const useTheme = () => {
       body.style.backgroundColor = '#ffffff';
       body.style.color = '#111827';
       root.style.backgroundColor = '#ffffff';
+      
+      // Clear any dark mode overrides
+      body.style.removeProperty('color');
+      body.style.removeProperty('background-color');
+      root.style.removeProperty('color');
+      root.style.removeProperty('background-color');
+      
+      // Let Material-UI handle the rest
+      requestAnimationFrame(() => {
+        body.style.backgroundColor = '';
+        body.style.color = '';
+        root.style.backgroundColor = '';
+      });
     }
   }, [mode]);
 
@@ -218,13 +232,21 @@ export const useTheme = () => {
           root.style.setProperty('--paper-color', '#0a0a0a');
           root.style.setProperty('--border-color', '#1a1a1a');
         } else {
-          body.style.backgroundColor = '#ffffff';
-          body.style.color = '#111827';
-          root.style.backgroundColor = '#ffffff';
+          // Light mode - reset to Material-UI defaults
           root.style.setProperty('--bg-color', '#ffffff');
           root.style.setProperty('--text-color', '#111827');
           root.style.setProperty('--paper-color', '#f8fafc');
           root.style.setProperty('--border-color', '#e2e8f0');
+          
+          // Clear inline styles to let Material-UI take over
+          body.style.backgroundColor = '';
+          body.style.color = '';
+          root.style.backgroundColor = '';
+          
+          // Additional cleanup
+          body.style.removeProperty('background-color');
+          body.style.removeProperty('color');
+          root.style.removeProperty('background-color');
         }
       });
       
