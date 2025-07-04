@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack, MenuItem, Box, useTheme,
-  Typography, IconButton
+  Typography, IconButton, CircularProgress
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Package, X, Upload, Trash2 } from 'lucide-react';
@@ -19,10 +19,11 @@ interface AddItemModalProps {
     priority: 'Low' | 'Medium' | 'High';
     notes: string;
     imageUrl?: string;
-  }) => void;
+  }) => Promise<void>;
+  isLoading?: boolean;
 }
 
-const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => {
+const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoading = false }) => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
@@ -120,7 +121,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     }
   };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim() && formData.category && formData.category !== '') {
       // Ensure imageUrl is included in the data being sent
@@ -137,7 +138,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         formData: { ...itemData, imageUrl: itemData.imageUrl ? '[IMAGE_DATA]' : undefined }
       });
       
-      onAdd(itemData);
+      await onAdd(itemData);
       
       // Reset form
       setFormData({
@@ -222,7 +223,25 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
 
         <form onSubmit={handleSubmit}>
           <DialogContent>
-            <Stack spacing={3} sx={{ mt: 1 }}>
+            {isLoading ? (
+              <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                alignItems: 'center', 
+                justifyContent: 'center',
+                minHeight: '200px',
+                py: 4
+              }}>
+                <CircularProgress size={48} sx={{ mb: 2 }} />
+                <Typography variant="h6" color="text.secondary">
+                  Adding item...
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                  Please wait while we add your item to the list
+                </Typography>
+              </Box>
+            ) : (
+              <Stack spacing={3} sx={{ mt: 1 }}>
               <TextField
                 fullWidth
                 label="Item Name"
@@ -363,11 +382,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
               />
             </Stack>
+            )}
           </DialogContent>
 
           <DialogActions sx={{ p: 3 }}>
             <Button
               onClick={handleClose}
+              disabled={isLoading}
               startIcon={<X size={16} />}
               sx={{
                 borderRadius: '8px',
@@ -379,15 +400,15 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
             <Button
               type="submit"
               variant="contained"
-              disabled={!formData.name.trim() || !formData.category}
-              startIcon={<Package size={16} />}
+              disabled={isLoading || !formData.name.trim() || !formData.category}
+              startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <Package size={16} />}
               sx={{
                 borderRadius: '8px',
                 textTransform: 'none',
                 background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
               }}
             >
-              Add Item
+              {isLoading ? 'Adding...' : 'Add Item'}
             </Button>
           </DialogActions>
         </form>

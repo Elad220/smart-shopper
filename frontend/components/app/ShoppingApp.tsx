@@ -27,6 +27,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
+  const [isAddingItem, setIsAddingItem] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(
     localStorage.getItem('selectedListId')
   );
@@ -49,6 +50,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
 
   const handleAddItem = async (itemData: any) => {
     try {
+      setIsAddingItem(true);
+      
       // Debug: Track image through the flow
       console.log('� ShoppingApp:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
       
@@ -61,6 +64,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     } catch (error: any) {
       console.error('🖼️ ShoppingApp - Error adding item:', error);
       toast.error(error.message);
+    } finally {
+      setIsAddingItem(false);
     }
   };
 
@@ -351,8 +356,9 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         {/* Add Item Modal */}
         <AddItemModal
           open={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => !isAddingItem && setIsAddModalOpen(false)}
           onAdd={handleAddItem}
+          isLoading={isAddingItem}
         />
 
         {/* Edit Item Modal */}
