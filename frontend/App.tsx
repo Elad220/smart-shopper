@@ -16,8 +16,8 @@ const App: React.FC = () => {
   React.useEffect(() => {
     // Force immediate visual update
     document.documentElement.style.setProperty('--theme-mode', mode);
-    document.body.style.backgroundColor = mode === 'dark' ? '#141a1f' : '#f8fafc';
-    document.body.style.color = mode === 'dark' ? '#ffffff' : '#0d141c';
+    document.body.style.backgroundColor = mode === 'dark' ? '#1a202c' : '#f8fafc';
+    document.body.style.color = mode === 'dark' ? '#f7fafc' : '#1a202c';
     document.documentElement.setAttribute('data-theme', mode);
     
     // Force all components to re-render with new theme

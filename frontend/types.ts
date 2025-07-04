@@ -23,7 +23,6 @@ export interface ShoppingItem {
   amount: number;
   priority: 'Low' | 'Medium' | 'High';
   notes: string;
-  imageUrl?: string; // For backward compatibility
-  image?: string;    // New property for image URL
+  imageUrl?: string;
   completed: boolean;
 }

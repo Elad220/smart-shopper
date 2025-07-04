@@ -373,10 +373,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                 />
                                 
                                 {/* Item Image */}
-                                {(item.imageUrl || item.image) && (
+                                {item.imageUrl && (
                                   <Box sx={{ mr: 2 }}>
                                     <img
-                                      src={item.imageUrl || item.image}
+                                      src={item.imageUrl}
                                       alt={item.name}
                                       style={{
                                         width: '60px',

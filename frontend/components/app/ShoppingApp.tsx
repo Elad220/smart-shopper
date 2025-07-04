@@ -49,10 +49,17 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
 
   const handleAddItem = async (itemData: any) => {
     try {
-      await addItem(itemData);
+      // Debug: Track image through the flow
+      console.log('� ShoppingApp:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
+      
+      const newItem = await addItem(itemData);
+      
+      console.log('� ShoppingApp result:', newItem.imageUrl ? '✅ Image saved' : '❌ Image lost');
+      
       setIsAddModalOpen(false);
       toast.success(`Added "${itemData.name}" to your list! ✅`);
     } catch (error: any) {
+      console.error('🖼️ ShoppingApp - Error adding item:', error);
       toast.error(error.message);
     }
   };

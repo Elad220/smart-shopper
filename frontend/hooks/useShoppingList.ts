@@ -74,7 +74,12 @@ export const useShoppingList = (token: string, listId?: string | null) => {
   const addItem = useCallback(async (itemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
     
+    console.log('� Hook:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
+    
     const newItem = await api.addShoppingItem(token, selectedListId, itemData);
+    
+    console.log('� Hook result:', newItem.imageUrl ? '✅ API returned image' : '❌ API lost image');
+    
     setItems(prev => [...prev, newItem].sort((a, b) => a.name.localeCompare(b.name)));
     return newItem;
   }, [token, selectedListId]);

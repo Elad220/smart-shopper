@@ -120,7 +120,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim() && formData.category && formData.category !== '') {
       // Ensure imageUrl is included in the data being sent
@@ -129,7 +129,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         name: formData.name.trim(),
       };
       
-
+      // Debug: Check if image is being submitted
+      if (itemData.imageUrl) {
+        console.log('✅ Image data included:', itemData.imageUrl.substring(0, 50) + '...');
+      } else {
+        console.log('❌ No image data');
+      }
+      
       onAdd(itemData);
       
       // Reset form
