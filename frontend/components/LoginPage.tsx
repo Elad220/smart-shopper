@@ -33,22 +33,25 @@ const LoginPage: React.FC<LoginPageProps> = ({
   const commonTextFieldStyles = {
     '& .MuiOutlinedInput-root': {
       borderRadius: '12px',
-      backgroundColor: isDarkMode ? '#1f272e' : '#e7edf4',
+      backgroundColor: isDarkMode ? '#0a0a0a' : '#e7edf4',
+      transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
       '& fieldset': {
-        borderColor: isDarkMode ? '#3d4d5c' : 'transparent',
+        borderColor: isDarkMode ? '#1a1a1a' : 'transparent',
       },
       '&:hover fieldset': {
-        borderColor: isDarkMode ? '#567a9a' : '#c1d9f0',
+        borderColor: isDarkMode ? '#2a2a2a' : '#c1d9f0',
       },
       '&.Mui-focused fieldset': {
-        borderColor: isDarkMode ? '#90caf9' : '#0c7ff2',
+        borderColor: isDarkMode ? '#60a5fa' : '#0c7ff2',
       },
     },
     '& .MuiInputBase-input': {
-      color: isDarkMode ? 'white' : '#0d141c',
+      color: isDarkMode ? '#ffffff' : '#0d141c',
+      transition: 'color 0.2s ease-in-out',
     },
      '& .MuiInputLabel-root': {
-        color: isDarkMode ? '#9daebe' : '#49739c',
+        color: isDarkMode ? '#d1d5db' : '#49739c',
+        transition: 'color 0.2s ease-in-out',
     },
   };
 
@@ -58,11 +61,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
         <Typography
           variant="h4"
           sx={{
-            color: isDarkMode ? 'white' : '#0d141c',
+            color: isDarkMode ? '#ffffff' : '#0d141c',
             fontWeight: 'bold',
             textAlign: 'center',
             pb: 3,
             pt: 5,
+            transition: 'color 0.2s ease-in-out',
           }}
         >
           Welcome back
@@ -98,9 +102,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
                 component="button"
                 type="button"
                 sx={{
-                color: isDarkMode ? '#9daebe' : '#49739c',
+                color: isDarkMode ? '#d1d5db' : '#49739c',
                 fontSize: '0.875rem',
                 textDecoration: 'underline',
+                transition: 'color 0.2s ease-in-out',
                 }}
             >
                 Forgot Password?
@@ -116,13 +121,14 @@ const LoginPage: React.FC<LoginPageProps> = ({
             sx={{
               borderRadius: '9999px',
               height: 48,
-              bgcolor: isDarkMode ? '#dce8f3' : '#0c7ff2',
-              color: isDarkMode ? '#141a1f' : 'white',
+              bgcolor: isDarkMode ? '#60a5fa' : '#0c7ff2',
+              color: isDarkMode ? '#000000' : 'white',
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
+              transition: 'all 0.2s ease-in-out',
                '&:hover': {
-                bgcolor: isDarkMode ? '#b9c8d6' : '#0064c4',
+                bgcolor: isDarkMode ? '#3b82f6' : '#0064c4',
               }
             }}
           >
@@ -131,9 +137,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
         </Box>
         <Typography
           sx={{
-            color: isDarkMode ? '#9daebe' : '#49739c',
+            color: isDarkMode ? '#d1d5db' : '#49739c',
             textAlign: 'center',
             fontSize: '0.875rem',
+            transition: 'color 0.2s ease-in-out',
           }}
         >
           Don't have an account?{' '}
@@ -142,9 +149,10 @@ const LoginPage: React.FC<LoginPageProps> = ({
             type="button"
             onClick={onSwitchToRegister}
             sx={{
-              color: isDarkMode ? '#dce8f3' : '#0c7ff2',
+              color: isDarkMode ? '#60a5fa' : '#0c7ff2',
               textDecoration: 'underline',
               fontWeight: 'medium',
+              transition: 'color 0.2s ease-in-out',
             }}
           >
             Sign up
