@@ -32,10 +32,11 @@ const Header: React.FC<HeaderProps> = ({
       elevation={0}
       sx={{ 
         background: theme.palette.mode === 'dark' 
-          ? 'rgba(255, 255, 255, 0.05)' 
+          ? 'rgba(30, 41, 59, 0.8)' 
           : 'rgba(255, 255, 255, 0.8)',
         backdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${theme.palette.divider}`,
+        color: theme.palette.text.primary,
       }}
     >
       <Toolbar>
@@ -43,7 +44,10 @@ const Header: React.FC<HeaderProps> = ({
         {isAuthenticated && isMobile && (
           <IconButton 
             edge="start" 
-            sx={{ mr: 2 }}
+            sx={{ 
+              mr: 2,
+              color: theme.palette.text.primary,
+            }}
             onClick={onMenuOpen}
           >
             <Menu size={24} />
@@ -83,7 +87,11 @@ const Header: React.FC<HeaderProps> = ({
         {/* User Info */}
         {isAuthenticated && user && (
           <Box sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography 
+              variant="body2" 
+              color="text.secondary"
+              sx={{ color: theme.palette.text.secondary }}
+            >
               Welcome, {user.username || user.email.split('@')[0]}
             </Typography>
           </Box>
@@ -92,7 +100,13 @@ const Header: React.FC<HeaderProps> = ({
         {/* Theme Toggle */}
         <IconButton 
           onClick={onToggleMode}
-          sx={{ mr: 1 }}
+          sx={{ 
+            mr: 1,
+            color: theme.palette.text.primary,
+            '&:hover': {
+              backgroundColor: theme.palette.action.hover,
+            }
+          }}
         >
           {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
         </IconButton>
@@ -105,6 +119,10 @@ const Header: React.FC<HeaderProps> = ({
             sx={{
               textTransform: 'none',
               borderRadius: '8px',
+              color: theme.palette.text.primary,
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover,
+              }
             }}
           >
             Logout

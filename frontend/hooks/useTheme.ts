@@ -8,20 +8,6 @@ export const useTheme = () => {
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
-    
-    // Apply CSS custom properties for immediate theme switching
-    const root = document.documentElement;
-    if (mode === 'dark') {
-      root.style.setProperty('--bg-color', '#111827');
-      root.style.setProperty('--text-color', '#f9fafb');
-      root.style.setProperty('--paper-color', '#1f2937');
-      root.style.setProperty('--border-color', '#374151');
-    } else {
-      root.style.setProperty('--bg-color', '#ffffff');
-      root.style.setProperty('--text-color', '#111827');
-      root.style.setProperty('--paper-color', '#f8fafc');
-      root.style.setProperty('--border-color', '#e5e7eb');
-    }
   }, [mode]);
 
   const theme = useMemo(() => createTheme({
@@ -64,18 +50,18 @@ export const useTheme = () => {
           dark: '#7c3aed'
         },
         background: { 
-          default: '#111827', 
-          paper: '#1f2937' 
+          default: '#0f172a', 
+          paper: '#1e293b' 
         },
         text: { 
-          primary: '#f9fafb', 
-          secondary: '#d1d5db' 
+          primary: '#f8fafc', 
+          secondary: '#cbd5e1' 
         },
-        divider: '#374151',
+        divider: '#334155',
         action: {
-          hover: '#1f2937',
-          selected: '#374151',
-          disabled: '#6b7280'
+          hover: '#1e293b',
+          selected: '#334155',
+          disabled: '#64748b'
         }
       })
     },
@@ -92,20 +78,24 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? '#ffffff !important' : '#111827 !important',
-            color: mode === 'light' ? '#111827 !important' : '#f9fafb !important',
-            transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#0f172a',
+            color: mode === 'light' ? '#111827' : '#f8fafc',
+            transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
           },
           '*': {
+            transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
             '&::-webkit-scrollbar': {
               width: '8px',
             },
             '&::-webkit-scrollbar-track': {
-              background: mode === 'light' ? '#f3f4f6' : '#1f2937',
+              background: mode === 'light' ? '#f1f5f9' : '#1e293b',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: mode === 'light' ? '#d1d5db' : '#6b7280',
+              background: mode === 'light' ? '#cbd5e1' : '#64748b',
               borderRadius: '4px',
+              '&:hover': {
+                background: mode === 'light' ? '#94a3b8' : '#475569',
+              }
             },
           }
         }
@@ -113,24 +103,43 @@ export const useTheme = () => {
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#1f2937',
-            border: `1px solid ${mode === 'light' ? '#e5e7eb' : '#374151'}`,
+            backgroundColor: mode === 'light' ? '#f8fafc' : '#1e293b',
+            border: `1px solid ${mode === 'light' ? '#e2e8f0' : '#334155'}`,
+            transition: 'background-color 0.3s ease-in-out, border-color 0.3s ease-in-out',
           }
         }
       },
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#1f2937',
+            backgroundColor: mode === 'light' ? '#f8fafc' : '#1e293b',
             backgroundImage: 'none',
+            transition: 'background-color 0.3s ease-in-out',
           }
         }
       },
       MuiDialog: {
         styleOverrides: {
           paper: {
-            backgroundColor: mode === 'light' ? '#ffffff' : '#1f2937',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#1e293b',
             backgroundImage: 'none',
+            transition: 'background-color 0.3s ease-in-out',
+          }
+        }
+      },
+      MuiAppBar: {
+        styleOverrides: {
+          root: {
+            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.8)' : 'rgba(30, 41, 59, 0.8)',
+            backdropFilter: 'blur(20px)',
+            transition: 'background-color 0.3s ease-in-out',
+          }
+        }
+      },
+      MuiButton: {
+        styleOverrides: {
+          root: {
+            transition: 'all 0.3s ease-in-out',
           }
         }
       }
@@ -138,17 +147,7 @@ export const useTheme = () => {
   }), [mode]);
 
   const toggleMode = useCallback(() => {
-    setMode(prev => {
-      const newMode = prev === 'light' ? 'dark' : 'light';
-      
-      // Force immediate DOM updates
-      setTimeout(() => {
-        const event = new CustomEvent('themeChange', { detail: { mode: newMode } });
-        window.dispatchEvent(event);
-      }, 0);
-      
-      return newMode;
-    });
+    setMode(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
   return { theme, mode, setMode, toggleMode };
