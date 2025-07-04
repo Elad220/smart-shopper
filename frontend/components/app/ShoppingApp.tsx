@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress, Drawer,
