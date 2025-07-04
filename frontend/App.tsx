@@ -16,6 +16,10 @@ const App: React.FC = () => {
     // Force a style recalculation
     document.documentElement.style.setProperty('--theme-mode', mode);
     document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+    document.body.className = `theme-${mode}`;
+    
+    // Force a repaint
+    document.body.offsetHeight;
   }, [mode]);
 
   return (

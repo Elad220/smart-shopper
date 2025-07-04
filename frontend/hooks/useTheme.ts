@@ -8,6 +8,9 @@ export const useTheme = () => {
 
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
+    // Update DOM attributes for immediate CSS changes
+    document.documentElement.setAttribute('data-theme', mode);
+    document.documentElement.style.setProperty('--theme-mode', mode);
   }, [mode]);
 
   const theme = useMemo(() => createTheme({
@@ -34,7 +37,13 @@ export const useTheme = () => {
   }), [mode]);
 
   const toggleMode = useCallback(() => {
-    setMode(prev => prev === 'light' ? 'dark' : 'light');
+    setMode(prev => {
+      const newMode = prev === 'light' ? 'dark' : 'light';
+      // Force DOM update immediately
+      document.documentElement.setAttribute('data-theme', newMode);
+      document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+      return newMode;
+    });
   }, []);
 
   return { theme, mode, setMode, toggleMode };

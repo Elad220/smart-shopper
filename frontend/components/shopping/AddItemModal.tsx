@@ -18,6 +18,7 @@ interface AddItemModalProps {
     units: string;
     priority: 'Low' | 'Medium' | 'High';
     notes: string;
+    imageUrl?: string;
   }) => void;
 }
 
@@ -122,7 +123,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim() && formData.category && formData.category !== '') {
-      onAdd(formData);
+      // Ensure imageUrl is included in the data being sent
+      const itemData = {
+        ...formData,
+        name: formData.name.trim(),
+      };
+      
+      console.log('Adding item with data:', itemData); // Debug log
+      onAdd(itemData);
       
       // Reset form
       setFormData({

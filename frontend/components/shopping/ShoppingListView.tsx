@@ -44,8 +44,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       'Deli': '🥓',
       'Other': '📦',
     };
-    // Return standard emoji if available, otherwise use folder emoji for custom categories
-    return emojiMap[category] || '�';
+          // Return standard emoji if available, otherwise use shopping cart emoji for custom categories
+    return emojiMap[category] || '🛒';
   };
 
   // Group items by category
@@ -371,6 +371,23 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                     },
                                   }}
                                 />
+                                
+                                {/* Item Image */}
+                                {(item.imageUrl || item.image) && (
+                                  <Box sx={{ mr: 2 }}>
+                                    <img
+                                      src={item.imageUrl || item.image}
+                                      alt={item.name}
+                                      style={{
+                                        width: '60px',
+                                        height: '60px',
+                                        objectFit: 'cover',
+                                        borderRadius: '8px',
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    />
+                                  </Box>
+                                )}
                                 
                                 <Box sx={{ flexGrow: 1 }}>
                                   <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
