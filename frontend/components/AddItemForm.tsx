@@ -425,7 +425,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
-            rows={{ xs: 2, sm: 3 }}
+            rows={2}
             placeholder="Any additional notes..."
             sx={{ mb: 2 }}
           />
