@@ -44,6 +44,12 @@ export const useAuth = () => {
       localStorage.setItem('currentUser', JSON.stringify(userData));
       
       toast.success(`Welcome back, ${userData.username || userData.email}! 🎉`);
+      
+      // Force immediate redirect by reloading the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
       return { success: true };
     } catch (error: any) {
       const message = error.message || 'Login failed';

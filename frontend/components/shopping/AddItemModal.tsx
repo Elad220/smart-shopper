@@ -31,16 +31,18 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
   });
 
   const categories = [
-    'Fruits & Vegetables',
-    'Meat & Fish', 
-    'Dairy',
-    'Bakery',
-    'Beverages',
-    'Snacks',
-    'Household',
-    'Personal Care',
-    'Health',
-    'Other'
+    { value: 'Produce', label: '🥬 Produce', emoji: '🥬' },
+    { value: 'Dairy', label: '🥛 Dairy', emoji: '🥛' },
+    { value: 'Fridge', label: '❄️ Fridge', emoji: '❄️' },
+    { value: 'Freezer', label: '🧊 Freezer', emoji: '🧊' },
+    { value: 'Bakery', label: '🍞 Bakery', emoji: '🍞' },
+    { value: 'Pantry', label: '🏺 Pantry', emoji: '🏺' },
+    { value: 'Disposable', label: '🗑️ Disposable', emoji: '🗑️' },
+    { value: 'Hygiene', label: '🧴 Hygiene', emoji: '🧴' },
+    { value: 'Canned Goods', label: '🥫 Canned Goods', emoji: '🥫' },
+    { value: 'Organics', label: '🌱 Organics', emoji: '🌱' },
+    { value: 'Deli', label: '🥓 Deli', emoji: '🥓' },
+    { value: 'Other', label: '📦 Other', emoji: '📦' },
   ];
 
   const units = ['pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp'];
@@ -166,8 +168,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                 >
                   {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
+                    <MenuItem key={category.value} value={category.value}>
+                      {category.label}
                     </MenuItem>
                   ))}
                 </TextField>

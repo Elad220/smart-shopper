@@ -9,10 +9,13 @@ import MainApp from './components/app/MainApp';
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const { theme } = useTheme();
+  const { theme, mode } = useTheme();
+
+  // Force re-render when theme or auth state changes
+  const appKey = `${mode}-${isAuthenticated ? user?.id || 'auth' : 'noauth'}`;
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} key={`theme-${mode}`}>
       <CssBaseline />
       <Toaster 
         position="top-right"
@@ -25,11 +28,13 @@ const App: React.FC = () => {
           },
         }}
       />
-      {isAuthenticated && user ? (
-        <MainApp key={user.id} user={user} />
-      ) : (
-        <AuthFlow key="auth" />
-      )}
+      <div key={appKey}>
+        {isAuthenticated && user ? (
+          <MainApp user={user} />
+        ) : (
+          <AuthFlow />
+        )}
+      </div>
     </ThemeProvider>
   );
 };

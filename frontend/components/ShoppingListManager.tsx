@@ -12,6 +12,9 @@ import {
   Alert,
   Paper,
   Tooltip,
+  Stack,
+  useTheme,
+  alpha,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -24,8 +27,6 @@ import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShopp
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import { DragDropContext, Droppable, Draggable, DropResult, DroppableProvided, DraggableProvided, DraggableStateSnapshot } from '@hello-pangea/dnd';
-
 interface ShoppingList {
   _id: string;
   name: string;
@@ -55,10 +56,10 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   onDataChange,
   onOpenCreateDialog,
 }) => {
+  const theme = useTheme();
   const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
-  const [customOrder, setCustomOrder] = useState<string[]>(JSON.parse(localStorage.getItem('shoppingListCustomOrder') || '[]'));
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
@@ -76,27 +77,14 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   }, [sortMode]);
 
   useEffect(() => {
-    localStorage.setItem('shoppingListCustomOrder', JSON.stringify(customOrder));
-  }, [customOrder]);
-
-  useEffect(() => {
     let sortedLists = [...listsRaw];
     if (sortMode === 'alpha') {
       sortedLists.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortMode === 'created') {
       sortedLists.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    } else if (sortMode === 'custom' && customOrder.length) {
-      sortedLists.sort((a, b) => {
-        const ia = customOrder.indexOf(a._id);
-        const ib = customOrder.indexOf(b._id);
-        if (ia === -1 && ib === -1) return 0;
-        if (ia === -1) return 1;
-        if (ib === -1) return -1;
-        return ia - ib;
-      });
     }
     setLists(sortedLists);
-  }, [listsRaw, sortMode, customOrder]);
+  }, [listsRaw, sortMode]);
 
   const loadLists = async () => {
     setIsLoading(true);
@@ -176,15 +164,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     setAnchorEl(null);
   };
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-    const reordered = Array.from(lists);
-    const [removed] = reordered.splice(result.source.index, 1);
-    reordered.splice(result.destination.index, 0, removed);
-    const newOrder = reordered.map(l => l._id);
-    setCustomOrder(newOrder);
-    console.log('Drag ended. New custom order:', newOrder);
-  };
+
   
   const handleExport = async () => {
     if(!selectedListId) {
@@ -234,21 +214,74 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   };
 
   return (
-    <Box sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', p: 1 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-        <Typography variant="h6" sx={{ flexGrow: 1 }}>
-          Shopping Lists
+    <Box sx={{ width: '100%', height: '100%', bgcolor: 'background.default', p: 2 }}>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+          My Lists
         </Typography>
-        <Tooltip title="Sort Lists">
+        
+        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+          <Tooltip title="Create New List">
             <IconButton
-              color="primary"
-              onClick={handleSortClick}
-              size="medium"
-              sx={{ ml: 1 }}
+              onClick={onOpenCreateDialog}
+              disabled={isLoading}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
             >
-              <SortIcon />
+              <AddIcon fontSize="small" />
             </IconButton>
-        </Tooltip>
+          </Tooltip>
+          <Tooltip title="Sort Lists">
+            <IconButton
+              onClick={handleSortClick}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <SortIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Import Items">
+            <IconButton
+              onClick={handleImportClick}
+              disabled={isLoading || !selectedListId}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <ImportIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Export Selected List">
+            <IconButton
+              onClick={handleExport}
+              disabled={isLoading || !selectedListId}
+              sx={{
+                borderRadius: '8px',
+                border: `1px solid ${theme.palette.divider}`,
+                '&:hover': {
+                  background: alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <ExportIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+
         <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
           {SORT_MODES.map(mode => (
             <MenuItem
@@ -260,45 +293,13 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             </MenuItem>
           ))}
         </Menu>
-        <Tooltip title="Create New List">
-            <IconButton
-              color="primary"
-              onClick={onOpenCreateDialog}
-              size="medium"
-              disabled={isLoading}
-              sx={{ ml: 1 }}
-            >
-              <AddIcon />
-            </IconButton>
-        </Tooltip>
-        <Tooltip title="Import Items to Selected List">
-            <IconButton
-              color="primary"
-              onClick={handleImportClick}
-              size="medium"
-              disabled={isLoading || !selectedListId}
-              sx={{ ml: 1 }}
-            >
-              <ImportIcon />
-            </IconButton>
-        </Tooltip>
-        <Tooltip title="Export Selected List">
-            <IconButton
-              color="primary"
-              onClick={handleExport}
-              size="medium"
-              disabled={isLoading || !selectedListId}
-              sx={{ ml: 1 }}
-            >
-              <ExportIcon />
-            </IconButton>
-        </Tooltip>
+        
         <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileImport}
-            style={{ display: 'none' }}
-            accept=".json"
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileImport}
+          style={{ display: 'none' }}
+          accept=".json"
         />
       </Box>
 
@@ -308,148 +309,84 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         </Alert>
       )}
 
-      <Box sx={{ maxHeight: 400, overflowY: 'auto', pr: 1 }}>
-        {sortMode === 'custom' ? (
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="shopping-lists-droppable">
-              {(provided: DroppableProvided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps}>
-                  {lists.map((list, idx) => (
-                    <Draggable key={list._id} draggableId={list._id} index={idx}>
-                      {(provided: DraggableProvided, snapshot: DraggableStateSnapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          style={{
-                            marginBottom: 16,
-                            ...provided.draggableProps.style,
-                          }}
-                        >
-                          <Paper
-                            elevation={selectedListId === list._id ? 6 : 1}
-                            sx={{
-                              p: 2,
-                              borderRadius: 3,
-                              display: 'flex',
-                              alignItems: 'center',
-                              background: selectedListId === list._id ? 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)' : 'background.paper',
-                              border: selectedListId === list._id ? '2px solid #90caf9' : '1px solid #e0e0e0',
-                              boxShadow: selectedListId === list._id ? 4 : 1,
-                              cursor: 'pointer',
-                              transition: 'box-shadow 0.2s, border 0.2s',
-                              opacity: snapshot.isDragging ? 0.7 : 1,
-                            }}
-                            onClick={() => onListSelect(list._id)}
-                          >
-                            <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                              <Typography
-                                variant="subtitle1"
-                                noWrap
-                                sx={{ fontWeight: selectedListId === list._id ? 700 : 500 }}
-                              >
-                                {list.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {list.items.length} items
-                              </Typography>
-                            </Box>
-                            <IconButton
-                              edge="end"
-                              aria-label="edit"
-                              onClick={e => {
-                                e.stopPropagation();
-                                openEditDialog(list);
-                              }}
-                              size="small"
-                              sx={{ ml: 1 }}
-                              disabled={isLoading}
-                            >
-                              <EditIcon fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              edge="end"
-                              aria-label="delete"
-                              onClick={e => {
-                                e.stopPropagation();
-                                handleDeleteList(list._id);
-                              }}
-                              size="small"
-                              sx={{ ml: 1 }}
-                              disabled={isLoading}
-                            >
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
-                          </Paper>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-        ) : (
-          lists.map((list) => (
+      <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
+        <Stack spacing={1.5}>
+          {lists.map((list) => (
             <Paper
               key={list._id}
-              elevation={selectedListId === list._id ? 6 : 1}
               sx={{
-                mb: 2,
                 p: 2,
-                borderRadius: 3,
-                display: 'flex',
-                alignItems: 'center',
-                background: selectedListId === list._id ? 'linear-gradient(90deg, #e3f2fd 0%, #bbdefb 100%)' : 'background.paper',
-                border: selectedListId === list._id ? '2px solid #90caf9' : '1px solid #e0e0e0',
-                boxShadow: selectedListId === list._id ? 4 : 1,
+                borderRadius: '12px',
                 cursor: 'pointer',
-                transition: 'box-shadow 0.2s, border 0.2s',
+                transition: 'all 0.2s ease',
+                border: selectedListId === list._id 
+                  ? `2px solid ${theme.palette.primary.main}` 
+                  : `1px solid ${theme.palette.divider}`,
+                background: selectedListId === list._id
+                  ? `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.secondary.main}08)`
+                  : theme.palette.background.paper,
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: theme.shadows[2],
+                },
               }}
               onClick={() => onListSelect(list._id)}
             >
-              <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                <Typography
-                  variant="subtitle1"
-                  noWrap
-                  sx={{ fontWeight: selectedListId === list._id ? 700 : 500 }}
-                >
-                  {list.name}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {list.items.length} items
-                </Typography>
-              </Box>
-              <IconButton
-                edge="end"
-                aria-label="edit"
-                onClick={e => {
-                  e.stopPropagation();
-                  openEditDialog(list);
-                }}
-                size="small"
-                sx={{ ml: 1 }}
-                disabled={isLoading}
-              >
-                <EditIcon fontSize="small" />
-              </IconButton>
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={e => {
-                  e.stopPropagation();
-                  handleDeleteList(list._id);
-                }}
-                size="small"
-                sx={{ ml: 1 }}
-                disabled={isLoading}
-              >
-                <DeleteIcon fontSize="small" />
-              </IconButton>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
+                <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                  <Typography
+                    variant="body1"
+                    noWrap
+                    sx={{ 
+                      fontWeight: selectedListId === list._id ? 600 : 500,
+                      mb: 0.25,
+                    }}
+                  >
+                    {list.name}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {list.items.length} items
+                  </Typography>
+                </Box>
+                
+                <Stack direction="row" spacing={0.5}>
+                  <IconButton
+                    size="small"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      openEditDialog(list);
+                    }}
+                    disabled={isLoading}
+                    sx={{
+                      borderRadius: '6px',
+                      '&:hover': {
+                        background: alpha(theme.palette.primary.main, 0.1),
+                      },
+                    }}
+                  >
+                    <EditIcon sx={{ fontSize: 16 }} />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={(e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      handleDeleteList(list._id);
+                    }}
+                    disabled={isLoading}
+                    sx={{
+                      borderRadius: '6px',
+                      '&:hover': {
+                        background: alpha(theme.palette.error.main, 0.1),
+                      },
+                    }}
+                  >
+                    <DeleteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                  </IconButton>
+                </Stack>
+              </Stack>
             </Paper>
-          ))
-        )}
+          ))}
+        </Stack>
       </Box>
 
       {/* Edit List Dialog */}

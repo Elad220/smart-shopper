@@ -1,16 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Grid3X3 } from 'lucide-react';
+import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical } from 'lucide-react';
 import { ShoppingItem } from '../../types';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
+  onEditItem: (item: ShoppingItem) => void;
   onAddItem: () => void;
 }
 
@@ -18,10 +20,31 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   items,
   onToggleComplete,
   onDeleteItem,
+  onEditItem,
   onAddItem,
 }) => {
   const theme = useTheme();
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+
+  // Category emoji mapping
+  const getCategoryEmoji = (category: string) => {
+    const emojiMap: { [key: string]: string } = {
+      'Produce': '🥬',
+      'Dairy': '🥛',
+      'Fridge': '❄️',
+      'Freezer': '🧊',
+      'Bakery': '🍞',
+      'Pantry': '🏺',
+      'Disposable': '🗑️',
+      'Hygiene': '🧴',
+      'Canned Goods': '🥫',
+      'Organics': '🌱',
+      'Deli': '🥓',
+      'Other': '📦',
+    };
+    return emojiMap[category] || '📦';
+  };
 
   // Group items by category
   const groupedItems = items.reduce((acc, item) => {
@@ -50,11 +73,42 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   });
 
   // Get sorted category names
-  const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
-    if (a === 'Other') return 1;
-    if (b === 'Other') return -1;
-    return a.localeCompare(b);
-  });
+  const sortedCategories = (() => {
+    const categoryNames = Object.keys(groupedItems);
+    
+    // If we have a custom order, use it
+    if (categoryOrder.length > 0) {
+      return categoryNames.sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        
+        // If both are in custom order, sort by custom order
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        // If only A is in custom order, A comes first
+        if (indexA !== -1) return -1;
+        // If only B is in custom order, B comes first
+        if (indexB !== -1) return 1;
+        // If neither is in custom order, sort alphabetically
+        return a.localeCompare(b);
+      });
+    }
+    
+    // Default alphabetical sort with Other last
+    return categoryNames.sort((a, b) => {
+      if (a === 'Other') return 1;
+      if (b === 'Other') return -1;
+      return a.localeCompare(b);
+    });
+  })();
+
+  // Initialize category order if empty
+  useEffect(() => {
+    if (categoryOrder.length === 0 && sortedCategories.length > 0) {
+      setCategoryOrder(sortedCategories);
+    }
+  }, [sortedCategories, categoryOrder.length]);
 
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories(prev => {
@@ -66,6 +120,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       }
       return newSet;
     });
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const newOrder = Array.from(sortedCategories);
+    const [reorderedItem] = newOrder.splice(result.source.index, 1);
+    newOrder.splice(result.destination.index, 0, reorderedItem);
+
+    setCategoryOrder(newOrder);
   };
 
   const getPriorityIcon = (priority: string) => {
@@ -129,16 +193,30 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   return (
     <Box>
-      <AnimatePresence>
-        <Stack spacing={3}>
-          {sortedCategories.map((categoryName) => (
-            <motion.div
-              key={categoryName}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              layout
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="categories">
+          {(provided) => (
+            <Box
+              ref={provided.innerRef}
+              {...provided.droppableProps}
             >
+              <AnimatePresence>
+                <Stack spacing={3}>
+                  {sortedCategories.map((categoryName, index) => (
+                    <Draggable key={categoryName} draggableId={categoryName} index={index}>
+                      {(provided, snapshot) => (
+                        <motion.div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          layout
+                          style={{
+                            ...provided.draggableProps.style,
+                            opacity: snapshot.isDragging ? 0.8 : 1,
+                          }}
+                        >
               <Card
                 sx={{
                   borderRadius: '16px',
@@ -159,7 +237,12 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   onClick={() => toggleCategoryCollapse(categoryName)}
                 >
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Grid3X3 size={20} color={theme.palette.text.secondary} />
+                    <Box {...provided.dragHandleProps} sx={{ display: 'flex', cursor: 'grab' }}>
+                      <GripVertical size={16} color={theme.palette.text.secondary} />
+                    </Box>
+                    <Typography variant="h5" sx={{ fontSize: '1.25rem' }}>
+                      {getCategoryEmoji(categoryName)}
+                    </Typography>
                     <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
                       {categoryName}
                     </Typography>
@@ -252,18 +335,32 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                   </Stack>
                                 </Box>
                                 
-                                <IconButton
-                                  size="small"
-                                  onClick={() => onDeleteItem(item.id)}
-                                  sx={{ 
-                                    color: theme.palette.error.main,
-                                    '&:hover': {
-                                      background: alpha(theme.palette.error.main, 0.1),
-                                    },
-                                  }}
-                                >
-                                  <Trash2 size={16} />
-                                </IconButton>
+                                <Stack direction="row" spacing={1}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => onEditItem(item)}
+                                    sx={{ 
+                                      color: theme.palette.primary.main,
+                                      '&:hover': {
+                                        background: alpha(theme.palette.primary.main, 0.1),
+                                      },
+                                    }}
+                                  >
+                                    <Edit size={16} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => onDeleteItem(item.id)}
+                                    sx={{ 
+                                      color: theme.palette.error.main,
+                                      '&:hover': {
+                                        background: alpha(theme.palette.error.main, 0.1),
+                                      },
+                                    }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </IconButton>
+                                </Stack>
                               </Stack>
                             </CardContent>
                           </Card>
@@ -273,10 +370,17 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   </Box>
                 </Collapse>
               </Card>
-            </motion.div>
-          ))}
-        </Stack>
-      </AnimatePresence>
+                        </motion.div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Stack>
+              </AnimatePresence>
+            </Box>
+          )}
+        </Droppable>
+      </DragDropContext>
     </Box>
   );
 };

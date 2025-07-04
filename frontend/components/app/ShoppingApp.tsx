@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress, Drawer,
-  IconButton, useMediaQuery
+  IconButton, useMediaQuery, alpha
 } from '@mui/material';
 import { Plus, Package, Menu, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -11,6 +11,7 @@ import { User } from '../../hooks/useAuth';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
 import AddItemModal from '../shopping/AddItemModal';
+import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
 import SmartAssistant from '../SmartAssistant';
 
@@ -22,6 +23,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<any>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(
@@ -33,6 +36,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     isLoading,
     error,
     addItem,
+    updateItem,
     deleteItem,
     toggleComplete,
     clearCompleted
@@ -65,6 +69,22 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const handleToggleComplete = async (id: string) => {
     try {
       await toggleComplete(id);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
+  const handleEditItem = (item: any) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateItem = async (itemData: any) => {
+    try {
+      await updateItem(editingItem.id, itemData);
+      setIsEditModalOpen(false);
+      setEditingItem(null);
+      toast.success(`Updated "${itemData.name}" successfully! ✅`);
     } catch (error: any) {
       toast.error(error.message);
     }
@@ -172,57 +192,74 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                 border: `1px solid ${theme.palette.divider}`,
               }}
             >
-              <CardContent sx={{ p: 3 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between">
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <CardContent sx={{ p: 2.5 }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
                     <IconButton
                       onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                      sx={{ display: { md: 'none' } }}
+                      sx={{ 
+                        display: { md: 'none' },
+                        p: 1
+                      }}
                     >
-                      <Menu size={20} />
+                      <Menu size={18} />
                     </IconButton>
-                    <Box>
-                      <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
                         My Shopping List
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="caption" color="text.secondary">
                         {totalItems} items • {completedItems} completed
                       </Typography>
                     </Box>
                   </Box>
                   
-                  <Stack direction="row" spacing={2}>
-                    <Button
-                      variant="outlined"
-                      startIcon={<Brain size={20} />}
+                  <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                    <IconButton
                       onClick={() => setIsSmartAssistantOpen(true)}
-                      sx={{ borderRadius: '10px', textTransform: 'none' }}
-                    >
-                      Smart Assistant
-                    </Button>
-                    {completedItems > 0 && (
-                      <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        onClick={handleClearCompleted}
-                        sx={{ borderRadius: '10px', textTransform: 'none' }}
-                      >
-                        Clear Completed
-                      </Button>
-                    )}
-                    <Button
-                      variant="contained"
-                      startIcon={<Plus size={20} />}
-                      onClick={() => setIsAddModalOpen(true)}
-                      sx={{
-                        borderRadius: '10px',
-                        textTransform: 'none',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      sx={{ 
+                        borderRadius: '8px',
+                        border: `1px solid ${theme.palette.divider}`,
+                        '&:hover': {
+                          background: alpha(theme.palette.primary.main, 0.1),
+                        },
                       }}
                     >
-                      Add Item
-                    </Button>
+                      <Brain size={18} />
+                    </IconButton>
+                    {completedItems > 0 && (
+                      <Button
+                        variant="text"
+                        size="small"
+                        onClick={handleClearCompleted}
+                        sx={{ 
+                          borderRadius: '8px', 
+                          textTransform: 'none',
+                          color: theme.palette.error.main,
+                          minWidth: 'auto',
+                          px: 1.5,
+                          fontSize: '0.75rem',
+                          '&:hover': {
+                            background: alpha(theme.palette.error.main, 0.1),
+                          },
+                        }}
+                      >
+                        Clear
+                      </Button>
+                    )}
+                    <IconButton
+                      onClick={() => setIsAddModalOpen(true)}
+                      sx={{
+                        borderRadius: '8px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                        color: 'white',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                        },
+                      }}
+                    >
+                      <Plus size={18} />
+                    </IconButton>
                   </Stack>
                 </Stack>
               
@@ -265,6 +302,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
             items={items}
             onToggleComplete={handleToggleComplete}
             onDeleteItem={handleDeleteItem}
+            onEditItem={handleEditItem}
             onAddItem={() => setIsAddModalOpen(true)}
           />
         )}
@@ -289,6 +327,21 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           onClose={() => setIsAddModalOpen(false)}
           onAdd={handleAddItem}
         />
+
+        {/* Edit Item Modal */}
+        {editingItem && (
+          <EditItemModal
+            isOpen={isEditModalOpen}
+            onClose={() => {
+              setIsEditModalOpen(false);
+              setEditingItem(null);
+            }}
+            onSave={handleUpdateItem}
+            item={editingItem}
+            categories={['Produce', 'Dairy', 'Fridge', 'Freezer', 'Bakery', 'Pantry', 'Disposable', 'Hygiene', 'Canned Goods', 'Organics', 'Deli', 'Other']}
+            onDeleteCategory={() => {}} // Not implemented in this simplified version
+          />
+        )}
       </Container>
     </Box>
 
