@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import * as api from '../src/services/api';
 
@@ -20,8 +20,12 @@ export const useAuth = () => {
   );
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const isAuthenticated = !!user && !!token;
+  // Update authentication status whenever user or token changes
+  useEffect(() => {
+    setIsAuthenticated(!!user && !!token);
+  }, [user, token]);
 
   const login = useCallback(async (credentials: { email?: string; username?: string; password: string }) => {
     setIsLoading(true);

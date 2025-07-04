@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
-  CardContent, Fab, useTheme, LinearProgress 
+  CardContent, Fab, useTheme, LinearProgress, Drawer,
+  IconButton, useMediaQuery
 } from '@mui/material';
-import { Plus, Package } from 'lucide-react';
+import { Plus, Package, Menu, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
 import AddItemModal from '../shopping/AddItemModal';
+import { ShoppingListManager } from '../ShoppingListManager';
+import SmartAssistant from '../SmartAssistant';
 
 interface ShoppingAppProps {
   user: User;
@@ -17,7 +20,13 @@ interface ShoppingAppProps {
 
 const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
+  const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string | null>(
+    localStorage.getItem('selectedListId')
+  );
   
   const {
     items,
@@ -72,6 +81,37 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     }
   };
 
+  const handleListSelect = (listId: string) => {
+    setSelectedListId(listId);
+    localStorage.setItem('selectedListId', listId);
+    if (isMobile) {
+      setIsDrawerOpen(false);
+    }
+  };
+
+  const handleDataChange = () => {
+    // This will trigger a refresh of the shopping list data
+    window.location.reload();
+  };
+
+  const handleSmartAssistantAddItems = async (aiItems: { name: string; category: string }[]) => {
+    try {
+      for (const aiItem of aiItems) {
+        await addItem({
+          name: aiItem.name,
+          category: aiItem.category,
+          amount: 1,
+          units: 'pcs',
+          priority: 'Medium',
+          notes: '',
+        });
+      }
+      toast.success(`Added ${aiItems.length} items from Smart Assistant! 🤖`);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -88,59 +128,103 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   }
 
   return (
-    <Box sx={{ flexGrow: 1, py: 3 }}>
-      <Container maxWidth="lg">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card
-            sx={{
-              mb: 3,
-              borderRadius: '16px',
-              background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-              border: `1px solid ${theme.palette.divider}`,
-            }}
+    <Box sx={{ display: 'flex', flexGrow: 1 }}>
+      {/* Drawer for Shopping List Manager */}
+      <Drawer
+        variant={isMobile ? 'temporary' : 'persistent'}
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+        sx={{
+          width: 360,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: 360,
+            boxSizing: 'border-box',
+            top: 64, // Account for header height
+            height: 'calc(100vh - 64px)',
+          },
+        }}
+      >
+        <ShoppingListManager
+          token={user.token}
+          selectedListId={selectedListId}
+          onListSelect={handleListSelect}
+          onDataChange={handleDataChange}
+          onOpenCreateDialog={() => {/* TODO: Implement create dialog */}}
+        />
+      </Drawer>
+
+      {/* Main Content */}
+      <Box sx={{ flexGrow: 1, py: 3, ml: !isMobile && isDrawerOpen ? 0 : 0 }}>
+        <Container maxWidth="lg">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            <CardContent sx={{ p: 3 }}>
-              <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
-                    My Shopping List
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {totalItems} items • {completedItems} completed
-                  </Typography>
-                </Box>
-                
-                <Stack direction="row" spacing={2}>
-                  {completedItems > 0 && (
+            <Card
+              sx={{
+                mb: 3,
+                borderRadius: '16px',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                border: `1px solid ${theme.palette.divider}`,
+              }}
+            >
+              <CardContent sx={{ p: 3 }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <IconButton
+                      onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+                      sx={{ display: { md: 'none' } }}
+                    >
+                      <Menu size={20} />
+                    </IconButton>
+                    <Box>
+                      <Typography variant="h5" sx={{ fontWeight: 600, mb: 1 }}>
+                        My Shopping List
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {totalItems} items • {completedItems} completed
+                      </Typography>
+                    </Box>
+                  </Box>
+                  
+                  <Stack direction="row" spacing={2}>
                     <Button
                       variant="outlined"
-                      color="error"
-                      size="small"
-                      onClick={handleClearCompleted}
+                      startIcon={<Brain size={20} />}
+                      onClick={() => setIsSmartAssistantOpen(true)}
                       sx={{ borderRadius: '10px', textTransform: 'none' }}
                     >
-                      Clear Completed
+                      Smart Assistant
                     </Button>
-                  )}
-                  <Button
-                    variant="contained"
-                    startIcon={<Plus size={20} />}
-                    onClick={() => setIsAddModalOpen(true)}
-                    sx={{
-                      borderRadius: '10px',
-                      textTransform: 'none',
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                    }}
-                  >
-                    Add Item
-                  </Button>
+                    {completedItems > 0 && (
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        onClick={handleClearCompleted}
+                        sx={{ borderRadius: '10px', textTransform: 'none' }}
+                      >
+                        Clear Completed
+                      </Button>
+                    )}
+                    <Button
+                      variant="contained"
+                      startIcon={<Plus size={20} />}
+                      onClick={() => setIsAddModalOpen(true)}
+                      sx={{
+                        borderRadius: '10px',
+                        textTransform: 'none',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                      }}
+                    >
+                      Add Item
+                    </Button>
+                  </Stack>
                 </Stack>
-              </Stack>
               
               {totalItems > 0 && (
                 <Box sx={{ mt: 3 }}>
@@ -207,6 +291,15 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         />
       </Container>
     </Box>
+
+    {/* Smart Assistant Modal */}
+    <SmartAssistant
+      open={isSmartAssistantOpen}
+      onClose={() => setIsSmartAssistantOpen(false)}
+      onAddItems={handleSmartAssistantAddItems}
+      token={user.token}
+    />
+  </Box>
   );
 };
 

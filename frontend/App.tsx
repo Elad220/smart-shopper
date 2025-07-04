@@ -25,7 +25,11 @@ const App: React.FC = () => {
           },
         }}
       />
-      {isAuthenticated && user ? <MainApp user={user} /> : <AuthFlow />}
+      {isAuthenticated && user ? (
+        <MainApp key={user.id} user={user} />
+      ) : (
+        <AuthFlow key="auth" />
+      )}
     </ThemeProvider>
   );
 };

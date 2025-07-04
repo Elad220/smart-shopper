@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { createTheme } from '@mui/material/styles';
 
 export const useTheme = () => {
@@ -33,7 +33,9 @@ export const useTheme = () => {
     shape: { borderRadius: 12 },
   }), [mode]);
 
-  const toggleMode = () => setMode(prev => prev === 'light' ? 'dark' : 'light');
+  const toggleMode = useCallback(() => {
+    setMode(prev => prev === 'light' ? 'dark' : 'light');
+  }, []);
 
   return { theme, mode, setMode, toggleMode };
 };
