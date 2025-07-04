@@ -16,14 +16,7 @@ const MainApp: React.FC<MainAppProps> = ({ user }) => {
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Header
-        mode={mode}
-        onToggleMode={toggleMode}
-        isAuthenticated={true}
-        user={user}
-        onLogout={logout}
-      />
-      <ShoppingApp user={user} />
+      <ShoppingApp user={user} mode={mode} onToggleMode={toggleMode} onLogout={logout} />
     </Box>
   );
 };

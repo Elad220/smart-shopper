@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress, Drawer,
@@ -15,13 +15,17 @@ import AddItemModal from '../shopping/AddItemModal';
 import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
 import SmartAssistant from '../SmartAssistant';
+import Header from '../layout/Header';
 import { createShoppingList } from '../../src/services/api';
 
 interface ShoppingAppProps {
   user: User;
+  mode: 'light' | 'dark';
+  onToggleMode: () => void;
+  onLogout: () => void;
 }
 
-const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
+const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -37,6 +41,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
+  const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
+  const shoppingListManagerRef = useRef<any>(null);
   
   const {
     items,
@@ -176,6 +182,41 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     }
   };
 
+  // Shopping list action handlers for header
+  const handleSortChange = (mode: string) => {
+    setSortMode(mode);
+    localStorage.setItem('shoppingListSortMode', mode);
+  };
+
+  const handleImportItems = () => {
+    if (!selectedListId) {
+      toast.error('Please select a list to import into.');
+      return;
+    }
+    // Trigger file input click in ShoppingListManager
+    const fileInput = document.querySelector('input[type="file"][accept=".json"]') as HTMLInputElement;
+    fileInput?.click();
+  };
+
+  const handleExportList = async () => {
+    if (!selectedListId) {
+      toast.error('Please select a list to export.');
+      return;
+    }
+    try {
+      const { exportShoppingList } = await import('../../src/services/api');
+      const itemsToExport = await exportShoppingList(user.token, selectedListId);
+      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(itemsToExport, null, 2))}`;
+      const link = document.createElement("a");
+      link.href = jsonString;
+      link.download = "shopping-list.json";
+      link.click();
+      toast.success('List exported successfully! 📄');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to export list.');
+    }
+  };
+
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -192,8 +233,28 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-      {/* Drawer for Shopping List Manager */}
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Header
+        mode={mode}
+        onToggleMode={onToggleMode}
+        isAuthenticated={true}
+        user={user}
+        onLogout={onLogout}
+        onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
+        isMobile={isMobile}
+        onCreateList={() => setIsCreateDialogOpen(true)}
+        onImportItems={handleImportItems}
+        onExportList={handleExportList}
+        onSortChange={handleSortChange}
+        currentSortMode={sortMode}
+        hasSelectedList={!!selectedListId}
+        isLoading={isLoading}
+      />
+
+      {/* Main Content Area */}
+      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+        {/* Drawer for Shopping List Manager */}
       <Drawer
         variant={isMobile ? 'temporary' : 'persistent'}
         anchor="left"
@@ -218,6 +279,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           onListSelect={handleListSelect}
           onDataChange={handleDataChange}
           onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+          onSortChange={handleSortChange}
+          sortMode={sortMode}
         />
       </Drawer>
 
@@ -455,6 +518,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           </DialogActions>
         </Dialog>
       </Container>
+    </Box>
     </Box>
   </Box>
   );
