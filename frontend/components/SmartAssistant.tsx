@@ -20,8 +20,10 @@ import {
   FormControlLabel,
   Stack,
   useTheme,
+  IconButton,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
 import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
 
 interface SmartAssistantProps {
@@ -205,11 +207,14 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
         }
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <Typography sx={{ fontSize: '1.8rem' }}>🤖</Typography>
           Smart Assistant
         </Stack>
+        <IconButton aria-label="close" onClick={onClose}>
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       <DialogContent>
         <Box sx={{ minHeight: '60px', mb: 2 }}>
