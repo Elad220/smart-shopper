@@ -40,14 +40,26 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   useEffect(() => {
     const stored = localStorage.getItem(`categoryOrder_${listId}`);
     if (stored) {
-      setCategoryOrder(JSON.parse(stored));
+      try {
+        const parsedOrder = JSON.parse(stored);
+        if (Array.isArray(parsedOrder)) {
+          setCategoryOrder(parsedOrder);
+        }
+      } catch (error) {
+        console.warn('Failed to parse stored category order:', error);
+        // Clear invalid data
+        localStorage.removeItem(`categoryOrder_${listId}`);
+      }
     }
   }, [listId]);
 
   // Save custom order to localStorage
   useEffect(() => {
-    if (categoryOrder.length) {
+    if (categoryOrder.length > 0) {
       localStorage.setItem(`categoryOrder_${listId}`, JSON.stringify(categoryOrder));
+    } else {
+      // Remove from localStorage if we reset to alphabetical order
+      localStorage.removeItem(`categoryOrder_${listId}`);
     }
   }, [categoryOrder, listId]);
 
@@ -114,7 +126,13 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
   
   // Get category names and apply sorting
   let sortedCategories = Object.keys(groupedItems);
-  if (categoryOrder.length > 0) {
+  
+  // Check if we have a custom order stored and if it contains all current categories
+  const hasValidCustomOrder = categoryOrder.length > 0 && 
+    sortedCategories.every(cat => categoryOrder.includes(cat));
+  
+  if (hasValidCustomOrder) {
+    // Use custom drag-and-drop order
     sortedCategories.sort((a, b) => {
       const ia = categoryOrder.indexOf(a);
       const ib = categoryOrder.indexOf(b);
@@ -123,18 +141,29 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
       return ia - ib;
     });
   } else {
+    // Default alphabetical sorting with "Other" category at the end
     sortedCategories.sort((a, b) => {
       if (a === StandardCategory.OTHER) return 1;
       if (b === StandardCategory.OTHER) return -1;
       return a.localeCompare(b);
     });
+    
+    // If we have new categories not in the stored order, reset the custom order
+    // to ensure all categories are included for future drag operations
+    if (categoryOrder.length > 0 && !hasValidCustomOrder) {
+      setCategoryOrder([]);
+    }
   }
   
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
+    
+    // Create a reordered array based on the drag result
     const reordered = Array.from(sortedCategories);
     const [removed] = reordered.splice(result.source.index, 1);
     reordered.splice(result.destination.index, 0, removed);
+    
+    // Store the new custom order - this overrides alphabetical sorting
     setCategoryOrder(reordered);
   };
 

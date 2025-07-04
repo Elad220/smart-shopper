@@ -133,22 +133,17 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const sortedCategories = (() => {
     const categoryNames = Object.keys(groupedItems);
     
-    // If we have a custom order, use it
-    if (categoryOrder.length > 0) {
+    // Check if we have a valid custom order that includes all current categories
+    const hasValidCustomOrder = categoryOrder.length > 0 && 
+      categoryNames.every(cat => categoryOrder.includes(cat)) &&
+      categoryOrder.every(cat => categoryNames.includes(cat));
+    
+    // If we have a valid custom order, use it
+    if (hasValidCustomOrder) {
       return categoryNames.sort((a, b) => {
         const indexA = categoryOrder.indexOf(a);
         const indexB = categoryOrder.indexOf(b);
-        
-        // If both are in custom order, sort by custom order
-        if (indexA !== -1 && indexB !== -1) {
-          return indexA - indexB;
-        }
-        // If only A is in custom order, A comes first
-        if (indexA !== -1) return -1;
-        // If only B is in custom order, B comes first
-        if (indexB !== -1) return 1;
-        // If neither is in custom order, sort alphabetically
-        return a.localeCompare(b);
+        return indexA - indexB;
       });
     }
     
@@ -160,15 +155,37 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     });
   })();
 
-  // Load category order from localStorage and initialize if needed
+  // Load category order from localStorage
   useEffect(() => {
     const savedOrder = localStorage.getItem('categoryOrder');
     if (savedOrder) {
-      setCategoryOrder(JSON.parse(savedOrder));
-    } else if (categoryOrder.length === 0 && sortedCategories.length > 0) {
-      setCategoryOrder(sortedCategories);
+      try {
+        const parsedOrder = JSON.parse(savedOrder);
+        if (Array.isArray(parsedOrder)) {
+          setCategoryOrder(parsedOrder);
+        }
+      } catch (error) {
+        console.warn('Failed to parse stored category order:', error);
+        // Clear invalid data
+        localStorage.removeItem('categoryOrder');
+      }
     }
-  }, [sortedCategories]);
+  }, []);
+
+  // Reset custom order if categories have changed significantly
+  useEffect(() => {
+    const categoryNames = Object.keys(groupedItems);
+    if (categoryOrder.length > 0 && categoryNames.length > 0) {
+      const hasValidCustomOrder = categoryNames.every(cat => categoryOrder.includes(cat)) &&
+        categoryOrder.every(cat => categoryNames.includes(cat));
+      
+      if (!hasValidCustomOrder) {
+        // Reset to empty array to fall back to alphabetical sorting
+        setCategoryOrder([]);
+        localStorage.removeItem('categoryOrder');
+      }
+    }
+  }, [groupedItems, categoryOrder]);
 
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories(prev => {
@@ -194,6 +211,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     }
   };
 
+  const resetCategoryOrder = () => {
+    setCategoryOrder([]);
+    localStorage.removeItem('categoryOrder');
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
@@ -202,13 +224,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
     if (sourceIndex === destinationIndex) return;
 
+    // Create new order based on current sorted categories
     const newOrder = Array.from(sortedCategories);
     const [reorderedItem] = newOrder.splice(sourceIndex, 1);
     newOrder.splice(destinationIndex, 0, reorderedItem);
 
+    // Update state and persist to localStorage
     setCategoryOrder(newOrder);
-    
-    // Save to localStorage for persistence
     localStorage.setItem('categoryOrder', JSON.stringify(newOrder));
   };
 
@@ -359,29 +381,57 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               />
               
               {sortedCategories.length > 1 && !searchQuery && (
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    onClick={toggleAllCategories}
-                    sx={{
-                      textTransform: 'none',
-                      borderRadius: '12px',
-                      borderColor: alpha(theme.palette.primary.main, 0.3),
-                      color: theme.palette.primary.main,
-                      background: alpha(theme.palette.primary.main, 0.05),
-                      backdropFilter: 'blur(10px)',
-                      whiteSpace: 'nowrap',
-                      '&:hover': {
-                        background: alpha(theme.palette.primary.main, 0.1),
-                        borderColor: theme.palette.primary.main,
-                        boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.2)}`,
-                      },
-                    }}
-                  >
-                    {areAllCollapsed ? 'Expand All' : 'Collapse All'}
-                  </Button>
-                </motion.div>
+                <>
+                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={toggleAllCategories}
+                      sx={{
+                        textTransform: 'none',
+                        borderRadius: '12px',
+                        borderColor: alpha(theme.palette.primary.main, 0.3),
+                        color: theme.palette.primary.main,
+                        background: alpha(theme.palette.primary.main, 0.05),
+                        backdropFilter: 'blur(10px)',
+                        whiteSpace: 'nowrap',
+                        '&:hover': {
+                          background: alpha(theme.palette.primary.main, 0.1),
+                          borderColor: theme.palette.primary.main,
+                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.2)}`,
+                        },
+                      }}
+                    >
+                      {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+                    </Button>
+                  </motion.div>
+                  
+                  {categoryOrder.length > 0 && (
+                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={resetCategoryOrder}
+                        sx={{
+                          textTransform: 'none',
+                          borderRadius: '12px',
+                          borderColor: alpha(theme.palette.secondary.main, 0.3),
+                          color: theme.palette.secondary.main,
+                          background: alpha(theme.palette.secondary.main, 0.05),
+                          backdropFilter: 'blur(10px)',
+                          whiteSpace: 'nowrap',
+                          '&:hover': {
+                            background: alpha(theme.palette.secondary.main, 0.1),
+                            borderColor: theme.palette.secondary.main,
+                            boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
+                          },
+                        }}
+                      >
+                        Reset Order
+                      </Button>
+                    </motion.div>
+                  )}
+                </>
               )}
             </Stack>
           </Box>
