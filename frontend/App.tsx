@@ -223,6 +223,7 @@ const App: React.FC = () => {
       
       setAuthToken(data.token);
       setCurrentUser(userData as User);
+      setShowLanding(false);
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(userData));
       
@@ -237,9 +238,12 @@ const App: React.FC = () => {
 
       setEmail('');
       setPassword('');
+      toast.success(`Welcome back, ${userData.username || userData.email}! 🎉`);
       
     } catch (err: any) {
-      setError(err.message || 'Login failed.');
+      const errorMessage = err.message || 'Login failed.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -248,7 +252,9 @@ const App: React.FC = () => {
   const handleRegister = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if(password !== confirmPassword){
-        setError("Passwords do not match.");
+        const errorMessage = "Passwords do not match.";
+        setError(errorMessage);
+        toast.error(errorMessage);
         return;
     }
     setIsLoading(true);
@@ -256,12 +262,16 @@ const App: React.FC = () => {
     setSuccessMessage(null);
     try {
       await api.registerUser(username, email, password);
-      setSuccessMessage('Registration successful! Please log in.');
+      const successMessage = 'Registration successful! Please log in.';
+      setSuccessMessage(successMessage);
       setIsRegistering(false);
       setUsername('');
       setConfirmPassword('');
+      toast.success('Account created successfully! 🎊');
     } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+      const errorMessage = err.message || 'Registration failed.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -271,12 +281,19 @@ const App: React.FC = () => {
     setAuthToken(null);
     setCurrentUser(null);
     setShoppingList([]);
+    setShowLanding(true);
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
+    toast.success('Logged out successfully! 👋');
   };
 
   const handleAddItem = useCallback(async (newItemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
-    if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
+    if (!authToken || !selectedListId) { 
+      const errorMessage = "Authentication and list selection required.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return; 
+    }
     setIsLoading(true);
     try {
       const newItem = await api.addShoppingItem(authToken, selectedListId, newItemData);
@@ -284,8 +301,11 @@ const App: React.FC = () => {
       if (!categories.includes(newItem.category)) {
         setCategories(prev => [...prev, newItem.category].sort());
       }
+      toast.success(`Added "${newItem.name}" to your list! ✅`);
     } catch (err: any) {
-      setError(err.message || 'Failed to add item.');
+      const errorMessage = err.message || 'Failed to add item.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -323,13 +343,22 @@ const App: React.FC = () => {
   }, [authToken, selectedListId, shoppingList]);
 
   const handleDeleteItem = useCallback(async (id: string) => {
-    if (!authToken || !selectedListId) { setError("Authentication and list selection required."); return; }
+    if (!authToken || !selectedListId) { 
+      const errorMessage = "Authentication and list selection required.";
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return; 
+    }
     const originalList = [...shoppingList];
+    const itemToDelete = shoppingList.find(item => item.id === id);
     setShoppingList(prevList => prevList.filter(item => item.id !== id));
     try {
       await api.deleteShoppingItem(authToken, selectedListId, id);
+      toast.success(`Removed "${itemToDelete?.name}" from your list! 🗑️`);
     } catch (err: any) {
-      setError(err.message || 'Failed to delete item.');
+      const errorMessage = err.message || 'Failed to delete item.';
+      setError(errorMessage);
+      toast.error(errorMessage);
       setShoppingList(originalList);
     }
   }, [authToken, selectedListId, shoppingList]);
@@ -539,46 +568,64 @@ const App: React.FC = () => {
     return (
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <AuthHeader
-            mode={mode}
-            setMode={setMode}
-            isLoggedIn={false}
-        />
-        {isRegistering ? (
-          <RegisterPage
-            onRegister={handleRegister}
-            onSwitchToLogin={() => {
-                setIsRegistering(false);
-                setError(null);
+        <ToastProvider />
+        <LoadingOverlay isVisible={isLoading} message="Please wait..." />
+        
+        {showLanding ? (
+          <LandingPage
+            onGetStarted={() => {
+              setShowLanding(false);
+              setIsRegistering(true);
             }}
-            setUsername={setUsername}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            setConfirmPassword={setConfirmPassword}
-            isLoading={isLoading}
-            username={username}
-            email={email}
-            password={password}
-            confirmPassword={confirmPassword}
-            error={error}
+            onSignIn={() => {
+              setShowLanding(false);
+              setIsRegistering(false);
+            }}
           />
         ) : (
-          <LoginPage
-            onLogin={handleLogin}
-            onSwitchToRegister={() => {
-                setIsRegistering(true);
-                setError(null);
-            }}
-            setEmail={setEmail}
-            setPassword={setPassword}
-            isLoading={isLoading}
-            email={email}
-            password={password}
-            error={error}
-            successMessage={successMessage}
-          />
+          <>
+            <AuthHeader
+              mode={mode}
+              setMode={setMode}
+              isLoggedIn={false}
+            />
+            {isRegistering ? (
+              <ModernRegisterPage
+                onRegister={handleRegister}
+                onSwitchToLogin={() => {
+                    setIsRegistering(false);
+                    setError(null);
+                }}
+                setUsername={setUsername}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                setConfirmPassword={setConfirmPassword}
+                isLoading={isLoading}
+                username={username}
+                email={email}
+                password={password}
+                confirmPassword={confirmPassword}
+                error={error}
+              />
+            ) : (
+              <ModernLoginPage
+                onLogin={handleLogin}
+                onSwitchToRegister={() => {
+                    setIsRegistering(true);
+                    setError(null);
+                }}
+                setEmail={setEmail}
+                setPassword={setPassword}
+                isLoading={isLoading}
+                email={email}
+                password={password}
+                error={error}
+                successMessage={successMessage}
+              />
+            )}
+            <Footer />
+          </>
         )}
-        <Footer />
       </ThemeProvider>
     );
   }
@@ -593,6 +640,8 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
         <CssBaseline />
+        <ToastProvider />
+        <LoadingOverlay isVisible={isLoading} message="Loading your shopping list..." />
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
             <AuthHeader
               mode={mode}
@@ -698,7 +747,7 @@ const App: React.FC = () => {
                       <Typography variant="body2" color="text.secondary">{completionPercentage}%</Typography>
                   </Box>
     
-                  <ShoppingList
+                  <ModernShoppingList
                     items={shoppingList}
                     listId={selectedListId || 'default'}
                     onToggleComplete={handleToggleComplete}
