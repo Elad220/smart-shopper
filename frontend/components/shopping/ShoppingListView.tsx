@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
@@ -276,30 +276,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     >
       {(provided, snapshot) => (
         <Box
-          component={motion.div}
           ref={provided.innerRef}
           {...provided.draggableProps}
-          style={{
+          sx={{
             ...provided.draggableProps.style,
+            transform: `${provided.draggableProps.style?.transform || ''} rotate(${snapshot.isDragging ? 3 : 0}deg) scale(${snapshot.isDragging ? 1.05 : 1})`,
+            transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
+            '&:hover': !globalIsDragging ? {
+              transform: `${provided.draggableProps.style?.transform || ''} translateY(-4px) rotate(0deg) scale(1)`,
+            } : {},
           }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ 
-            opacity: 1, 
-            y: 0,
-            rotate: snapshot.isDragging ? 3 : 0,
-            scale: snapshot.isDragging ? 1.05 : 1,
-          }}
-          transition={{ 
-            type: snapshot.isDragging ? "tween" : "spring",
-            duration: snapshot.isDragging ? 0.2 : 0.6,
-            ease: snapshot.isDragging ? "easeOut" : "easeInOut",
-            stiffness: 300,
-            damping: 25,
-          }}
-          whileHover={!globalIsDragging ? { 
-            y: -4, 
-            transition: { duration: 0.2 } 
-          } : {}}
         >
           <Card
             className="glass-card"
@@ -342,12 +328,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             >
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Box
-                  component={motion.div}
                   {...provided.dragHandleProps}
-                  whileHover={!globalIsDragging ? { 
-                    scale: 1.1,
-                  } : {}}
-                  whileTap={{ scale: 0.95 }}
                   sx={{
                     display: 'flex', 
                     cursor: snapshot.isDragging ? 'grabbing' : 'grab',
@@ -360,6 +341,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       ? `2px solid ${alpha(theme.palette.primary.main, 0.4)}`
                       : `1px solid ${alpha(theme.palette.divider, 0.2)}`,
                     transition: 'all 0.2s ease',
+                    transform: snapshot.isDragging ? 'scale(1.1)' : 'scale(1)',
+                    '&:hover': !globalIsDragging ? {
+                      transform: 'scale(1.05)',
+                    } : {},
+                    '&:active': {
+                      transform: 'scale(0.95)',
+                    },
                   }}
                 >
                   <GripVertical 
@@ -371,18 +359,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   />
                 </Box>
                 <Box
-                  component={motion.div}
-                  animate={snapshot.isDragging ? {
-                    rotate: [0, -5, 5, 0],
-                    scale: [1, 1.1, 1.1, 1],
-                  } : {
-                    rotate: 0,
-                    scale: 1,
-                  }}
-                  transition={{
-                    duration: snapshot.isDragging ? 0.6 : 0.3,
-                    repeat: snapshot.isDragging ? Infinity : 0,
-                    ease: "easeInOut"
+                  sx={{
+                    transform: snapshot.isDragging ? 'rotate(5deg) scale(1.1)' : 'rotate(0deg) scale(1)',
+                    transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
+                    animation: snapshot.isDragging ? 'wobble 0.6s ease-in-out infinite' : 'none',
+                    '@keyframes wobble': {
+                      '0%, 100%': { transform: 'rotate(0deg) scale(1.1)' },
+                      '25%': { transform: 'rotate(-5deg) scale(1.1)' },
+                      '75%': { transform: 'rotate(5deg) scale(1.1)' },
+                    },
                   }}
                 >
                   <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
@@ -398,14 +383,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   {categoryName}
                 </Typography>
                 <Box
-                  component={motion.div}
-                  animate={snapshot.isDragging ? {
-                    scale: [1, 1.05, 1],
-                  } : {}}
-                  transition={{
-                    duration: 1,
-                    repeat: snapshot.isDragging ? Infinity : 0,
-                    ease: "easeInOut"
+                  sx={{
+                    transform: snapshot.isDragging ? 'scale(1.05)' : 'scale(1)',
+                    transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
+                    animation: snapshot.isDragging ? 'pulse 1s ease-in-out infinite' : 'none',
+                    '@keyframes pulse': {
+                      '0%, 100%': { transform: 'scale(1)' },
+                      '50%': { transform: 'scale(1.05)' },
+                    },
                   }}
                 >
                   <Chip 
@@ -426,14 +411,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   />
                 </Box>
                 <Box
-                  component={motion.div}
-                  animate={{
-                    rotate: isCollapsed ? 0 : 180,
-                    scale: snapshot.isDragging ? 1.1 : 1,
+                  sx={{
+                    transform: `rotate(${isCollapsed ? 0 : 180}deg) scale(${snapshot.isDragging ? 1.1 : 1})`,
+                    transition: 'transform 0.3s ease',
+                    '&:hover': !globalIsDragging ? {
+                      transform: `rotate(${isCollapsed ? 0 : 180}deg) scale(1.2)`,
+                    } : {},
+                    '&:active': {
+                      transform: `rotate(${isCollapsed ? 0 : 180}deg) scale(0.9)`,
+                    },
                   }}
-                  whileHover={!globalIsDragging ? { scale: 1.2 } : {}}
-                  whileTap={{ scale: 0.9 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
                   <IconButton 
                     size="small" 
@@ -463,7 +450,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             <Collapse in={!isCollapsed}>
               <Box sx={{ p: 3, pt: 0 }}>
                 <Stack spacing={2}>
-                  {items.map((item, itemIndex) => (
+                  {items.map((item) => (
                     <Card
                       key={item.id}
                       className="glass-card"
@@ -672,10 +659,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       <Box>
         {/* Enhanced Search and Controls */}
         <Box
-          component={motion.div}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          sx={{
+            opacity: 1,
+            transform: 'translateY(0)',
+            transition: 'all 0.6s ease',
+          }}
         >
           <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
             <Stack direction="row" spacing={2} alignItems="center">
@@ -712,9 +700,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                                       endAdornment: searchQuery && (
                     <InputAdornment position="end">
                       <Box
-                        component={motion.div}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
+                        sx={{
+                          transition: 'transform 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.1)',
+                          },
+                          '&:active': {
+                            transform: 'scale(0.9)',
+                          },
+                        }}
                       >
                         <IconButton
                           size="small"
@@ -732,9 +726,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               {sortedCategories.length > 1 && !searchQuery && (
                 <>
                   <Box
-                    component={motion.div}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    sx={{
+                      transition: 'transform 0.2s ease',
+                      '&:hover': {
+                        transform: 'scale(1.05)',
+                      },
+                      '&:active': {
+                        transform: 'scale(0.95)',
+                      },
+                    }}
                   >
                     <Button
                       variant="outlined"
@@ -761,9 +761,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   
                                                                               {categoryOrder.length > 0 && (
                       <Box
-                        component={motion.div}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        sx={{
+                          transition: 'transform 0.2s ease',
+                          '&:hover': {
+                            transform: 'scale(1.05)',
+                          },
+                          '&:active': {
+                            transform: 'scale(0.95)',
+                          },
+                        }}
                       >
                         <Button
                           variant="outlined"
@@ -826,18 +832,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   ))}
                   {/* Enhanced placeholder with animation */}
                   <Box
-                    component={motion.div}
                     sx={{ 
                       display: isDragging ? 'block' : 'none',
-                    }}
-                    animate={isDragging ? {
-                      opacity: [0.3, 0.6, 0.3],
-                      scale: [0.98, 1.02, 0.98],
-                    } : {}}
-                    transition={{
-                      duration: 1.5,
-                      repeat: Infinity,
-                      ease: "easeInOut"
+                      animation: isDragging ? 'placeholderPulse 1.5s ease-in-out infinite' : 'none',
+                      '@keyframes placeholderPulse': {
+                        '0%, 100%': { opacity: 0.3, transform: 'scale(0.98)' },
+                        '50%': { opacity: 0.6, transform: 'scale(1.02)' },
+                      },
                     }}
                   >
                     {provided.placeholder}
