@@ -28,16 +28,28 @@ interface ShoppingListItemProps {
 const StyledListItem = styled(ListItem, {
   shouldForwardProp: (prop) => prop !== 'completed',
 })<{ completed: boolean }>(({ theme, completed }) => ({
-  transition: 'background-color 0.3s ease-in-out, opacity 0.3s ease-in-out',
-  backgroundColor: completed ? theme.palette.action.disabledBackground : theme.palette.background.paper,
-  opacity: completed ? 0.6 : 1,
-  borderRadius: theme.shape.borderRadius,
-  marginBottom: theme.spacing(1),
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+  transition: 'all 0.3s ease-in-out',
+  backgroundColor: completed 
+    ? (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : theme.palette.action.disabledBackground)
+    : theme.palette.background.paper,
+  opacity: completed ? 0.5 : 1,
+  borderRadius: theme.spacing(1.5),
+  marginBottom: theme.spacing(1.5),
+  boxShadow: theme.palette.mode === 'dark' 
+    ? '0 2px 8px rgba(0, 0, 0, 0.2), 0 0 0 1px rgba(255, 255, 255, 0.04)'
+    : '0 2px 8px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04)',
+  border: `1px solid ${theme.palette.divider}`,
+  backdropFilter: 'blur(8px)',
   '&:hover': {
-    backgroundColor: completed ? theme.palette.action.disabledBackground : theme.palette.action.hover,
+    backgroundColor: completed 
+      ? (theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : theme.palette.action.disabledBackground)
+      : theme.palette.action.hover,
+    transform: 'translateY(-1px)',
+    boxShadow: theme.palette.mode === 'dark' 
+      ? '0 4px 12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.06)'
+      : '0 4px 12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06)',
   },
-  padding: theme.spacing(0.5, 2),
+  padding: theme.spacing(1, 2.5),
 }));
 
 
@@ -135,6 +147,22 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({
         onClose={handleMenuClose}
         MenuListProps={{
           'aria-labelledby': 'more-options-button',
+        }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            background: (theme) => theme.palette.mode === 'dark'
+              ? 'rgba(26, 26, 26, 0.8)'
+              : 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: (theme) => theme.palette.mode === 'dark' 
+              ? '1px solid rgba(255, 255, 255, 0.12)'
+              : '1px solid rgba(255, 255, 255, 0.25)',
+            boxShadow: (theme) => theme.palette.mode === 'dark'
+              ? '0 12px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              : '0 12px 36px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+            minWidth: 180,
+          }
         }}
       >
         <MenuItem onClick={handleEdit}>
