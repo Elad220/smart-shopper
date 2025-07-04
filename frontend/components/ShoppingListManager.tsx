@@ -18,7 +18,7 @@ import {
   Edit as EditIcon,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
-import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
+import { fetchShoppingLists, updateShoppingList, deleteShoppingList, importShoppingList } from '../src/services/api';
 
 interface ShoppingList {
   _id: string;
@@ -33,9 +33,6 @@ interface ShoppingListManagerProps {
   onListSelect: (listId: string) => void;
   selectedListId: string | null;
   onDataChange: () => void;
-  onOpenCreateDialog: () => void;
-  // Props for handling actions from header
-  onSortChange: (mode: string) => void;
   sortMode: string;
 }
 
@@ -44,8 +41,6 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   onListSelect,
   selectedListId,
   onDataChange,
-  onOpenCreateDialog,
-  onSortChange,
   sortMode,
 }) => {
   const theme = useTheme();

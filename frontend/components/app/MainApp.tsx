@@ -3,7 +3,6 @@ import { Box } from '@mui/material';
 import { User } from '../../hooks/useAuth';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
-import Header from '../layout/Header';
 import ShoppingApp from './ShoppingApp';
 
 interface MainAppProps {

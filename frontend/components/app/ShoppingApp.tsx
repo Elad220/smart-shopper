@@ -42,7 +42,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
-  const shoppingListManagerRef = useRef<any>(null);
   
   const {
     items,
@@ -278,8 +277,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           selectedListId={selectedListId}
           onListSelect={handleListSelect}
           onDataChange={handleDataChange}
-          onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
-          onSortChange={handleSortChange}
           sortMode={sortMode}
         />
       </Drawer>
