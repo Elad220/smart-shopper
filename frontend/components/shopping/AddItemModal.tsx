@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Stack, MenuItem, Box, useTheme
+  TextField, Button, Stack, MenuItem, Box, useTheme, Collapse
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { Package, X } from 'lucide-react';
@@ -29,8 +29,29 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     priority: 'Medium' as 'Low' | 'Medium' | 'High',
     notes: '',
   });
+  
+  const [customCategory, setCustomCategory] = useState('');
+  const [showCustomCategory, setShowCustomCategory] = useState(false);
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
 
-  const categories = [
+  // Load custom categories from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('userCustomCategories');
+    if (saved) {
+      setCustomCategories(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save custom category to localStorage
+  const saveCustomCategory = (categoryName: string) => {
+    if (categoryName && !customCategories.includes(categoryName)) {
+      const updated = [...customCategories, categoryName];
+      setCustomCategories(updated);
+      localStorage.setItem('userCustomCategories', JSON.stringify(updated));
+    }
+  };
+
+  const standardCategories = [
     { value: 'Produce', label: '🥬 Produce', emoji: '🥬' },
     { value: 'Dairy', label: '🥛 Dairy', emoji: '🥛' },
     { value: 'Fridge', label: '❄️ Fridge', emoji: '❄️' },
@@ -42,16 +63,43 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     { value: 'Canned Goods', label: '🥫 Canned Goods', emoji: '🥫' },
     { value: 'Organics', label: '🌱 Organics', emoji: '🌱' },
     { value: 'Deli', label: '🥓 Deli', emoji: '🥓' },
-    { value: 'Other', label: '📦 Other', emoji: '📦' },
+  ];
+
+  // Combine standard and custom categories
+  const allCategories = [
+    ...standardCategories,
+    ...customCategories.map(cat => ({ value: cat, label: `📁 ${cat}`, emoji: '📁' })),
+    { value: 'Other', label: '📦 Add New Category...', emoji: '📦' },
   ];
 
   const units = ['pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp'];
   const priorities = ['Low', 'Medium', 'High'] as const;
 
+  const handleCategoryChange = (value: string) => {
+    setFormData({ ...formData, category: value });
+    setShowCustomCategory(value === 'Other');
+    if (value !== 'Other') {
+      setCustomCategory('');
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim()) {
-      onAdd(formData);
+      let finalCategory = formData.category;
+      
+      // If "Other" is selected and user entered a custom category
+      if (formData.category === 'Other' && customCategory.trim()) {
+        finalCategory = customCategory.trim();
+        saveCustomCategory(finalCategory);
+      }
+      
+      onAdd({
+        ...formData,
+        category: finalCategory,
+      });
+      
+      // Reset form
       setFormData({
         name: '',
         category: 'Other',
@@ -60,6 +108,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         priority: 'Medium',
         notes: '',
       });
+      setCustomCategory('');
+      setShowCustomCategory(false);
     }
   };
 
@@ -73,6 +123,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
       priority: 'Medium',
       notes: '',
     });
+    setCustomCategory('');
+    setShowCustomCategory(false);
   };
 
   return (
@@ -164,10 +216,10 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                   fullWidth
                   label="Category"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                 >
-                  {categories.map((category) => (
+                  {allCategories.map((category) => (
                     <MenuItem key={category.value} value={category.value}>
                       {category.label}
                     </MenuItem>
@@ -189,6 +241,20 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                   ))}
                 </TextField>
               </Stack>
+
+              <Collapse in={showCustomCategory}>
+                <TextField
+                  fullWidth
+                  label="New Category Name"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  placeholder="Enter new category name..."
+                  sx={{ 
+                    '& .MuiOutlinedInput-root': { borderRadius: '12px' },
+                    mt: 1,
+                  }}
+                />
+              </Collapse>
 
               <TextField
                 fullWidth

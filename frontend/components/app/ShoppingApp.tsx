@@ -33,6 +33,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   
   const {
     items,
+    currentListName,
     isLoading,
     error,
     addItem,
@@ -204,14 +205,14 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                     >
                       <Menu size={18} />
                     </IconButton>
-                    <Box sx={{ minWidth: 0 }}>
-                      <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                        My Shopping List
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {totalItems} items • {completedItems} completed
-                      </Typography>
-                    </Box>
+                                         <Box sx={{ minWidth: 0 }}>
+                       <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                         {currentListName}
+                       </Typography>
+                       <Typography variant="caption" color="text.secondary">
+                         {totalItems} items • {completedItems} completed
+                       </Typography>
+                     </Box>
                   </Box>
                   
                   <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>

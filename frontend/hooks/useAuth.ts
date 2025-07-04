@@ -82,6 +82,11 @@ export const useAuth = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('selectedListId');
     toast.success('Logged out successfully! 👋');
+    
+    // Redirect to landing page after logout
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   }, []);
 
   return {

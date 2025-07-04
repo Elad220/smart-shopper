@@ -4,6 +4,7 @@ import { ShoppingItem } from '../types';
 
 export const useShoppingList = (token: string) => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [currentListName, setCurrentListName] = useState<string>('My Shopping List');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState<string | null>(
@@ -16,6 +17,14 @@ export const useShoppingList = (token: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Fetch list details to get the name
+      const lists = await api.fetchShoppingLists(token);
+      const currentList = lists.find(list => list._id === selectedListId);
+      if (currentList) {
+        setCurrentListName(currentList.name);
+      }
+      
+      // Fetch list items
       const list = await api.fetchShoppingList(token, selectedListId);
       setItems(list || []);
     } catch (err: any) {
@@ -94,6 +103,7 @@ export const useShoppingList = (token: string) => {
 
   return {
     items,
+    currentListName,
     isLoading,
     error,
     addItem,

@@ -18,6 +18,8 @@ import {
   Alert,
   Checkbox,
   FormControlLabel,
+  Stack,
+  useTheme,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
@@ -32,6 +34,7 @@ interface SmartAssistantProps {
 const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
+  const theme = useTheme();
   const [prompt, setPrompt] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -175,8 +178,39 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Smart Assistant</DialogTitle>
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      maxWidth="sm" 
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+        }
+      }}
+    >
+      <DialogTitle>
+        <Stack direction="row" alignItems="center" spacing={2}>
+          <Box
+            sx={{
+              width: 40,
+              height: 40,
+              borderRadius: '8px',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            🤖
+          </Box>
+          Smart Assistant
+        </Stack>
+      </DialogTitle>
       <DialogContent>
         <Box sx={{ minHeight: '60px', mb: 2 }}>
             {isCheckingStatus ? (
@@ -264,12 +298,38 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
           )
         )}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={isLoading}>Cancel</Button>
-        <Button onClick={handleGenerate} variant="outlined" disabled={isLoading || !hasApiKey}>
-          Generate
+      <DialogActions sx={{ p: 3 }}>
+        <Button 
+          onClick={onClose} 
+          disabled={isLoading}
+          sx={{
+            borderRadius: '8px',
+            textTransform: 'none',
+          }}
+        >
+          Cancel
         </Button>
-        <Button onClick={handleAddClick} variant="contained" disabled={isLoading || generatedItems.length === 0}>
+        <Button 
+          onClick={handleGenerate} 
+          variant="outlined" 
+          disabled={isLoading || !hasApiKey}
+          sx={{
+            borderRadius: '8px',
+            textTransform: 'none',
+          }}
+        >
+          {isLoading && !success ? 'Generating...' : 'Generate'}
+        </Button>
+        <Button 
+          onClick={handleAddClick} 
+          variant="contained" 
+          disabled={isLoading || generatedItems.length === 0}
+          sx={{
+            borderRadius: '8px',
+            textTransform: 'none',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+          }}
+        >
           Add Selected Items
         </Button>
       </DialogActions>

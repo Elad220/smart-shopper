@@ -11,11 +11,14 @@ const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { theme, mode } = useTheme();
 
-  // Force re-render when theme or auth state changes
-  const appKey = `${mode}-${isAuthenticated ? user?.id || 'auth' : 'noauth'}`;
+  // Force complete re-render when theme changes
+  React.useEffect(() => {
+    // Force a style recalculation
+    document.documentElement.style.setProperty('--theme-mode', mode);
+  }, [mode]);
 
   return (
-    <ThemeProvider theme={theme} key={`theme-${mode}`}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Toaster 
         position="top-right"
@@ -28,13 +31,11 @@ const App: React.FC = () => {
           },
         }}
       />
-      <div key={appKey}>
-        {isAuthenticated && user ? (
-          <MainApp user={user} />
-        ) : (
-          <AuthFlow />
-        )}
-      </div>
+      {isAuthenticated && user ? (
+        <MainApp key={`${user.id}-${mode}`} user={user} />
+      ) : (
+        <AuthFlow key={`auth-${mode}`} />
+      )}
     </ThemeProvider>
   );
 };

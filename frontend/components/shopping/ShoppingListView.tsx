@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
-  Stack, Chip, useTheme, alpha, Collapse
+  Stack, Chip, useTheme, alpha, Collapse, Button
 } from '@mui/material';
 import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical } from 'lucide-react';
 import { ShoppingItem } from '../../types';
@@ -26,6 +26,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const theme = useTheme();
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+  const [areAllCollapsed, setAreAllCollapsed] = useState(false);
 
   // Category emoji mapping
   const getCategoryEmoji = (category: string) => {
@@ -43,7 +44,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       'Deli': '🥓',
       'Other': '📦',
     };
-    return emojiMap[category] || '📦';
+    // Return standard emoji if available, otherwise use folder emoji for custom categories
+    return emojiMap[category] || '�';
   };
 
   // Group items by category
@@ -103,12 +105,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     });
   })();
 
-  // Initialize category order if empty
+  // Load category order from localStorage and initialize if needed
   useEffect(() => {
-    if (categoryOrder.length === 0 && sortedCategories.length > 0) {
+    const savedOrder = localStorage.getItem('categoryOrder');
+    if (savedOrder) {
+      setCategoryOrder(JSON.parse(savedOrder));
+    } else if (categoryOrder.length === 0 && sortedCategories.length > 0) {
       setCategoryOrder(sortedCategories);
     }
-  }, [sortedCategories, categoryOrder.length]);
+  }, [sortedCategories]);
 
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories(prev => {
@@ -122,14 +127,34 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     });
   };
 
+  const toggleAllCategories = () => {
+    if (areAllCollapsed) {
+      // Expand all
+      setCollapsedCategories(new Set());
+      setAreAllCollapsed(false);
+    } else {
+      // Collapse all
+      setCollapsedCategories(new Set(sortedCategories));
+      setAreAllCollapsed(true);
+    }
+  };
+
   const handleDragEnd = (result: DropResult) => {
     if (!result.destination) return;
 
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
     const newOrder = Array.from(sortedCategories);
-    const [reorderedItem] = newOrder.splice(result.source.index, 1);
-    newOrder.splice(result.destination.index, 0, reorderedItem);
+    const [reorderedItem] = newOrder.splice(sourceIndex, 1);
+    newOrder.splice(destinationIndex, 0, reorderedItem);
 
     setCategoryOrder(newOrder);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('categoryOrder', JSON.stringify(newOrder));
   };
 
   const getPriorityIcon = (priority: string) => {
@@ -193,6 +218,27 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   return (
     <Box>
+      {/* Collapse All Button */}
+      {sortedCategories.length > 1 && (
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button
+            variant="text"
+            size="small"
+            onClick={toggleAllCategories}
+            sx={{
+              textTransform: 'none',
+              color: theme.palette.text.secondary,
+              fontSize: '0.75rem',
+              '&:hover': {
+                background: alpha(theme.palette.primary.main, 0.1),
+              },
+            }}
+          >
+            {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+          </Button>
+        </Box>
+      )}
+
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="categories">
           {(provided) => (
@@ -214,7 +260,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           layout
                           style={{
                             ...provided.draggableProps.style,
-                            opacity: snapshot.isDragging ? 0.8 : 1,
                           }}
                         >
               <Card
@@ -222,6 +267,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   borderRadius: '16px',
                   border: `1px solid ${theme.palette.divider}`,
                   overflow: 'hidden',
+                  transform: snapshot.isDragging ? 'rotate(3deg)' : 'rotate(0deg)',
+                  boxShadow: snapshot.isDragging ? theme.shadows[8] : theme.shadows[1],
+                  opacity: snapshot.isDragging ? 0.9 : 1,
+                  transition: snapshot.isDragging ? 'none' : 'all 0.2s ease',
                 }}
               >
                 {/* Category Header */}
@@ -237,7 +286,21 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   onClick={() => toggleCategoryCollapse(categoryName)}
                 >
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Box {...provided.dragHandleProps} sx={{ display: 'flex', cursor: 'grab' }}>
+                    <Box 
+                      {...provided.dragHandleProps} 
+                      sx={{ 
+                        display: 'flex', 
+                        cursor: 'grab',
+                        p: 0.5,
+                        borderRadius: '4px',
+                        '&:hover': {
+                          background: alpha(theme.palette.action.hover, 0.5),
+                        },
+                        '&:active': {
+                          cursor: 'grabbing',
+                        },
+                      }}
+                    >
                       <GripVertical size={16} color={theme.palette.text.secondary} />
                     </Box>
                     <Typography variant="h5" sx={{ fontSize: '1.25rem' }}>
