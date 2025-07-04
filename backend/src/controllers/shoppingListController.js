@@ -147,8 +147,15 @@ exports.addItem = async (req, res) => {
       return res.status(404).json({ message: 'Shopping list not found' });
     }
     
+    // Map imageUrl from frontend to image field for database
+    const itemData = { ...req.body };
+    if (itemData.imageUrl) {
+      itemData.image = itemData.imageUrl;
+      delete itemData.imageUrl; // Clean up the original field
+    }
+    
     const item = new Item({
-      ...req.body,
+      ...itemData,
       userId: req.user.userId
     });
     
@@ -157,8 +164,12 @@ exports.addItem = async (req, res) => {
     list.items.push(savedItem._id);
     await list.save();
     
+    // Debug: Log successful save
+    console.log('✓ Backend: Item saved with image:', !!savedItem.image);
+    
     res.status(201).json(transformItem(savedItem));
   } catch (error) {
+    console.error('✗ Backend: Error saving item:', error.message);
     res.status(400).json({ message: error.message });
   }
 };
