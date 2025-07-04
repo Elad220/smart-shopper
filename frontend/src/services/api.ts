@@ -210,8 +210,6 @@ export const addShoppingItem = async (
   listId: string,
   itemData: Omit<ShoppingItem, 'id' | 'completed'>
 ): Promise<ShoppingItem> => {
-  console.log('🌐 API sending:', itemData.imageUrl ? '✅ With image' : '❌ No image');
-  
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items`, {
     method: 'POST',
     headers: {
@@ -223,7 +221,12 @@ export const addShoppingItem = async (
   
   const result = await handleResponse<ShoppingItem>(response);
   
-  console.log('🌐 API received:', result.imageUrl ? '✅ Backend saved image' : '❌ Backend lost image');
+  // Debug: Check if backend returned image
+  if (result.imageUrl) {
+    console.log('✓ API: Backend saved image (' + result.imageUrl.length + ' chars)');
+  } else {
+    console.log('✗ API: Backend did not save image');
+  }
   
   return result;
 };

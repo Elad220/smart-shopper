@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
-  Stack, Chip, useTheme, alpha, Collapse, Button
+  Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical } from 'lucide-react';
+import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical, Search, X } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -27,6 +27,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Category emoji mapping
   const getCategoryEmoji = (category: string) => {
@@ -48,8 +49,21 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     return emojiMap[category] || '🛒';
   };
 
-  // Group items by category
-  const groupedItems = items.reduce((acc, item) => {
+  // Filter items based on search query
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    
+    const query = searchQuery.toLowerCase();
+    return items.filter(item => 
+      item.name.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      item.notes?.toLowerCase().includes(query) ||
+      item.units.toLowerCase().includes(query)
+    );
+  }, [items, searchQuery]);
+
+  // Group filtered items by category
+  const groupedItems = filteredItems.reduce((acc, item) => {
     const categoryKey = typeof item.category === 'string' ? item.category : 'Other';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
@@ -218,9 +232,41 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   return (
     <Box>
-      {/* Collapse All Button */}
-      {sortedCategories.length > 1 && (
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
+      {/* Search and Controls */}
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <TextField
+          size="small"
+          placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+          sx={{ 
+            flexGrow: 1,
+            '& .MuiOutlinedInput-root': { 
+              borderRadius: '8px',
+              backgroundColor: theme.palette.background.paper,
+            }
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search size={18} color={theme.palette.text.secondary} />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setSearchQuery('')}
+                  sx={{ p: 0.5 }}
+                >
+                  <X size={16} />
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
+        />
+        
+        {sortedCategories.length > 1 && !searchQuery && (
           <Button
             variant="text"
             size="small"
@@ -229,6 +275,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               textTransform: 'none',
               color: theme.palette.text.secondary,
               fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
               '&:hover': {
                 background: alpha(theme.palette.primary.main, 0.1),
               },
@@ -236,8 +283,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           >
             {areAllCollapsed ? 'Expand All' : 'Collapse All'}
           </Button>
-        </Box>
-      )}
+        )}
+      </Box>
 
       <DragDropContext onDragEnd={handleDragEnd}>
         <Droppable droppableId="categories" type="CATEGORY">

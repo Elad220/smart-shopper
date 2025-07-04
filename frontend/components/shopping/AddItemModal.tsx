@@ -129,11 +129,11 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         name: formData.name.trim(),
       };
       
-      // Debug: Check if image is being submitted
+      // Debug: Image data check
       if (itemData.imageUrl) {
-        console.log('✅ Image data included:', itemData.imageUrl.substring(0, 50) + '...');
+        console.log('✓ Modal: Image attached (' + itemData.imageUrl.length + ' chars)');
       } else {
-        console.log('❌ No image data');
+        console.log('✗ Modal: No image');
       }
       
       onAdd(itemData);

@@ -9,42 +9,28 @@ import MainApp from './components/app/MainApp';
 
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
-  const { theme, mode } = useTheme();
-  const [themeKey, setThemeKey] = React.useState(0);
-
-  // Force complete re-render when theme changes
-  React.useEffect(() => {
-    // Force immediate visual update
-    document.documentElement.style.setProperty('--theme-mode', mode);
-    document.body.style.backgroundColor = mode === 'dark' ? '#1a202c' : '#f8fafc';
-    document.body.style.color = mode === 'dark' ? '#f7fafc' : '#1a202c';
-    document.documentElement.setAttribute('data-theme', mode);
-    
-    // Force all components to re-render with new theme
-    setThemeKey((prev: number) => prev + 1);
-  }, [mode]);
+  const { theme } = useTheme();
 
   return (
-    <ThemeProvider key={`theme-${mode}-${themeKey}`} theme={theme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
       <Toaster 
         position="top-right"
         toastOptions={{
           duration: 4000,
           style: {
-            borderRadius: '12px',
+            borderRadius: '8px',
             background: theme.palette.background.paper,
             color: theme.palette.text.primary,
+            border: `1px solid ${theme.palette.divider}`,
           },
         }}
       />
-      <div key={`app-${mode}-${themeKey}`}>
-        {isAuthenticated && user ? (
-          <MainApp key={`${user.id}-${mode}-${themeKey}`} user={user} />
-        ) : (
-          <AuthFlow key={`auth-${mode}-${themeKey}`} />
-        )}
-      </div>
+      {isAuthenticated && user ? (
+        <MainApp user={user} />
+      ) : (
+        <AuthFlow />
+      )}
     </ThemeProvider>
   );
 };
