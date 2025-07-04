@@ -26,27 +26,21 @@ export const useTheme = () => {
       body.style.color = '#ffffff';
       root.style.backgroundColor = '#000000';
     } else {
-      // Light mode - use proper light colors
+      // Light mode - completely clear all overrides and let Material-UI take control
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
       root.style.setProperty('--paper-color', '#f8fafc');
       root.style.setProperty('--border-color', '#e2e8f0');
-      body.style.backgroundColor = '#ffffff';
-      body.style.color = '#111827';
-      root.style.backgroundColor = '#ffffff';
       
-      // Clear any dark mode overrides
-      body.style.removeProperty('color');
+      // Clear ALL inline styles completely
       body.style.removeProperty('background-color');
-      root.style.removeProperty('color');
+      body.style.removeProperty('color');
       root.style.removeProperty('background-color');
+      root.style.removeProperty('color');
       
-      // Let Material-UI handle the rest
-      requestAnimationFrame(() => {
-        body.style.backgroundColor = '';
-        body.style.color = '';
-        root.style.backgroundColor = '';
-      });
+      // Also clear the style attribute completely if empty
+      if (!body.style.cssText) body.removeAttribute('style');
+      if (!root.style.cssText) root.removeAttribute('style');
     }
   }, [mode]);
 
@@ -118,15 +112,15 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? '#ffffff !important' : '#000000 !important',
-            color: mode === 'light' ? '#111827 !important' : '#ffffff !important',
+            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
+            color: mode === 'light' ? 'inherit' : '#ffffff !important',
             transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
           },
           html: {
-            backgroundColor: mode === 'light' ? '#ffffff !important' : '#000000 !important',
+            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
           },
           '#root': {
-            backgroundColor: mode === 'light' ? '#ffffff !important' : '#000000 !important',
+            backgroundColor: mode === 'light' ? 'transparent' : '#000000 !important',
             minHeight: '100vh',
           },
           '*': {
@@ -149,8 +143,10 @@ export const useTheme = () => {
       MuiCard: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#0a0a0a',
-            border: `1px solid ${mode === 'light' ? '#e2e8f0' : '#1a1a1a'}`,
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+              border: '1px solid #1a1a1a !important',
+            }),
             transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
           }
         }
@@ -158,7 +154,9 @@ export const useTheme = () => {
       MuiPaper: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? '#f8fafc' : '#0a0a0a',
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+            }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
           }
@@ -167,7 +165,9 @@ export const useTheme = () => {
       MuiDialog: {
         styleOverrides: {
           paper: {
-            backgroundColor: mode === 'light' ? '#ffffff' : '#0a0a0a',
+            ...(mode === 'dark' && {
+              backgroundColor: '#0a0a0a !important',
+            }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
           }
@@ -193,16 +193,18 @@ export const useTheme = () => {
         styleOverrides: {
           root: {
             '& .MuiOutlinedInput-root': {
-              backgroundColor: mode === 'light' ? '#ffffff' : '#0a0a0a',
-              '& fieldset': {
-                borderColor: mode === 'light' ? '#e2e8f0' : '#1a1a1a',
-              },
-              '&:hover fieldset': {
-                borderColor: mode === 'light' ? '#cbd5e1' : '#2a2a2a',
-              },
-              '&.Mui-focused fieldset': {
-                borderColor: mode === 'light' ? '#3b82f6' : '#60a5fa',
-              },
+              ...(mode === 'dark' && {
+                backgroundColor: '#0a0a0a !important',
+                '& fieldset': {
+                  borderColor: '#1a1a1a !important',
+                },
+                '&:hover fieldset': {
+                  borderColor: '#2a2a2a !important',
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: '#60a5fa !important',
+                },
+              }),
             },
           }
         }
@@ -232,21 +234,21 @@ export const useTheme = () => {
           root.style.setProperty('--paper-color', '#0a0a0a');
           root.style.setProperty('--border-color', '#1a1a1a');
         } else {
-          // Light mode - reset to Material-UI defaults
+          // Light mode - completely clear all overrides
           root.style.setProperty('--bg-color', '#ffffff');
           root.style.setProperty('--text-color', '#111827');
           root.style.setProperty('--paper-color', '#f8fafc');
           root.style.setProperty('--border-color', '#e2e8f0');
           
-          // Clear inline styles to let Material-UI take over
-          body.style.backgroundColor = '';
-          body.style.color = '';
-          root.style.backgroundColor = '';
-          
-          // Additional cleanup
+          // Remove all inline style overrides
           body.style.removeProperty('background-color');
           body.style.removeProperty('color');
           root.style.removeProperty('background-color');
+          root.style.removeProperty('color');
+          
+          // Clear style attributes if empty
+          if (!body.style.cssText) body.removeAttribute('style');
+          if (!root.style.cssText) root.removeAttribute('style');
         }
       });
       
