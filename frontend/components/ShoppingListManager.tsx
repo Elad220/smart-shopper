@@ -15,6 +15,7 @@ import {
   Stack,
   useTheme,
   alpha,
+  CircularProgress,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -67,6 +68,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const [editingList, setEditingList] = useState<ShoppingList | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -131,7 +133,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   };
 
   const handleDeleteList = async (listId: string) => {
-    setIsLoading(true);
+    setDeletingListId(listId);
     setError(null);
     try {
       await deleteShoppingList(token, listId);
@@ -146,7 +148,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       setError(error.message || 'Failed to delete shopping list');
       console.error('Error deleting shopping list:', error);
     } finally {
-      setIsLoading(false);
+      setDeletingListId(null);
     }
   };
 
@@ -230,7 +232,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           <Tooltip title="Create New List">
             <IconButton
               onClick={onOpenCreateDialog}
-              disabled={isLoading}
+              disabled={isLoading || !!deletingListId}
               sx={{
                 borderRadius: '8px',
                 border: `1px solid ${theme.palette.divider}`,
@@ -245,6 +247,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           <Tooltip title="Sort Lists">
             <IconButton
               onClick={handleSortClick}
+              disabled={!!deletingListId}
               sx={{
                 borderRadius: '8px',
                 border: `1px solid ${theme.palette.divider}`,
@@ -259,7 +262,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           <Tooltip title="Import Items">
             <IconButton
               onClick={handleImportClick}
-              disabled={isLoading || !selectedListId}
+              disabled={isLoading || !selectedListId || !!deletingListId}
               sx={{
                 borderRadius: '8px',
                 border: `1px solid ${theme.palette.divider}`,
@@ -274,7 +277,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           <Tooltip title="Export Selected List">
             <IconButton
               onClick={handleExport}
-              disabled={isLoading || !selectedListId}
+              disabled={isLoading || !selectedListId || !!deletingListId}
               sx={{
                 borderRadius: '8px',
                 border: `1px solid ${theme.palette.divider}`,
@@ -324,7 +327,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
               sx={{
                 p: 2,
                 borderRadius: '12px',
-                cursor: 'pointer',
+                cursor: deletingListId ? 'not-allowed' : 'pointer',
                 transition: 'all 0.2s ease',
                 border: selectedListId === list._id 
                   ? `2px solid ${theme.palette.primary.main}` 
@@ -332,12 +335,14 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                 background: selectedListId === list._id
                   ? `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.secondary.main}08)`
                   : theme.palette.background.paper,
-                '&:hover': {
+                opacity: deletingListId && deletingListId !== list._id ? 0.5 : 1,
+                pointerEvents: deletingListId ? 'none' : 'auto',
+                '&:hover': !deletingListId ? {
                   transform: 'translateY(-1px)',
                   boxShadow: theme.shadows[2],
-                },
+                } : {},
               }}
-              onClick={() => onListSelect(list._id)}
+              onClick={() => !deletingListId && onListSelect(list._id)}
             >
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box sx={{ flexGrow: 1, minWidth: 0 }}>
@@ -363,7 +368,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                       e.stopPropagation();
                       openEditDialog(list);
                     }}
-                    disabled={isLoading}
+                    disabled={isLoading || !!deletingListId}
                     sx={{
                       borderRadius: '6px',
                       '&:hover': {
@@ -379,7 +384,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                       e.stopPropagation();
                       handleDeleteList(list._id);
                     }}
-                    disabled={isLoading}
+                    disabled={isLoading || !!deletingListId}
                     sx={{
                       borderRadius: '6px',
                       '&:hover': {
@@ -387,7 +392,11 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                       },
                     }}
                   >
-                    <DeleteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                    {deletingListId === list._id ? (
+                      <CircularProgress size={16} sx={{ color: theme.palette.error.main }} />
+                    ) : (
+                      <DeleteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                    )}
                   </IconButton>
                 </Stack>
               </Stack>
@@ -397,7 +406,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       </Box>
 
       {/* Edit List Dialog */}
-      <Dialog open={isEditDialogOpen} onClose={() => !isLoading && setIsEditDialogOpen(false)}>
+      <Dialog open={isEditDialogOpen} onClose={() => !isLoading && !deletingListId && setIsEditDialogOpen(false)}>
         <DialogTitle>Edit Shopping List</DialogTitle>
         <DialogContent>
           <TextField
@@ -407,20 +416,20 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             fullWidth
             value={newListName}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
-            disabled={isLoading}
+            disabled={isLoading || !!deletingListId}
             error={!!error}
             helperText={error}
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setIsEditDialogOpen(false)} disabled={isLoading}>
+          <Button onClick={() => setIsEditDialogOpen(false)} disabled={isLoading || !!deletingListId}>
             Cancel
           </Button>
           <Button 
             onClick={handleUpdateList} 
             variant="contained" 
             color="primary"
-            disabled={isLoading || !newListName.trim()}
+            disabled={isLoading || !!deletingListId || !newListName.trim()}
           >
             {isLoading ? 'Saving...' : 'Save'}
           </Button>
