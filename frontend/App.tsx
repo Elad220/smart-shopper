@@ -2,16 +2,23 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import AddItemForm from './components/AddItemForm';
 import ShoppingList from './components/ShoppingList';
+import ModernShoppingList from './components/ModernShoppingList';
 import EditItemModal from './components/EditItemModal';
 import { ShoppingListManager } from './components/ShoppingListManager';
 import { ShoppingItem, Category, StandardCategory } from './types';
 import * as api from './src/services/api'; // Import API service
 import { BASE_URL, fetchUserCategories } from './src/services/api';
 import LoginPage from './components/LoginPage';
+import ModernLoginPage from './components/ModernLoginPage';
 import RegisterPage from './components/RegisterPage';
+import ModernRegisterPage from './components/ModernRegisterPage';
+import LandingPage from './components/LandingPage';
 import AuthHeader from './components/AuthHeader';
 import SmartAssistant from './components/SmartAssistant';
 import Footer from './components/Footer';
+import ToastProvider from './components/ToastProvider';
+import { LoadingOverlay } from './components/ModernSpinner';
+import toast from 'react-hot-toast';
 
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Typography from '@mui/material/Typography';
@@ -130,6 +137,7 @@ const App: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [username, setUsername] = useState('');
+  const [showLanding, setShowLanding] = useState(!authToken);
 
   const [selectedList, setSelectedList] = useState<any | null>(null);
 
