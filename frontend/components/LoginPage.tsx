@@ -39,19 +39,27 @@ const LoginPage: React.FC<LoginPageProps> = ({
         borderColor: theme.palette.divider,
       },
       '&:hover fieldset': {
-        borderColor: theme.palette.action.hover,
+        borderColor: theme.palette.divider,
       },
       '&.Mui-focused fieldset': {
         borderColor: theme.palette.primary.main,
+        borderWidth: '2px',
       },
     },
     '& .MuiInputBase-input': {
       color: theme.palette.text.primary,
       transition: 'color 0.2s ease-in-out',
-    },
-     '& .MuiInputLabel-root': {
+      '&::placeholder': {
         color: theme.palette.text.secondary,
-        transition: 'color 0.2s ease-in-out',
+        opacity: 0.8,
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: theme.palette.text.secondary,
+      transition: 'color 0.2s ease-in-out',
+      '&.Mui-focused': {
+        color: theme.palette.primary.main,
+      },
     },
   };
 
@@ -152,17 +160,22 @@ const LoginPage: React.FC<LoginPageProps> = ({
               borderRadius: '9999px',
               height: 48,
               bgcolor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
+              color: '#ffffff',
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               transition: 'all 0.2s ease-in-out',
-               '&:hover': {
+              '&:hover': {
                 bgcolor: theme.palette.primary.dark,
+                color: '#ffffff',
+              },
+              '&:disabled': {
+                bgcolor: theme.palette.action.disabled,
+                color: '#ffffff',
               }
             }}
           >
-            {isLoading ? <CircularProgress size={24} /> : 'Sign In →'}
+            {isLoading ? <CircularProgress size={24} sx={{ color: '#ffffff' }} /> : 'Sign In →'}
           </Button>
         </Box>
         <Typography

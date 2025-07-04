@@ -18,10 +18,10 @@ export const useTheme = () => {
     
     // Set CSS custom properties for immediate theme switching
     if (mode === 'dark') {
-      root.style.setProperty('--bg-color', '#0f0f0f');
+      root.style.setProperty('--bg-color', '#121212');
       root.style.setProperty('--text-color', '#ffffff');
-      root.style.setProperty('--paper-color', '#1a1a1a');
-      root.style.setProperty('--border-color', '#2a2a2a');
+      root.style.setProperty('--paper-color', '#1e1e1e');
+      root.style.setProperty('--border-color', '#333333');
     } else {
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
@@ -70,18 +70,18 @@ export const useTheme = () => {
           dark: '#7c3aed'
         },
         background: { 
-          default: '#0f0f0f', 
-          paper: '#1a1a1a' 
+          default: '#121212', 
+          paper: '#1e1e1e' 
         },
         text: { 
           primary: '#ffffff', 
-          secondary: '#9ca3af' 
+          secondary: '#a1a1aa' 
         },
-        divider: '#2a2a2a',
+        divider: '#333333',
         action: {
           hover: '#2a2a2a',
-          selected: '#374151',
-          disabled: '#4b5563'
+          selected: '#3f3f46',
+          disabled: '#52525b'
         }
       })
     },
@@ -98,7 +98,7 @@ export const useTheme = () => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            backgroundColor: mode === 'light' ? '#ffffff' : '#0f0f0f',
+            backgroundColor: mode === 'light' ? '#ffffff' : '#121212',
             color: mode === 'light' ? '#111827' : '#ffffff',
             transition: 'background-color 0.2s ease-in-out, color 0.2s ease-in-out',
           },
@@ -107,13 +107,13 @@ export const useTheme = () => {
               width: '8px',
             },
             '&::-webkit-scrollbar-track': {
-              background: mode === 'light' ? '#f1f5f9' : '#1a1a1a',
+              background: mode === 'light' ? '#f1f5f9' : '#1e1e1e',
             },
             '&::-webkit-scrollbar-thumb': {
-              background: mode === 'light' ? '#cbd5e1' : '#4b5563',
+              background: mode === 'light' ? '#cbd5e1' : '#52525b',
               borderRadius: '4px',
               '&:hover': {
-                background: mode === 'light' ? '#94a3b8' : '#6b7280',
+                background: mode === 'light' ? '#94a3b8' : '#71717a',
               }
             },
           }
@@ -123,8 +123,8 @@ export const useTheme = () => {
         styleOverrides: {
           root: {
             ...(mode === 'dark' && {
-              backgroundColor: '#1a1a1a !important',
-              border: '1px solid #2a2a2a !important',
+              backgroundColor: '#1e1e1e !important',
+              border: '1px solid #333333 !important',
             }),
             transition: 'background-color 0.2s ease-in-out, border-color 0.2s ease-in-out',
           }
@@ -134,7 +134,7 @@ export const useTheme = () => {
         styleOverrides: {
           root: {
             ...(mode === 'dark' && {
-              backgroundColor: '#1a1a1a !important',
+              backgroundColor: '#1e1e1e !important',
             }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
@@ -145,7 +145,7 @@ export const useTheme = () => {
         styleOverrides: {
           paper: {
             ...(mode === 'dark' && {
-              backgroundColor: '#1a1a1a !important',
+              backgroundColor: '#1e1e1e !important',
             }),
             backgroundImage: 'none',
             transition: 'background-color 0.2s ease-in-out',
@@ -155,7 +155,7 @@ export const useTheme = () => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(15, 15, 15, 0.9)',
+            backgroundColor: mode === 'light' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(18, 18, 18, 0.9)',
             backdropFilter: 'blur(20px)',
             transition: 'background-color 0.2s ease-in-out',
           }
@@ -173,12 +173,12 @@ export const useTheme = () => {
           root: {
             '& .MuiOutlinedInput-root': {
               ...(mode === 'dark' && {
-                backgroundColor: '#1a1a1a !important',
+                backgroundColor: '#1e1e1e !important',
                 '& fieldset': {
-                  borderColor: '#2a2a2a !important',
+                  borderColor: '#333333 !important',
                 },
                 '&:hover fieldset': {
-                  borderColor: '#374151 !important',
+                  borderColor: '#3f3f46 !important',
                 },
                 '&.Mui-focused fieldset': {
                   borderColor: '#3b82f6 !important',
@@ -192,7 +192,7 @@ export const useTheme = () => {
             },
             '& .MuiInputLabel-root': {
               ...(mode === 'dark' && {
-                color: '#9ca3af !important',
+                color: '#a1a1aa !important',
                 '&.Mui-focused': {
                   color: '#3b82f6 !important',
                 },
