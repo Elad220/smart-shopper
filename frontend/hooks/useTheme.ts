@@ -171,33 +171,7 @@ export const useTheme = () => {
       MuiTextField: {
         styleOverrides: {
           root: {
-            '& .MuiOutlinedInput-root': {
-              ...(mode === 'dark' && {
-                backgroundColor: '#1e1e1e !important',
-                '& fieldset': {
-                  borderColor: '#333333 !important',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#3f3f46 !important',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#3b82f6 !important',
-                },
-              }),
-            },
-            '& .MuiInputBase-input': {
-              ...(mode === 'dark' && {
-                color: '#ffffff !important',
-              }),
-            },
-            '& .MuiInputLabel-root': {
-              ...(mode === 'dark' && {
-                color: '#a1a1aa !important',
-                '&.Mui-focused': {
-                  color: '#3b82f6 !important',
-                },
-              }),
-            },
+            // Remove global overrides to let component-level styles take precedence
           }
         }
       }
