@@ -20,6 +20,8 @@ import {
   FormHelperText,
   OutlinedInput,
   InputAdornment,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
@@ -37,6 +39,9 @@ interface AddItemFormProps {
 }
 
 const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, categories, onDeleteCategory }) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
@@ -167,9 +172,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       onClose={onClose} 
       maxWidth="sm" 
       fullWidth
+      fullScreen={isMobile}
+      scroll="paper"
       PaperProps={{
         sx: {
-          borderRadius: '20px',
+          borderRadius: isMobile ? '0px' : '20px',
           background: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.7)'
             : 'rgba(255, 255, 255, 0.8)',
@@ -181,10 +188,12 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
           // Mobile responsiveness: Set max height and ensure dialog fits on screen
-          maxHeight: '90vh',
-          height: 'auto',
-          margin: { xs: '16px', sm: '32px' },
-          width: { xs: 'calc(100% - 32px)', sm: 'auto' },
+          maxHeight: isMobile ? '100vh' : '90vh',
+          height: isMobile ? '100vh' : 'auto',
+          margin: isMobile ? '0px' : '32px',
+          width: isMobile ? '100%' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
       BackdropProps={{
@@ -204,7 +213,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         dividers
         sx={{
           // Mobile responsiveness: Make content scrollable
-          maxHeight: { xs: 'calc(90vh - 180px)', sm: 'calc(90vh - 140px)' },
+          flex: 1,
           overflowY: 'auto',
           paddingBottom: '16px',
           '&::-webkit-scrollbar': {
@@ -277,8 +286,8 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             </Box>
           )}
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: { xs: 1, sm: 2 }, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)' } }}>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: isMobile ? 1 : 2, mb: 2 }}>
+            <Box sx={{ width: isMobile ? '100%' : (showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)') }}>
               <FormControl fullWidth margin="normal" error={!!categoryError}>
                 <InputLabel id="category-label" shrink={true}>Category</InputLabel>
                 <Select
@@ -319,7 +328,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
               </FormControl>
             </Box>
             {showCustomCategoryInput && (
-              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+              <Box sx={{ width: isMobile ? '100%' : 'calc(50% - 8px)' }}>
                   <TextField
                       margin="normal"
                       required
@@ -332,7 +341,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
                   />
               </Box>
             )}
-            <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
+            <Box sx={{ width: isMobile ? '100%' : 'calc(50% - 8px)' }}>
               <FormControl fullWidth margin="normal">
                 <InputLabel id="priority-label">Priority</InputLabel>
                 <Select
@@ -349,7 +358,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             </Box>
           </Box>
           
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: { xs: 1, sm: 2 }, mb: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: isMobile ? 1 : 2, mb: 2 }}>
             <FormControl variant="outlined" sx={{ flex: 1, mt: 2 }}>
               <InputLabel htmlFor="add-amount-input">Amount</InputLabel>
               <OutlinedInput
@@ -435,8 +444,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         sx={{ 
           p: '16px 24px',
           // Mobile responsiveness: Ensure buttons remain visible and accessible
-          position: 'sticky',
-          bottom: 0,
+          flexShrink: 0,
           backgroundColor: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.95)'
             : 'rgba(255, 255, 255, 0.95)',
@@ -444,11 +452,11 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           borderTop: (theme) => `1px solid ${theme.palette.mode === 'dark' 
             ? 'rgba(255, 255, 255, 0.1)' 
             : 'rgba(0, 0, 0, 0.1)'}`,
-          flexDirection: { xs: 'column', sm: 'row' },
-          gap: { xs: 1, sm: 1 },
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: isMobile ? 1 : 1,
           '& .MuiButton-root': {
             minHeight: '44px', // Ensure buttons are touch-friendly on mobile
-            width: { xs: '100%', sm: 'auto' },
+            width: isMobile ? '100%' : 'auto',
           }
         }}
       >
