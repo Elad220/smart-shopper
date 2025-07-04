@@ -10,6 +10,7 @@ import MainApp from './components/app/MainApp';
 const App: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { theme, mode } = useTheme();
+  const [forceUpdate, setForceUpdate] = React.useState(0);
 
   // Force complete re-render when theme changes
   React.useEffect(() => {
@@ -20,10 +21,13 @@ const App: React.FC = () => {
     
     // Force a repaint
     document.body.offsetHeight;
+    
+    // Force component re-render
+    setForceUpdate((prev: number) => prev + 1);
   }, [mode]);
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider key={`theme-${mode}-${forceUpdate}`} theme={theme}>
       <CssBaseline />
       <Toaster 
         position="top-right"
@@ -36,11 +40,11 @@ const App: React.FC = () => {
           },
         }}
       />
-      <div key={`app-${mode}`}>
+      <div key={`app-${mode}-${forceUpdate}`}>
         {isAuthenticated && user ? (
-          <MainApp key={`${user.id}-${mode}`} user={user} />
+          <MainApp key={`${user.id}-${mode}-${forceUpdate}`} user={user} />
         ) : (
-          <AuthFlow key={`auth-${mode}`} />
+          <AuthFlow key={`auth-${mode}-${forceUpdate}`} />
         )}
       </div>
     </ThemeProvider>

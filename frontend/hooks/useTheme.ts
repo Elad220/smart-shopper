@@ -39,9 +39,21 @@ export const useTheme = () => {
   const toggleMode = useCallback(() => {
     setMode(prev => {
       const newMode = prev === 'light' ? 'dark' : 'light';
-      // Force DOM update immediately
-      document.documentElement.setAttribute('data-theme', newMode);
-      document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+      
+      // Force immediate DOM updates
+      requestAnimationFrame(() => {
+        document.documentElement.setAttribute('data-theme', newMode);
+        document.documentElement.style.setProperty('--theme-mode', newMode);
+        document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
+        document.body.className = `theme-${newMode}`;
+        
+        // Force repaint
+        document.body.offsetHeight;
+        
+        // Update localStorage immediately
+        localStorage.setItem('themeMode', newMode);
+      });
+      
       return newMode;
     });
   }, []);

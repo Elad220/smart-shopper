@@ -151,7 +151,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexGrow: 1 }}>
+    <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
       {/* Drawer for Shopping List Manager */}
       <Drawer
         variant={isMobile ? 'temporary' : 'persistent'}
@@ -166,6 +166,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
             boxSizing: 'border-box',
             top: 64, // Account for header height
             height: 'calc(100vh - 64px)',
+            borderRight: `1px solid ${theme.palette.divider}`,
           },
         }}
       >
@@ -180,8 +181,23 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
       </Drawer>
 
       {/* Main Content */}
-      <Box sx={{ flexGrow: 1, py: 3, ml: !isMobile && isDrawerOpen ? 0 : 0 }}>
-        <Container maxWidth="lg">
+      <Box sx={{ 
+        flexGrow: 1, 
+        py: 3, 
+        ml: !isMobile && isDrawerOpen ? '360px' : 0,
+        transition: 'margin-left 0.3s ease',
+        minWidth: 0, // Prevent overflow
+        width: !isMobile && isDrawerOpen ? 'calc(100vw - 360px)' : '100%',
+        overflow: 'hidden',
+      }}>
+        <Container 
+          maxWidth="lg" 
+          sx={{ 
+            width: '100%',
+            maxWidth: '100%',
+            px: { xs: 2, sm: 3 }
+          }}
+        >
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -342,16 +358,16 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           onSave={handleUpdateItem}
           item={editingItem}
         />
+
+        {/* Smart Assistant Modal */}
+        <SmartAssistant
+          open={isSmartAssistantOpen}
+          onClose={() => setIsSmartAssistantOpen(false)}
+          onAddItems={handleSmartAssistantAddItems}
+          token={user.token}
+        />
       </Container>
     </Box>
-
-    {/* Smart Assistant Modal */}
-    <SmartAssistant
-      open={isSmartAssistantOpen}
-      onClose={() => setIsSmartAssistantOpen(false)}
-      onAddItems={handleSmartAssistantAddItems}
-      token={user.token}
-    />
   </Box>
   );
 };
