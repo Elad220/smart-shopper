@@ -44,6 +44,8 @@ export const useShoppingList = (token: string, listId?: string | null) => {
   const initializeList = useCallback(async () => {
     if (!token) return;
     
+    setIsLoading(true);
+    setError(null);
     try {
       const lists = await api.fetchShoppingLists(token);
       if (lists.length > 0) {
@@ -58,6 +60,8 @@ export const useShoppingList = (token: string, listId?: string | null) => {
       }
     } catch (err: any) {
       setError(err.message || 'Failed to initialize shopping list');
+    } finally {
+      setIsLoading(false);
     }
   }, [token]);
 
