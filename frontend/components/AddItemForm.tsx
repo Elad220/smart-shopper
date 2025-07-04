@@ -173,7 +173,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       maxWidth="sm" 
       fullWidth
       fullScreen={false}
-      scroll="body"
+      scroll="paper"
       disableScrollLock={false}
       disableEscapeKeyDown={false}
       keepMounted={false}
@@ -190,10 +190,13 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
           boxShadow: (theme) => theme.palette.mode === 'dark'
             ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
             : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-          // Mobile responsiveness: Set max height and ensure dialog fits on screen
-          maxHeight: isMobile ? '100vh' : '90vh',
-          margin: isMobile ? '0px' : '32px',
-          width: isMobile ? '100%' : 'auto',
+          // Mobile responsiveness: Constrain dialog size properly
+          maxHeight: isMobile ? '95vh' : '85vh',
+          height: isMobile ? '95vh' : 'auto',
+          margin: isMobile ? '16px' : '32px',
+          width: isMobile ? 'calc(100% - 32px)' : 'auto',
+          display: 'flex',
+          flexDirection: 'column',
           position: 'relative',
         }
       }}
@@ -204,7 +207,13 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         }
       }}
     >
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <DialogTitle sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        flexShrink: 0, // Prevent title from shrinking
+        pb: 1 // Reduce bottom padding to save space
+      }}>
         Add New Item
         <IconButton aria-label="close" onClick={onClose}>
           <CloseIcon />
@@ -214,9 +223,12 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
         dividers
         sx={{
           // Mobile responsiveness: Make content scrollable
+          flex: '1 1 auto',
+          overflowY: 'auto',
+          overflowX: 'hidden',
           paddingBottom: '16px',
+          minHeight: 0, // Critical for flex scrolling
           WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
-          // With scroll="body", the entire content should be scrollable
           '&::-webkit-scrollbar': {
             width: '8px',
           },
@@ -435,21 +447,17 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             multiline
-            rows={4}
+            rows={3}
             placeholder="Any additional notes..."
             sx={{ mb: 2 }}
           />
-          
-          {/* Add some extra content to ensure scrolling is triggered on mobile */}
-          <Box sx={{ height: '20px' }} /> {/* Spacer */}
-          <Box sx={{ height: '20px' }} /> {/* Spacer */}
-          <Box sx={{ height: '20px' }} /> {/* Spacer */}
         </Box>
       </DialogContent>
       <DialogActions 
         sx={{ 
           p: '16px 24px',
           // Mobile responsiveness: Ensure buttons remain visible and accessible
+          flexShrink: 0, // Prevent buttons from shrinking
           backgroundColor: (theme) => theme.palette.mode === 'dark'
             ? 'rgba(26, 26, 26, 0.95)'
             : 'rgba(255, 255, 255, 0.95)',
