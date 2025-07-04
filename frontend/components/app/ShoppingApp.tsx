@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress, Drawer,
-  IconButton, useMediaQuery, alpha
+  IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
+  DialogContent, DialogActions, TextField
 } from '@mui/material';
 import { Plus, Package, Menu, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -14,6 +15,7 @@ import AddItemModal from '../shopping/AddItemModal';
 import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
 import SmartAssistant from '../SmartAssistant';
+import { createShoppingList } from '../../src/services/api';
 
 interface ShoppingAppProps {
   user: User;
@@ -31,6 +33,10 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const [selectedListId, setSelectedListId] = useState<string | null>(
     localStorage.getItem('selectedListId')
   );
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [isCreatingList, setIsCreatingList] = useState(false);
+  const [listRefreshKey, setListRefreshKey] = useState(0);
   
   const {
     items,
@@ -123,9 +129,32 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   };
 
   const handleDataChange = () => {
-    // Trigger a data refresh by updating the list selection
-    if (selectedListId) {
-      setSelectedListId(selectedListId);
+    // Force ShoppingListManager to reload by incrementing refresh key
+    setListRefreshKey((prev: number) => prev + 1);
+  };
+
+  const handleCreateList = async () => {
+    if (!newListName.trim()) {
+      toast.error('Please enter a list name');
+      return;
+    }
+
+    setIsCreatingList(true);
+    try {
+      const newList = await createShoppingList(user.token, newListName.trim());
+      setSelectedListId(newList._id);
+      localStorage.setItem('selectedListId', newList._id);
+      setIsCreateDialogOpen(false);
+      setNewListName('');
+      setListRefreshKey((prev: number) => prev + 1); // Force ShoppingListManager to reload
+      toast.success(`Created "${newListName}" successfully! ✅`);
+      if (isMobile) {
+        setIsDrawerOpen(false);
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create shopping list');
+    } finally {
+      setIsCreatingList(false);
     }
   };
 
@@ -183,12 +212,12 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         }}
       >
         <ShoppingListManager
-          key={isDrawerOpen ? 'open' : 'closed'}
+          key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
           token={user.token}
           selectedListId={selectedListId}
           onListSelect={handleListSelect}
           onDataChange={handleDataChange}
-          onOpenCreateDialog={() => {/* TODO: Implement create dialog */}}
+          onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
         />
       </Drawer>
 
@@ -382,6 +411,49 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           onAddItems={handleSmartAssistantAddItems}
           token={user.token}
         />
+
+        {/* Create Shopping List Dialog */}
+        <Dialog 
+          open={isCreateDialogOpen} 
+          onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Create New Shopping List</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="List Name"
+              fullWidth
+              variant="outlined"
+              value={newListName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
+              disabled={isCreatingList}
+              onKeyPress={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
+                  handleCreateList();
+                }
+              }}
+              sx={{ mt: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setIsCreateDialogOpen(false)} 
+              disabled={isCreatingList}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateList} 
+              variant="contained" 
+              disabled={isCreatingList || !newListName.trim()}
+            >
+              {isCreatingList ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </Box>
   </Box>
