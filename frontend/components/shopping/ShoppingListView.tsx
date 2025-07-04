@@ -255,18 +255,18 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   }, [theme.palette]);
 
   // Memoized category component for better performance
-  const CategoryCard = memo(({ 
-    categoryName, 
-    items, 
-    index, 
-    isCollapsed, 
-    isDragging: globalIsDragging 
-  }: { 
+  const CategoryCard = memo<{
     categoryName: string;
     items: ShoppingItem[];
     index: number;
     isCollapsed: boolean;
     isDragging: boolean;
+  }>(({ 
+    categoryName, 
+    items, 
+    index, 
+    isCollapsed, 
+    isDragging: globalIsDragging 
   }) => (
     <Draggable 
       key={categoryName} 
@@ -275,7 +275,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       isDragDisabled={false}
     >
       {(provided, snapshot) => (
-        <motion.div
+        <Box
+          component={motion.div}
           ref={provided.innerRef}
           {...provided.draggableProps}
           style={{
@@ -340,14 +341,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               onClick={() => !snapshot.isDragging && toggleCategoryCollapse(categoryName)}
             >
               <Stack direction="row" alignItems="center" spacing={2}>
-                <motion.div
+                <Box
+                  component={motion.div}
                   {...provided.dragHandleProps}
                   whileHover={!globalIsDragging ? { 
                     scale: 1.1,
-                    backgroundColor: alpha(theme.palette.primary.main, 0.1)
                   } : {}}
                   whileTap={{ scale: 0.95 }}
-                  style={{
+                  sx={{
                     display: 'flex', 
                     cursor: snapshot.isDragging ? 'grabbing' : 'grab',
                     padding: '10px',
@@ -368,8 +369,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       : theme.palette.text.secondary
                     } 
                   />
-                </motion.div>
-                <motion.div
+                </Box>
+                <Box
+                  component={motion.div}
                   animate={snapshot.isDragging ? {
                     rotate: [0, -5, 5, 0],
                     scale: [1, 1.1, 1.1, 1],
@@ -386,7 +388,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
                     {getCategoryEmoji(categoryName)}
                   </Typography>
-                </motion.div>
+                </Box>
                 <Typography variant="h6" sx={{ 
                   flexGrow: 1, 
                   fontWeight: 600,
@@ -395,14 +397,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 }}>
                   {categoryName}
                 </Typography>
-                <motion.div
+                <Box
+                  component={motion.div}
                   animate={snapshot.isDragging ? {
                     scale: [1, 1.05, 1],
-                    boxShadow: [
-                      `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
-                      `0 4px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
-                      `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
-                    ],
                   } : {}}
                   transition={{
                     duration: 1,
@@ -426,8 +424,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       transition: 'all 0.3s ease',
                     }}
                   />
-                </motion.div>
-                <motion.div
+                </Box>
+                <Box
+                  component={motion.div}
                   animate={{
                     rotate: isCollapsed ? 0 : 180,
                     scale: snapshot.isDragging ? 1.1 : 1,
@@ -456,7 +455,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   >
                     <ChevronDown size={20} />
                   </IconButton>
-                </motion.div>
+                </Box>
               </Stack>
             </CardContent>
 
@@ -587,7 +586,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               </Box>
             </Collapse>
           </Card>
-        </motion.div>
+        </Box>
       )}
     </Draggable>
   ));
@@ -672,7 +671,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       <FloatingParticles />
       <Box>
         {/* Enhanced Search and Controls */}
-        <motion.div
+        <Box
+          component={motion.div}
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -709,9 +709,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       <Search size={18} color={theme.palette.primary.main} />
                     </InputAdornment>
                   ),
-                  endAdornment: searchQuery && (
+                                                      endAdornment: searchQuery && (
                     <InputAdornment position="end">
-                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                      <Box
+                        component={motion.div}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
                         <IconButton
                           size="small"
                           onClick={() => setSearchQuery('')}
@@ -719,7 +723,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                         >
                           <X size={16} />
                         </IconButton>
-                      </motion.div>
+                      </Box>
                     </InputAdornment>
                   )
                 }}
@@ -727,7 +731,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               
               {sortedCategories.length > 1 && !searchQuery && (
                 <>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Box
+                    component={motion.div}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     <Button
                       variant="outlined"
                       size="small"
@@ -749,38 +757,42 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     >
                       {areAllCollapsed ? 'Expand All' : 'Collapse All'}
                     </Button>
-                  </motion.div>
+                  </Box>
                   
-                  {categoryOrder.length > 0 && (
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={resetCategoryOrder}
-                        sx={{
-                          textTransform: 'none',
-                          borderRadius: '12px',
-                          borderColor: alpha(theme.palette.secondary.main, 0.3),
-                          color: theme.palette.secondary.main,
-                          background: alpha(theme.palette.secondary.main, 0.05),
-                          backdropFilter: 'blur(10px)',
-                          whiteSpace: 'nowrap',
-                          '&:hover': {
-                            background: alpha(theme.palette.secondary.main, 0.1),
-                            borderColor: theme.palette.secondary.main,
-                            boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
-                          },
-                        }}
+                                                                              {categoryOrder.length > 0 && (
+                      <Box
+                        component={motion.div}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
                       >
-                        Reset Order
-                      </Button>
-                    </motion.div>
-                  )}
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={resetCategoryOrder}
+                          sx={{
+                            textTransform: 'none',
+                            borderRadius: '12px',
+                            borderColor: alpha(theme.palette.secondary.main, 0.3),
+                            color: theme.palette.secondary.main,
+                            background: alpha(theme.palette.secondary.main, 0.05),
+                            backdropFilter: 'blur(10px)',
+                            whiteSpace: 'nowrap',
+                            '&:hover': {
+                              background: alpha(theme.palette.secondary.main, 0.1),
+                              borderColor: theme.palette.secondary.main,
+                              boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
+                            },
+                          }}
+                        >
+                          Reset Order
+                        </Button>
+                      </Box>
+                    )}
                 </>
               )}
             </Stack>
           </Box>
-        </motion.div>
+        </Box>
 
         <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <Droppable droppableId="categories" type="CATEGORY">
@@ -813,8 +825,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     />
                   ))}
                   {/* Enhanced placeholder with animation */}
-                  <motion.div
-                    style={{ 
+                  <Box
+                    component={motion.div}
+                    sx={{ 
                       display: isDragging ? 'block' : 'none',
                     }}
                     animate={isDragging ? {
@@ -828,7 +841,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     }}
                   >
                     {provided.placeholder}
-                  </motion.div>
+                  </Box>
                   {!isDragging && provided.placeholder}
                 </Stack>
               </Box>
