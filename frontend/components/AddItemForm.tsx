@@ -170,19 +170,22 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       PaperProps={{
         sx: {
           borderRadius: '20px',
-          backdropFilter: 'blur(24px)',
+          background: (theme) => theme.palette.mode === 'dark'
+            ? 'rgba(26, 26, 26, 0.7)'
+            : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(32px)',
           border: (theme) => theme.palette.mode === 'dark' 
-            ? '1px solid rgba(255, 255, 255, 0.1)'
-            : '1px solid rgba(0, 0, 0, 0.05)',
+            ? '1px solid rgba(255, 255, 255, 0.15)'
+            : '1px solid rgba(255, 255, 255, 0.3)',
           boxShadow: (theme) => theme.palette.mode === 'dark'
-            ? '0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-            : '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+            ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+            : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
         }
       }}
       BackdropProps={{
         sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(8px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(12px)',
         }
       }}
     >

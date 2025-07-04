@@ -150,11 +150,17 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({
         }}
         PaperProps={{
           sx: {
-            borderRadius: 2.5,
-            backdropFilter: 'blur(20px)',
+            borderRadius: 3,
+            background: (theme) => theme.palette.mode === 'dark'
+              ? 'rgba(26, 26, 26, 0.8)'
+              : 'rgba(255, 255, 255, 0.85)',
+            backdropFilter: 'blur(24px)',
+            border: (theme) => theme.palette.mode === 'dark' 
+              ? '1px solid rgba(255, 255, 255, 0.12)'
+              : '1px solid rgba(255, 255, 255, 0.25)',
             boxShadow: (theme) => theme.palette.mode === 'dark'
-              ? '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1)'
-              : '0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)',
+              ? '0 12px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08)'
+              : '0 12px 36px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
             minWidth: 180,
           }
         }}
