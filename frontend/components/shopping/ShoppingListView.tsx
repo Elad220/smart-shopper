@@ -4,7 +4,7 @@ import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical, Search, X, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, Edit, GripVertical, Search, X, Sparkles } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -450,19 +450,22 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                 onClick={() => toggleCategoryCollapse(categoryName)}
                               >
                                 <Stack direction="row" alignItems="center" spacing={2}>
-                                  <motion.div 
-                                    {...provided.dragHandleProps} 
-                                    whileHover={{ scale: 1.1 }}
-                                    style={{ 
+                                  <Box 
+                                    {...provided.dragHandleProps}
+                                    sx={{ 
                                       display: 'flex', 
                                       cursor: 'grab',
                                       padding: '8px',
                                       borderRadius: '8px',
                                       background: alpha(theme.palette.action.hover, 0.5),
+                                      transition: 'transform 0.2s ease',
+                                      '&:hover': {
+                                        transform: 'scale(1.1)',
+                                      }
                                     }}
                                   >
                                     <GripVertical size={16} color={theme.palette.text.secondary} />
-                                  </motion.div>
+                                  </Box>
                                   <motion.div
                                     animate={{ rotate: [0, 10, 0] }}
                                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
