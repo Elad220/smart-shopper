@@ -5,7 +5,7 @@ import {
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from '@mui/material';
-import { Plus, Package, Menu, Brain } from 'lucide-react';
+import { Plus, Package, Brain } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
@@ -15,13 +15,17 @@ import AddItemModal from '../shopping/AddItemModal';
 import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
 import SmartAssistant from '../SmartAssistant';
+import Header from '../layout/Header';
 import { createShoppingList } from '../../src/services/api';
 
 interface ShoppingAppProps {
   user: User;
+  mode: 'light' | 'dark';
+  onToggleMode: () => void;
+  onLogout: () => void;
 }
 
-const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
+const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -176,6 +180,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     }
   };
 
+  // Shopping list actions are now handled in ShoppingListManager
+
   if (error) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
@@ -192,8 +198,21 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   }
 
   return (
-    <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-      {/* Drawer for Shopping List Manager */}
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Header */}
+      <Header
+        mode={mode}
+        onToggleMode={onToggleMode}
+        isAuthenticated={true}
+        user={user}
+        onLogout={onLogout}
+        onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
+        isMobile={isMobile}
+      />
+
+      {/* Main Content Area */}
+      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
+        {/* Drawer for Shopping List Manager */}
       <Drawer
         variant={isMobile ? 'temporary' : 'persistent'}
         anchor="left"
@@ -268,23 +287,14 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                   <CardContent sx={{ p: 2.5 }}>
                     <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                        <IconButton
-                          onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-                          sx={{ 
-                            display: { md: 'none' },
-                            p: 1
-                          }}
-                        >
-                          <Menu size={18} />
-                        </IconButton>
-                                             <Box sx={{ minWidth: 0 }}>
-                           <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                             {currentListName}
-                           </Typography>
-                           <Typography variant="caption" color="text.secondary">
-                             {totalItems} items • {completedItems} completed
-                           </Typography>
-                         </Box>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                            {currentListName}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {totalItems} items • {completedItems} completed
+                          </Typography>
+                        </Box>
                       </Box>
                       
                       <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
@@ -455,6 +465,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
           </DialogActions>
         </Dialog>
       </Container>
+    </Box>
     </Box>
   </Box>
   );

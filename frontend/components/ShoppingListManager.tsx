@@ -23,10 +23,11 @@ import {
   UploadFile as ImportIcon,
   Download as ExportIcon,
 } from '@mui/icons-material';
-import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
+
 interface ShoppingList {
   _id: string;
   name: string;
@@ -158,16 +159,16 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
+  
   const handleSortClose = () => {
     setAnchorEl(null);
   };
+  
   const handleSortChange = (mode: string) => {
     setSortMode(mode);
     setAnchorEl(null);
   };
 
-
-  
   const handleExport = async () => {
     if(!selectedListId) {
       setError("Please select a list to export.");
@@ -192,7 +193,8 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     }
     fileInputRef.current?.click();
   };
-  
+
+  // Expose import functionality to parent
   const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if(!selectedListId){
       setError("Please select a list to import into.");
@@ -214,6 +216,8 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       reader.readAsText(file);
     }
   };
+
+  // The import/export functionality is now handled in the parent component (ShoppingApp)
 
   return (
     <Box sx={{ width: '100%', height: '100%', bgcolor: 'background.default', p: 2 }}>
@@ -296,6 +300,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           ))}
         </Menu>
         
+        {/* Hidden file input for import functionality */}
         <input
           type="file"
           ref={fileInputRef}
@@ -362,7 +367,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                     sx={{
                       borderRadius: '6px',
                       '&:hover': {
-                        background: alpha(theme.palette.primary.main, 0.1),
+                        background: theme.palette.action.hover,
                       },
                     }}
                   >
@@ -378,7 +383,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                     sx={{
                       borderRadius: '6px',
                       '&:hover': {
-                        background: alpha(theme.palette.error.main, 0.1),
+                        background: theme.palette.action.hover,
                       },
                     }}
                   >
@@ -401,7 +406,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             label="List Name"
             fullWidth
             value={newListName}
-            onChange={(e) => setNewListName(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
             disabled={isLoading}
             error={!!error}
             helperText={error}
