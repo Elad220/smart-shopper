@@ -236,6 +236,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     const [reorderedItem] = newOrder.splice(sourceIndex, 1);
     newOrder.splice(destinationIndex, 0, reorderedItem);
 
+    console.log('Drag operation:', {
+      from: sourceIndex,
+      to: destinationIndex,
+      item: reorderedItem,
+      oldOrder: sortedCategories,
+      newOrder: newOrder
+    });
+
     // Update state and persist to localStorage
     setCategoryOrder(newOrder);
     localStorage.setItem('categoryOrder', JSON.stringify(newOrder));
@@ -282,6 +290,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             ...provided.draggableProps.style,
           }}
           sx={{
+            // Ensure proper positioning for drag operations
+            position: 'relative',
+            width: '100%',
+            zIndex: snapshot.isDragging ? 1000 : 'auto',
             // Don't override transform during drag - let the drag library handle it
             transition: snapshot.isDragging ? 'none' : 'transform 0.3s ease',
             '&:hover': !snapshot.isDragging && !globalIsDragging ? {
@@ -335,8 +347,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   {...provided.dragHandleProps}
                   sx={{
                     display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     cursor: snapshot.isDragging ? 'grabbing' : 'grab',
-                    padding: '10px',
+                    padding: '12px',
                     borderRadius: '12px',
                     background: snapshot.isDragging 
                       ? alpha(theme.palette.primary.main, 0.2)
@@ -346,8 +360,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       : `1px solid ${alpha(theme.palette.divider, 0.2)}`,
                     transition: 'all 0.2s ease',
                     transform: snapshot.isDragging ? 'scale(1.1)' : 'scale(1)',
+                    // Ensure drag handle is always interactive
+                    pointerEvents: 'all',
+                    userSelect: 'none',
+                    touchAction: 'none',
                     '&:hover': !globalIsDragging ? {
                       transform: 'scale(1.05)',
+                      background: alpha(theme.palette.primary.main, 0.15),
                     } : {},
                     '&:active': {
                       transform: 'scale(0.95)',
@@ -660,7 +679,12 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   return (
     <>
       <FloatingParticles />
-      <Box>
+      <Box sx={{ 
+        overflow: 'visible', 
+        position: 'relative',
+        width: '100%',
+        minHeight: '100vh'
+      }}>
         {/* Enhanced Search and Controls */}
         <Box
           sx={{
@@ -805,13 +829,18 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         </Box>
 
         <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <Droppable droppableId="categories" type="CATEGORY">
+          <Droppable droppableId="categories" type="CATEGORY" direction="vertical">
             {(provided, snapshot) => (
               <Box
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 sx={{
-                  minHeight: snapshot.isDraggingOver ? 120 : 'auto',
+                  minHeight: snapshot.isDraggingOver ? 120 : 60,
+                  width: '100%',
+                  // Remove any overflow constraints that could limit drag area
+                  overflow: 'visible',
+                  // Ensure the container can expand during drag
+                  position: 'relative',
                   transition: 'all 0.3s ease',
                   borderRadius: snapshot.isDraggingOver ? '16px' : '0px',
                   background: snapshot.isDraggingOver 
@@ -823,7 +852,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   padding: snapshot.isDraggingOver ? '8px' : '0px',
                 }}
               >
-                <Stack spacing={3}>
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: 3,
+                  width: '100%',
+                  minHeight: 60,
+                  // Ensure the drag area extends properly
+                  position: 'relative',
+                  overflow: 'visible'
+                }}>
                   {sortedCategories.map((categoryName, index) => (
                     <CategoryCard
                       key={categoryName}
@@ -838,6 +876,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   <Box
                     sx={{ 
                       display: isDragging ? 'block' : 'none',
+                      minHeight: '60px',
                       animation: isDragging ? 'placeholderPulse 1.5s ease-in-out infinite' : 'none',
                       '@keyframes placeholderPulse': {
                         '0%, 100%': { opacity: 0.3, transform: 'scale(0.98)' },
@@ -848,7 +887,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     {provided.placeholder}
                   </Box>
                   {!isDragging && provided.placeholder}
-                </Stack>
+                </Box>
               </Box>
             )}
           </Droppable>
