@@ -36,6 +36,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
+  const [listRefreshKey, setListRefreshKey] = useState(0);
   
   const {
     items,
@@ -128,10 +129,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
   };
 
   const handleDataChange = () => {
-    // Trigger a data refresh by updating the list selection
-    if (selectedListId) {
-      setSelectedListId(selectedListId);
-    }
+    // Force ShoppingListManager to reload by incrementing refresh key
+    setListRefreshKey((prev: number) => prev + 1);
   };
 
   const handleCreateList = async () => {
@@ -147,7 +146,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
       localStorage.setItem('selectedListId', newList._id);
       setIsCreateDialogOpen(false);
       setNewListName('');
-      handleDataChange(); // Refresh the list manager
+      setListRefreshKey((prev: number) => prev + 1); // Force ShoppingListManager to reload
       toast.success(`Created "${newListName}" successfully! ✅`);
       if (isMobile) {
         setIsDrawerOpen(false);
@@ -213,7 +212,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
         }}
       >
         <ShoppingListManager
-          key={isDrawerOpen ? 'open' : 'closed'}
+          key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
           token={user.token}
           selectedListId={selectedListId}
           onListSelect={handleListSelect}
@@ -429,7 +428,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
               fullWidth
               variant="outlined"
               value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
               disabled={isCreatingList}
               onKeyPress={(e: React.KeyboardEvent) => {
                 if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
