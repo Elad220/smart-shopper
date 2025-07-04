@@ -275,34 +275,50 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       isDragDisabled={false}
     >
       {(provided, snapshot) => (
-        <div
+        <motion.div
           ref={provided.innerRef}
           {...provided.draggableProps}
           style={{
             ...provided.draggableProps.style,
-            // Simplified transform for better performance
-            transform: snapshot.isDragging 
-              ? `${provided.draggableProps.style?.transform} rotate(1deg)` 
-              : provided.draggableProps.style?.transform,
           }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ 
+            opacity: 1, 
+            y: 0,
+            rotate: snapshot.isDragging ? 3 : 0,
+            scale: snapshot.isDragging ? 1.05 : 1,
+          }}
+          transition={{ 
+            type: snapshot.isDragging ? "tween" : "spring",
+            duration: snapshot.isDragging ? 0.2 : 0.6,
+            ease: snapshot.isDragging ? "easeOut" : "easeInOut",
+            stiffness: 300,
+            damping: 25,
+          }}
+          whileHover={!globalIsDragging ? { 
+            y: -4, 
+            transition: { duration: 0.2 } 
+          } : {}}
         >
           <Card
             className="glass-card"
             sx={{
               borderRadius: '20px',
               overflow: 'hidden',
-              // Simplified transform - no rotation during drag for better performance
-              transform: snapshot.isDragging ? 'scale(1.02)' : 'scale(1)',
-              transition: snapshot.isDragging || globalIsDragging ? 'none' : 'all 0.2s ease',
-              // Disable hover effects during drag for better performance
-              '&:hover': !globalIsDragging ? {
-                transform: 'translateY(-2px)',
-                boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.12)}`,
-              } : {},
-              // Reduce shadow complexity
+              // Enhanced shadow during drag
               boxShadow: snapshot.isDragging 
-                ? `0 8px 25px ${alpha(theme.palette.primary.main, 0.25)}`
-                : 'inherit',
+                ? `0 20px 40px ${alpha(theme.palette.primary.main, 0.3)}, 0 0 0 2px ${alpha(theme.palette.primary.main, 0.2)}`
+                : globalIsDragging 
+                  ? '0 4px 12px rgba(0,0,0,0.1)' 
+                  : '0 4px 20px rgba(0,0,0,0.08)',
+              // Smooth transition when not dragging
+              transition: snapshot.isDragging ? 'none' : 'box-shadow 0.3s ease',
+              // Improved backdrop blur during drag
+              backdropFilter: snapshot.isDragging ? 'blur(20px)' : 'blur(10px)',
+              // Add border during drag for better visual feedback
+              border: snapshot.isDragging 
+                ? `2px solid ${alpha(theme.palette.primary.main, 0.3)}`
+                : `1px solid ${alpha(theme.palette.divider, 0.1)}`,
             }}
           >
             {/* Simplified Category Header */}
@@ -324,31 +340,53 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               onClick={() => !snapshot.isDragging && toggleCategoryCollapse(categoryName)}
             >
               <Stack direction="row" alignItems="center" spacing={2}>
-                <Box 
+                <motion.div
                   {...provided.dragHandleProps}
-                  sx={{ 
+                  whileHover={!globalIsDragging ? { 
+                    scale: 1.1,
+                    backgroundColor: alpha(theme.palette.primary.main, 0.1)
+                  } : {}}
+                  whileTap={{ scale: 0.95 }}
+                  style={{
                     display: 'flex', 
-                    cursor: 'grab',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    background: alpha(theme.palette.action.hover, 0.5),
-                    // Disable transitions during drag
-                    transition: snapshot.isDragging || globalIsDragging ? 'none' : 'transform 0.15s ease',
-                    '&:hover': !globalIsDragging ? {
-                      transform: 'scale(1.05)',
-                    } : {},
-                    // Active state for better feedback
-                    '&:active': {
-                      cursor: 'grabbing',
-                      transform: 'scale(0.98)',
-                    },
+                    cursor: snapshot.isDragging ? 'grabbing' : 'grab',
+                    padding: '10px',
+                    borderRadius: '12px',
+                    background: snapshot.isDragging 
+                      ? alpha(theme.palette.primary.main, 0.2)
+                      : alpha(theme.palette.action.hover, 0.3),
+                    border: snapshot.isDragging 
+                      ? `2px solid ${alpha(theme.palette.primary.main, 0.4)}`
+                      : `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                    transition: 'all 0.2s ease',
                   }}
                 >
-                  <GripVertical size={16} color={theme.palette.text.secondary} />
-                </Box>
-                <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
-                  {getCategoryEmoji(categoryName)}
-                </Typography>
+                  <GripVertical 
+                    size={16} 
+                    color={snapshot.isDragging 
+                      ? theme.palette.primary.main 
+                      : theme.palette.text.secondary
+                    } 
+                  />
+                </motion.div>
+                <motion.div
+                  animate={snapshot.isDragging ? {
+                    rotate: [0, -5, 5, 0],
+                    scale: [1, 1.1, 1.1, 1],
+                  } : {
+                    rotate: 0,
+                    scale: 1,
+                  }}
+                  transition={{
+                    duration: snapshot.isDragging ? 0.6 : 0.3,
+                    repeat: snapshot.isDragging ? Infinity : 0,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
+                    {getCategoryEmoji(categoryName)}
+                  </Typography>
+                </motion.div>
                 <Typography variant="h6" sx={{ 
                   flexGrow: 1, 
                   fontWeight: 600,
@@ -357,33 +395,68 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 }}>
                   {categoryName}
                 </Typography>
-                <Chip 
-                  label={`${items.length} items`}
-                  size="small"
-                  sx={{ 
-                    borderRadius: '12px',
-                    // Simplified background
-                    background: theme.palette.primary.main,
-                    color: 'white',
-                    fontWeight: 600,
-                    // Reduce shadow during drag
-                    boxShadow: snapshot.isDragging ? 'none' : `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
-                  }}
-                />
-                <IconButton 
-                  size="small" 
-                  sx={{ 
-                    color: theme.palette.primary.main,
-                    transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
-                    transition: snapshot.isDragging || globalIsDragging ? 'none' : 'transform 0.2s ease',
-                  }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleCategoryCollapse(categoryName);
+                <motion.div
+                  animate={snapshot.isDragging ? {
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                      `0 4px 16px ${alpha(theme.palette.primary.main, 0.4)}`,
+                      `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`
+                    ],
+                  } : {}}
+                  transition={{
+                    duration: 1,
+                    repeat: snapshot.isDragging ? Infinity : 0,
+                    ease: "easeInOut"
                   }}
                 >
-                  <ChevronDown size={20} />
-                </IconButton>
+                  <Chip 
+                    label={`${items.length} items`}
+                    size="small"
+                    sx={{ 
+                      borderRadius: '12px',
+                      background: snapshot.isDragging 
+                        ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`
+                        : theme.palette.primary.main,
+                      color: 'white',
+                      fontWeight: 600,
+                      boxShadow: snapshot.isDragging 
+                        ? `0 4px 12px ${alpha(theme.palette.primary.main, 0.4)}`
+                        : `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                      transition: 'all 0.3s ease',
+                    }}
+                  />
+                </motion.div>
+                <motion.div
+                  animate={{
+                    rotate: isCollapsed ? 0 : 180,
+                    scale: snapshot.isDragging ? 1.1 : 1,
+                  }}
+                  whileHover={!globalIsDragging ? { scale: 1.2 } : {}}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                >
+                  <IconButton 
+                    size="small" 
+                    sx={{ 
+                      color: snapshot.isDragging 
+                        ? theme.palette.primary.main 
+                        : theme.palette.text.primary,
+                      background: snapshot.isDragging 
+                        ? alpha(theme.palette.primary.main, 0.1)
+                        : 'transparent',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!snapshot.isDragging) {
+                        toggleCategoryCollapse(categoryName);
+                      }
+                    }}
+                  >
+                    <ChevronDown size={20} />
+                  </IconButton>
+                </motion.div>
               </Stack>
             </CardContent>
 
@@ -514,7 +587,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               </Box>
             </Collapse>
           </Card>
-        </div>
+        </motion.div>
       )}
     </Draggable>
   ));
@@ -716,8 +789,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 sx={{
-                  minHeight: snapshot.isDraggingOver ? 100 : 'auto',
-                  transition: isDragging ? 'none' : 'min-height 0.2s ease',
+                  minHeight: snapshot.isDraggingOver ? 120 : 'auto',
+                  transition: 'all 0.3s ease',
+                  borderRadius: snapshot.isDraggingOver ? '16px' : '0px',
+                  background: snapshot.isDraggingOver 
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})`
+                    : 'transparent',
+                  border: snapshot.isDraggingOver 
+                    ? `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`
+                    : '2px dashed transparent',
+                  padding: snapshot.isDraggingOver ? '8px' : '0px',
                 }}
               >
                 <Stack spacing={3}>
@@ -731,7 +812,24 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       isDragging={isDragging}
                     />
                   ))}
-                  {provided.placeholder}
+                  {/* Enhanced placeholder with animation */}
+                  <motion.div
+                    style={{ 
+                      display: isDragging ? 'block' : 'none',
+                    }}
+                    animate={isDragging ? {
+                      opacity: [0.3, 0.6, 0.3],
+                      scale: [0.98, 1.02, 0.98],
+                    } : {}}
+                    transition={{
+                      duration: 1.5,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  >
+                    {provided.placeholder}
+                  </motion.div>
+                  {!isDragging && provided.placeholder}
                 </Stack>
               </Box>
             )}
