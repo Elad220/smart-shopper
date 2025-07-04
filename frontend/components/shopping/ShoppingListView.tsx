@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
@@ -70,6 +70,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   // Category emoji mapping
   const getCategoryEmoji = (category: string) => {
@@ -187,7 +188,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     }
   }, [groupedItems, categoryOrder]);
 
-  const toggleCategoryCollapse = (category: string) => {
+  const toggleCategoryCollapse = useCallback((category: string) => {
     setCollapsedCategories(prev => {
       const newSet = new Set(prev);
       if (newSet.has(category)) {
@@ -197,9 +198,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       }
       return newSet;
     });
-  };
+  }, []);
 
-  const toggleAllCategories = () => {
+  const toggleAllCategories = useCallback(() => {
     if (areAllCollapsed) {
       // Expand all
       setCollapsedCategories(new Set());
@@ -209,14 +210,20 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       setCollapsedCategories(new Set(sortedCategories));
       setAreAllCollapsed(true);
     }
-  };
+  }, [areAllCollapsed, sortedCategories]);
 
-  const resetCategoryOrder = () => {
+  const resetCategoryOrder = useCallback(() => {
     setCategoryOrder([]);
     localStorage.removeItem('categoryOrder');
-  };
+  }, []);
 
-  const handleDragEnd = (result: DropResult) => {
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+  }, []);
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    setIsDragging(false);
+    
     if (!result.destination) return;
 
     const sourceIndex = result.source.index;
@@ -232,9 +239,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     // Update state and persist to localStorage
     setCategoryOrder(newOrder);
     localStorage.setItem('categoryOrder', JSON.stringify(newOrder));
-  };
+  }, [sortedCategories]);
 
-  const getPriorityIcon = (priority: string) => {
+  const getPriorityIcon = useCallback((priority: string) => {
     switch (priority) {
       case 'High':
         return <AlertTriangle size={16} color={theme.palette.error.main} />;
@@ -245,7 +252,272 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       default:
         return <Circle size={16} color={theme.palette.info.main} />;
     }
-  };
+  }, [theme.palette]);
+
+  // Memoized category component for better performance
+  const CategoryCard = memo(({ 
+    categoryName, 
+    items, 
+    index, 
+    isCollapsed, 
+    isDragging: globalIsDragging 
+  }: { 
+    categoryName: string;
+    items: ShoppingItem[];
+    index: number;
+    isCollapsed: boolean;
+    isDragging: boolean;
+  }) => (
+    <Draggable 
+      key={categoryName} 
+      draggableId={categoryName} 
+      index={index}
+      isDragDisabled={false}
+    >
+      {(provided, snapshot) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.draggableProps}
+          style={{
+            ...provided.draggableProps.style,
+            // Simplified transform for better performance
+            transform: snapshot.isDragging 
+              ? `${provided.draggableProps.style?.transform} rotate(1deg)` 
+              : provided.draggableProps.style?.transform,
+          }}
+        >
+          <Card
+            className="glass-card"
+            sx={{
+              borderRadius: '20px',
+              overflow: 'hidden',
+              // Simplified transform - no rotation during drag for better performance
+              transform: snapshot.isDragging ? 'scale(1.02)' : 'scale(1)',
+              transition: snapshot.isDragging || globalIsDragging ? 'none' : 'all 0.2s ease',
+              // Disable hover effects during drag for better performance
+              '&:hover': !globalIsDragging ? {
+                transform: 'translateY(-2px)',
+                boxShadow: `0 8px 20px ${alpha(theme.palette.primary.main, 0.12)}`,
+              } : {},
+              // Reduce shadow complexity
+              boxShadow: snapshot.isDragging 
+                ? `0 8px 25px ${alpha(theme.palette.primary.main, 0.25)}`
+                : 'inherit',
+            }}
+          >
+            {/* Simplified Category Header */}
+            <CardContent 
+              sx={{ 
+                p: 3, 
+                cursor: 'pointer',
+                background: snapshot.isDragging 
+                  ? alpha(theme.palette.primary.main, 0.15)
+                  : `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})`,
+                // Simplified backdrop filter for performance
+                backdropFilter: snapshot.isDragging ? 'none' : 'blur(10px)',
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                transition: snapshot.isDragging || globalIsDragging ? 'none' : 'background 0.2s ease',
+                '&:hover': !globalIsDragging ? {
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.12)}, ${alpha(theme.palette.secondary.main, 0.12)})`,
+                } : {},
+              }}
+              onClick={() => !snapshot.isDragging && toggleCategoryCollapse(categoryName)}
+            >
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Box 
+                  {...provided.dragHandleProps}
+                  sx={{ 
+                    display: 'flex', 
+                    cursor: 'grab',
+                    padding: '8px',
+                    borderRadius: '8px',
+                    background: alpha(theme.palette.action.hover, 0.5),
+                    // Disable transitions during drag
+                    transition: snapshot.isDragging || globalIsDragging ? 'none' : 'transform 0.15s ease',
+                    '&:hover': !globalIsDragging ? {
+                      transform: 'scale(1.05)',
+                    } : {},
+                    // Active state for better feedback
+                    '&:active': {
+                      cursor: 'grabbing',
+                      transform: 'scale(0.98)',
+                    },
+                  }}
+                >
+                  <GripVertical size={16} color={theme.palette.text.secondary} />
+                </Box>
+                <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
+                  {getCategoryEmoji(categoryName)}
+                </Typography>
+                <Typography variant="h6" sx={{ 
+                  flexGrow: 1, 
+                  fontWeight: 600,
+                  // Simplified gradient for performance
+                  color: theme.palette.text.primary,
+                }}>
+                  {categoryName}
+                </Typography>
+                <Chip 
+                  label={`${items.length} items`}
+                  size="small"
+                  sx={{ 
+                    borderRadius: '12px',
+                    // Simplified background
+                    background: theme.palette.primary.main,
+                    color: 'white',
+                    fontWeight: 600,
+                    // Reduce shadow during drag
+                    boxShadow: snapshot.isDragging ? 'none' : `0 2px 8px ${alpha(theme.palette.primary.main, 0.3)}`,
+                  }}
+                />
+                <IconButton 
+                  size="small" 
+                  sx={{ 
+                    color: theme.palette.primary.main,
+                    transform: isCollapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+                    transition: snapshot.isDragging || globalIsDragging ? 'none' : 'transform 0.2s ease',
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleCategoryCollapse(categoryName);
+                  }}
+                >
+                  <ChevronDown size={20} />
+                </IconButton>
+              </Stack>
+            </CardContent>
+
+            {/* Items remain the same but with performance optimizations */}
+            <Collapse in={!isCollapsed}>
+              <Box sx={{ p: 3, pt: 0 }}>
+                <Stack spacing={2}>
+                  {items.map((item, itemIndex) => (
+                    <Card
+                      key={item.id}
+                      className="glass-card"
+                      sx={{
+                        borderRadius: '16px',
+                        // Disable transitions during global drag
+                        transition: globalIsDragging ? 'none' : 'all 0.2s ease',
+                        background: item.completed
+                          ? alpha(theme.palette.success.main, 0.08)
+                          : 'inherit',
+                        '&:hover': !globalIsDragging ? {
+                          transform: 'translateY(-1px)',
+                          boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.08)}`,
+                        } : {},
+                      }}
+                    >
+                      <CardContent sx={{ p: item.imageUrl ? 2 : 3 }}>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Checkbox
+                            checked={item.completed}
+                            onChange={() => onToggleComplete(item.id)}
+                            sx={{
+                              color: theme.palette.primary.main,
+                              '&.Mui-checked': {
+                                color: theme.palette.success.main,
+                              },
+                            }}
+                          />
+                          
+                          {item.imageUrl && (
+                            <Box
+                              sx={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '8px',
+                                overflow: 'hidden',
+                                flexShrink: 0,
+                              }}
+                            >
+                              <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: 'cover',
+                                }}
+                              />
+                            </Box>
+                          )}
+                          
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Stack direction="row" alignItems="center" spacing={1}>
+                              <Typography
+                                variant="subtitle1"
+                                sx={{
+                                  fontWeight: 600,
+                                  textDecoration: item.completed ? 'line-through' : 'none',
+                                  opacity: item.completed ? 0.7 : 1,
+                                  flexGrow: 1,
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {item.name}
+                              </Typography>
+                              {getPriorityIcon(item.priority)}
+                            </Stack>
+                            
+                            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                              <Chip
+                                label={`${item.amount} ${item.units}`}
+                                size="small"
+                                sx={{ 
+                                  borderRadius: '8px', 
+                                  fontSize: '0.7rem',
+                                  height: '20px',
+                                }}
+                              />
+                              {item.notes && (
+                                <Chip
+                                  label={item.notes}
+                                  size="small"
+                                  variant="outlined"
+                                  sx={{ 
+                                    borderRadius: '8px',
+                                    fontSize: '0.7rem',
+                                    height: '20px',
+                                  }}
+                                />
+                              )}
+                            </Stack>
+                          </Box>
+                          
+                          <Stack direction="row" spacing={0.5}>
+                            <IconButton
+                              size="small"
+                              onClick={() => onEditItem(item)}
+                              sx={{ borderRadius: '6px' }}
+                            >
+                              <Edit size={14} />
+                            </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={() => onDeleteItem(item.id)}
+                              sx={{ 
+                                borderRadius: '6px',
+                                color: theme.palette.error.main,
+                              }}
+                            >
+                              <Trash2 size={14} />
+                            </IconButton>
+                          </Stack>
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+              </Box>
+            </Collapse>
+          </Card>
+        </div>
+      )}
+    </Draggable>
+  ));
 
   if (items.length === 0) {
     return (
@@ -437,7 +709,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           </Box>
         </motion.div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <Droppable droppableId="categories" type="CATEGORY">
             {(provided, snapshot) => (
               <Box
@@ -445,324 +717,20 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 {...provided.droppableProps}
                 sx={{
                   minHeight: snapshot.isDraggingOver ? 100 : 'auto',
-                  transition: 'min-height 0.3s ease',
+                  transition: isDragging ? 'none' : 'min-height 0.2s ease',
                 }}
               >
-                <Stack spacing={4}>
-                  <AnimatePresence>
-                    {sortedCategories.map((categoryName, index) => (
-                      <Draggable 
-                        key={categoryName} 
-                        draggableId={categoryName} 
-                        index={index}
-                        isDragDisabled={false}
-                      >
-                        {(provided, snapshot) => (
-                          <motion.div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            style={{
-                              ...provided.draggableProps.style,
-                              transform: snapshot.isDragging 
-                                ? `${provided.draggableProps.style?.transform} rotate(2deg)` 
-                                : provided.draggableProps.style?.transform,
-                            }}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.5, delay: index * 0.1 }}
-                          >
-                            <Card
-                              className="glass-card"
-                              sx={{
-                                borderRadius: '20px',
-                                overflow: 'hidden',
-                                transform: snapshot.isDragging ? 'rotate(3deg) scale(1.02)' : 'rotate(0deg) scale(1)',
-                                transition: snapshot.isDragging ? 'none' : 'all 0.3s ease',
-                                '&:hover': {
-                                  transform: 'translateY(-4px)',
-                                  boxShadow: `0 20px 40px ${alpha(theme.palette.primary.main, 0.15)}`,
-                                }
-                              }}
-                            >
-                              {/* Enhanced Category Header */}
-                              <CardContent 
-                                sx={{ 
-                                  p: 3, 
-                                  cursor: 'pointer',
-                                  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.08)}, ${alpha(theme.palette.secondary.main, 0.08)})`,
-                                  backdropFilter: 'blur(20px)',
-                                  borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-                                  '&:hover': {
-                                    background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.15)}, ${alpha(theme.palette.secondary.main, 0.15)})`,
-                                  },
-                                }}
-                                onClick={() => toggleCategoryCollapse(categoryName)}
-                              >
-                                <Stack direction="row" alignItems="center" spacing={2}>
-                                  <Box 
-                                    {...provided.dragHandleProps}
-                                    sx={{ 
-                                      display: 'flex', 
-                                      cursor: 'grab',
-                                      padding: '8px',
-                                      borderRadius: '8px',
-                                      background: alpha(theme.palette.action.hover, 0.5),
-                                      transition: 'transform 0.2s ease',
-                                      '&:hover': {
-                                        transform: 'scale(1.1)',
-                                      }
-                                    }}
-                                  >
-                                    <GripVertical size={16} color={theme.palette.text.secondary} />
-                                  </Box>
-                                  <motion.div
-                                    animate={{ rotate: [0, 10, 0] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                                  >
-                                    <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
-                                      {getCategoryEmoji(categoryName)}
-                                    </Typography>
-                                  </motion.div>
-                                  <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600, background: `linear-gradient(135deg, ${theme.palette.text.primary}, ${theme.palette.primary.main})`, backgroundClip: 'text', WebkitBackgroundClip: 'text' }}>
-                                    {categoryName}
-                                  </Typography>
-                                  <motion.div whileHover={{ scale: 1.05 }}>
-                                    <Chip 
-                                      label={`${groupedItems[categoryName].length} items`}
-                                      size="small"
-                                      sx={{ 
-                                        borderRadius: '12px',
-                                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                                        color: 'white',
-                                        fontWeight: 600,
-                                        boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                                      }}
-                                    />
-                                  </motion.div>
-                                  <motion.div
-                                    animate={{ rotate: collapsedCategories.has(categoryName) ? 0 : 180 }}
-                                    transition={{ duration: 0.3 }}
-                                  >
-                                    <IconButton size="small" sx={{ color: theme.palette.primary.main }}>
-                                      <ChevronDown size={20} />
-                                    </IconButton>
-                                  </motion.div>
-                                </Stack>
-                              </CardContent>
-
-                              {/* Enhanced Category Items */}
-                              <Collapse in={!collapsedCategories.has(categoryName)}>
-                                <Box sx={{ p: 3, pt: 0 }}>
-                                  <Stack spacing={3}>
-                                    <AnimatePresence>
-                                      {groupedItems[categoryName].map((item, itemIndex) => (
-                                        <motion.div
-                                          key={item.id}
-                                          initial={{ opacity: 0, x: -20, scale: 0.9 }}
-                                          animate={{ opacity: 1, x: 0, scale: 1 }}
-                                          exit={{ opacity: 0, x: 20, scale: 0.9 }}
-                                          transition={{ duration: 0.3, delay: itemIndex * 0.05 }}
-                                          layout
-                                          whileHover={{ scale: 1.02 }}
-                                        >
-                                          <Card
-                                            className="glass-card"
-                                            sx={{
-                                              borderRadius: '16px',
-                                              transition: 'all 0.3s ease',
-                                              background: item.completed
-                                                ? alpha(theme.palette.success.main, 0.08)
-                                                : 'inherit',
-                                              '&:hover': {
-                                                transform: 'translateY(-2px)',
-                                                boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.1)}`,
-                                              },
-                                            }}
-                                          >
-                                            <CardContent sx={{ p: item.imageUrl ? 2 : 3, overflow: 'hidden' }}>
-                                              <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
-                                                {/* Checkbox */}
-                                                <Box sx={{ flexShrink: 0 }}>
-                                                  <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                    <Checkbox
-                                                      checked={item.completed}
-                                                      onChange={() => onToggleComplete(item.id)}
-                                                      sx={{
-                                                        color: theme.palette.primary.main,
-                                                        '&.Mui-checked': {
-                                                          color: theme.palette.success.main,
-                                                        },
-                                                        '& .MuiSvgIcon-root': {
-                                                          fontSize: '1.5rem',
-                                                        }
-                                                      }}
-                                                    />
-                                                  </motion.div>
-                                                </Box>
-                                                
-                                                {/* Enhanced Item Image */}
-                                                {item.imageUrl && (
-                                                  <Box sx={{ flexShrink: 0 }}>
-                                                    <motion.div whileHover={{ scale: 1.05 }}>
-                                                      <Box
-                                                        sx={{
-                                                          width: '60px',
-                                                          height: '60px',
-                                                          borderRadius: '12px',
-                                                          overflow: 'hidden',
-                                                          position: 'relative',
-                                                          boxShadow: `0 8px 16px ${alpha(theme.palette.common.black, 0.2)}`,
-                                                        }}
-                                                      >
-                                                        <img
-                                                          src={item.imageUrl}
-                                                          alt={item.name}
-                                                          style={{
-                                                            width: '100%',
-                                                            height: '100%',
-                                                            objectFit: 'cover',
-                                                          }}
-                                                        />
-                                                      </Box>
-                                                    </motion.div>
-                                                  </Box>
-                                                )}
-                                                
-                                                {/* Content Area */}
-                                                <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden', pr: item.imageUrl ? 0.5 : 1 }}>
-                                                  <Stack direction="row" alignItems="flex-start" spacing={1} sx={{ mb: 0.5 }}>
-                                                    <Typography
-                                                      variant="subtitle1"
-                                                      sx={{
-                                                        fontWeight: 600,
-                                                        textDecoration: item.completed ? 'line-through' : 'none',
-                                                        opacity: item.completed ? 0.7 : 1,
-                                                        fontSize: item.imageUrl ? '1.0rem' : '1.05rem',
-                                                        flexGrow: 1,
-                                                        lineHeight: 1.3,
-                                                        // Allow text wrapping when images are present to give more room for item names
-                                                        ...(item.imageUrl ? {
-                                                          whiteSpace: 'normal',
-                                                          wordBreak: 'break-word',
-                                                          maxWidth: 'calc(100% - 24px)', // Account for priority icon space
-                                                        } : {
-                                                          overflow: 'hidden',
-                                                          textOverflow: 'ellipsis',
-                                                          whiteSpace: 'nowrap',
-                                                        }),
-                                                      }}
-                                                    >
-                                                      {item.name}
-                                                    </Typography>
-                                                    <Box sx={{ flexShrink: 0, mt: 0.2 }}>
-                                                      <motion.div whileHover={{ scale: 1.2 }}>
-                                                        {getPriorityIcon(item.priority)}
-                                                      </motion.div>
-                                                    </Box>
-                                                  </Stack>
-                                                  
-                                                  {/* Enhanced Item Details */}
-                                                  <Stack direction="row" alignItems="center" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5, mt: 0.5 }}>
-                                                    <motion.div whileHover={{ scale: 1.05 }}>
-                                                      <Chip
-                                                        label={`${item.amount} ${item.units}`}
-                                                        size="small"
-                                                        sx={{ 
-                                                          borderRadius: '10px', 
-                                                          fontSize: '0.7rem',
-                                                          height: '22px',
-                                                          background: alpha(theme.palette.primary.main, 0.1),
-                                                          color: theme.palette.primary.main,
-                                                          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                                                          '& .MuiChip-label': {
-                                                            px: 1,
-                                                          }
-                                                        }}
-                                                      />
-                                                    </motion.div>
-                                                    {item.notes && (
-                                                      <motion.div whileHover={{ scale: 1.05 }}>
-                                                        <Chip
-                                                          label={item.notes}
-                                                          size="small"
-                                                          sx={{ 
-                                                            borderRadius: '10px', 
-                                                            fontSize: '0.7rem',
-                                                            height: '22px',
-                                                            maxWidth: item.imageUrl ? '100px' : '140px',
-                                                            background: alpha(theme.palette.secondary.main, 0.1),
-                                                            color: theme.palette.secondary.main,
-                                                            border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-                                                            '& .MuiChip-label': {
-                                                              px: 1,
-                                                              overflow: 'hidden',
-                                                              textOverflow: 'ellipsis',
-                                                              whiteSpace: 'nowrap',
-                                                            }
-                                                          }}
-                                                        />
-                                                      </motion.div>
-                                                    )}
-                                                  </Stack>
-                                                </Box>
-                                                
-                                                {/* Action Buttons */}
-                                                <Box sx={{ flexShrink: 0, ml: item.imageUrl ? 0.5 : 1 }}>
-                                                  <Stack direction="row" spacing={item.imageUrl ? 0.5 : 1}>
-                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                      <IconButton
-                                                        size="small"
-                                                        onClick={() => onEditItem(item)}
-                                                        sx={{ 
-                                                          width: item.imageUrl ? '32px' : '36px',
-                                                          height: item.imageUrl ? '32px' : '36px',
-                                                          background: alpha(theme.palette.primary.main, 0.1),
-                                                          color: theme.palette.primary.main,
-                                                          '&:hover': {
-                                                            background: alpha(theme.palette.primary.main, 0.2),
-                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                                                          },
-                                                        }}
-                                                      >
-                                                        <Edit size={item.imageUrl ? 14 : 16} />
-                                                      </IconButton>
-                                                    </motion.div>
-                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                      <IconButton
-                                                        size="small"
-                                                        onClick={() => onDeleteItem(item.id)}
-                                                        sx={{ 
-                                                          width: item.imageUrl ? '32px' : '36px',
-                                                          height: item.imageUrl ? '32px' : '36px',
-                                                          background: alpha(theme.palette.error.main, 0.1),
-                                                          color: theme.palette.error.main,
-                                                          '&:hover': {
-                                                            background: alpha(theme.palette.error.main, 0.2),
-                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
-                                                          },
-                                                        }}
-                                                      >
-                                                        <Trash2 size={item.imageUrl ? 14 : 16} />
-                                                      </IconButton>
-                                                    </motion.div>
-                                                  </Stack>
-                                                </Box>
-                                              </Stack>
-                                            </CardContent>
-                                          </Card>
-                                        </motion.div>
-                                      ))}
-                                    </AnimatePresence>
-                                  </Stack>
-                                </Box>
-                              </Collapse>
-                            </Card>
-                          </motion.div>
-                        )}
-                      </Draggable>
-                    ))}
-                  </AnimatePresence>
+                <Stack spacing={3}>
+                  {sortedCategories.map((categoryName, index) => (
+                    <CategoryCard
+                      key={categoryName}
+                      categoryName={categoryName}
+                      items={groupedItems[categoryName]}
+                      index={index}
+                      isCollapsed={collapsedCategories.has(categoryName)}
+                      isDragging={isDragging}
+                    />
+                  ))}
                   {provided.placeholder}
                 </Stack>
               </Box>
