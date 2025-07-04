@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack, MenuItem, Box, useTheme,
-  Typography, IconButton, CircularProgress
+  Typography, IconButton, CircularProgress, useMediaQuery
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
@@ -25,6 +25,7 @@ interface AddItemModalProps {
 
 const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoading = false }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -192,6 +193,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
         sx: {
           borderRadius: '24px',
           overflow: 'hidden',
+          // Mobile responsiveness: Set max height based on viewport
+          maxHeight: { xs: '95vh', sm: '90vh' },
+          height: { xs: 'auto', sm: 'auto' },
+          margin: { xs: '16px', sm: '32px' },
+          // Ensure proper positioning on mobile
+          position: 'relative',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
       BackdropProps={{
@@ -200,6 +209,9 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
           backdropFilter: 'blur(20px)',
         }
       }}
+      // Add mobile-specific props
+      fullScreen={false}
+      scroll="paper"
     >
       <AnimatePresence>
         {open && (
@@ -265,7 +277,32 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
             </DialogTitle>
 
             <form onSubmit={handleSubmit}>
-              <DialogContent sx={{ px: 3 }}>
+              <DialogContent sx={{ 
+                px: 3,
+                // Make content scrollable on mobile
+                maxHeight: { xs: 'calc(95vh - 200px)', sm: 'calc(90vh - 200px)' },
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                // Add smooth scrolling
+                scrollBehavior: 'smooth',
+                // Ensure content doesn't get cut off
+                pb: 0,
+                // Add padding bottom to prevent content from being hidden behind buttons
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'rgba(0, 0, 0, 0.1)',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: '3px',
+                  '&:hover': {
+                    background: 'rgba(0, 0, 0, 0.3)',
+                  },
+                },
+              }}>
                 {isLoading ? (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -350,7 +387,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                 alt="Item preview"
                                 style={{
                                   width: '100%',
-                                  maxHeight: '200px',
+                                  // Mobile responsive image height
+                                  maxHeight: isMobile ? '150px' : '200px',
                                   objectFit: 'cover',
                                   borderRadius: '16px',
                                 }}
@@ -392,7 +430,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                 borderRadius: '20px',
                                 borderStyle: 'dashed',
                                 borderWidth: '2px',
-                                height: '80px',
+                                // Mobile responsive button height
+                                height: { xs: '60px', sm: '80px' },
                                 color: theme.palette.primary.main,
                                 borderColor: theme.palette.primary.main,
                                 background: 'rgba(255, 255, 255, 0.03)',
@@ -419,8 +458,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                         )}
                       </Box>
 
-                      <Stack direction="row" spacing={2}>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '40%' }}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '100%' }}>
                           <TextField
                             label="Amount"
                             type="number"
@@ -440,7 +479,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                             }}
                           />
                         </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '60%' }}>
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '100%' }}>
                           <TextField
                             select
                             label="Units"
@@ -467,7 +506,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                         </motion.div>
                       </Stack>
 
-                      <Stack direction="row" spacing={2}>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
                         <motion.div whileHover={{ scale: 1.02 }} style={{ flex: 1 }}>
                           <TextField
                             select
@@ -526,7 +565,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                           fullWidth
                           label="Notes (optional)"
                           multiline
-                          rows={3}
+                          rows={{ xs: 2, sm: 3 }}
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                           sx={{ 
@@ -546,8 +585,20 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                 )}
               </DialogContent>
 
-              <DialogActions sx={{ p: 3, pt: 2 }}>
-                <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+              <DialogActions sx={{ 
+                p: 3, 
+                pt: 2,
+                // Ensure buttons are always visible on mobile
+                position: 'sticky',
+                bottom: 0,
+                background: theme.palette.mode === 'dark' 
+                  ? 'rgba(26, 26, 26, 0.95)' 
+                  : 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(20px)',
+                borderTop: `1px solid ${theme.palette.divider}`,
+                zIndex: 1,
+              }}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: 1 }}>
                     <Button
                       onClick={handleClose}
@@ -557,7 +608,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                         width: '100%',
                         borderRadius: '16px',
                         textTransform: 'none',
-                        height: '48px',
+                        height: { xs: '44px', sm: '48px' },
                         background: 'rgba(255, 255, 255, 0.05)',
                         backdropFilter: 'blur(10px)',
                         border: `1px solid ${theme.palette.divider}`,
@@ -581,7 +632,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                         width: '100%',
                         borderRadius: '16px',
                         textTransform: 'none',
-                        height: '48px',
+                        height: { xs: '44px', sm: '48px' },
                         background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                         boxShadow: `0 8px 24px ${theme.palette.primary.main}40`,
                         '&:hover': {
