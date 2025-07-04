@@ -129,12 +129,13 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
         name: formData.name.trim(),
       };
       
-      // Debug: Image data check
-      if (itemData.imageUrl) {
-        console.log('✓ Modal: Image attached (' + itemData.imageUrl.length + ' chars)');
-      } else {
-        console.log('✗ Modal: No image');
-      }
+      // Debug: Comprehensive image data check
+      console.log('🖼️ Modal Debug - Full form data:', {
+        hasImage: !!itemData.imageUrl,
+        imageLength: itemData.imageUrl ? itemData.imageUrl.length : 0,
+        imagePrefix: itemData.imageUrl ? itemData.imageUrl.substring(0, 50) : 'N/A',
+        formData: { ...itemData, imageUrl: itemData.imageUrl ? '[IMAGE_DATA]' : undefined }
+      });
       
       onAdd(itemData);
       
