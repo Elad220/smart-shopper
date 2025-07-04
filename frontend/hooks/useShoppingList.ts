@@ -27,9 +27,16 @@ export const useShoppingList = (token: string, listId?: string | null) => {
       // Fetch list details to get the name
       const lists = await api.fetchShoppingLists(token);
       const currentList = lists.find(list => list._id === selectedListId);
-      if (currentList) {
-        setCurrentListName(currentList.name);
+      
+      if (!currentList) {
+        // Selected list doesn't exist, clear it and initialize a new one
+        setSelectedListId(null);
+        localStorage.removeItem('selectedListId');
+        setError('Selected list no longer exists');
+        return;
       }
+      
+      setCurrentListName(currentList.name);
       
       // Fetch list items
       const list = await api.fetchShoppingList(token, selectedListId);

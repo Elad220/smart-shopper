@@ -50,6 +50,14 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     clearCompleted
   } = useShoppingList(user.token, selectedListId);
 
+  // Handle case where selected list no longer exists
+  React.useEffect(() => {
+    if (error && error.includes('no longer exists')) {
+      setSelectedListId(null);
+      // The ShoppingListManager will handle creating/selecting a new list
+    }
+  }, [error]);
+
   const completedItems = items.filter(item => item.completed).length;
   const totalItems = items.length;
   const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
@@ -122,7 +130,11 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
 
   const handleListSelect = (listId: string) => {
     setSelectedListId(listId);
-    localStorage.setItem('selectedListId', listId);
+    if (listId) {
+      localStorage.setItem('selectedListId', listId);
+    } else {
+      localStorage.removeItem('selectedListId');
+    }
     if (isMobile) {
       setIsDrawerOpen(false);
     }
@@ -176,7 +188,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
     }
   };
 
-  if (error) {
+  if (error && !error.includes('no longer exists')) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Card sx={{ p: 4, textAlign: 'center', borderRadius: '16px' }}>
@@ -249,6 +261,22 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user }) => {
                 <Package size={40} color={theme.palette.primary.main} />
               </motion.div>
             </Box>
+          ) : !selectedListId ? (
+            <Card sx={{ p: 4, textAlign: 'center', borderRadius: '16px' }}>
+              <Typography variant="h6" gutterBottom>
+                No Shopping Lists
+              </Typography>
+              <Typography color="text.secondary" sx={{ mb: 3 }}>
+                Create your first shopping list to get started!
+              </Typography>
+              <Button
+                variant="contained"
+                onClick={() => setIsCreateDialogOpen(true)}
+                sx={{ borderRadius: '8px' }}
+              >
+                Create Shopping List
+              </Button>
+            </Card>
           ) : (
             <>
               {/* Header */}

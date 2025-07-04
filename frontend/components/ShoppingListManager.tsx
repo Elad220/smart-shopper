@@ -95,7 +95,11 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       const fetchedLists = await fetchShoppingLists(token);
       setListsRaw(fetchedLists);
       // If no list is selected and we have lists, select the first one
-      if (!selectedListId && fetchedLists.length > 0) {
+      if ((!selectedListId || selectedListId === '') && fetchedLists.length > 0) {
+        onListSelect(fetchedLists[0]._id);
+      }
+      // If selected list doesn't exist in fetched lists, select the first available
+      else if (selectedListId && fetchedLists.length > 0 && !fetchedLists.find(list => list._id === selectedListId)) {
         onListSelect(fetchedLists[0]._id);
       }
     } catch (error: any) {
@@ -134,13 +138,21 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     setError(null);
     try {
       await deleteShoppingList(token, listId);
-      await loadLists();
       
-      // If the deleted list was selected, select the first available list
-      if (selectedListId === listId && lists.length > 1) {
+      // If the deleted list was selected, we need to handle navigation
+      if (selectedListId === listId) {
         const remainingLists = lists.filter(list => list._id !== listId);
-        onListSelect(remainingLists[0]._id);
+        if (remainingLists.length > 0) {
+          // Select the first remaining list
+          onListSelect(remainingLists[0]._id);
+        } else {
+          // No lists remaining, clear selection and localStorage
+          onListSelect('');
+          localStorage.removeItem('selectedListId');
+        }
       }
+      
+      await loadLists();
     } catch (error: any) {
       setError(error.message || 'Failed to delete shopping list');
       console.error('Error deleting shopping list:', error);
