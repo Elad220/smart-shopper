@@ -69,7 +69,7 @@ const ShoppingListItem: React.FC<ShoppingListItemProps> = ({
     handleMenuClose();
   };
 
-  const imageUrl = item.image || item.imageUrl;
+  const imageUrl = item.imageUrl;
   const secondaryText = `${item.amount} ${item.units}` + (item.notes ? ` - ${item.notes}` : '');
 
   return (

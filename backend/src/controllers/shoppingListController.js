@@ -23,11 +23,29 @@ const addCustomCategory = async (userId, categoryName) => {
 const transformItem = (item) => {
   if (!item) return item;
   const obj = item.toObject ? item.toObject() : item;
-  return {
+  
+  // Debug: Log transformation
+  console.log('🖼️ Transform Debug - Input:', {
+    hasImage: !!obj.image,
+    hasImageUrl: !!obj.imageUrl,
+    imageLength: obj.image ? obj.image.length : 0,
+    imageUrlLength: obj.imageUrl ? obj.imageUrl.length : 0
+  });
+  
+  const result = {
     ...obj,
     id: obj._id ? obj._id.toString() : undefined,
     imageUrl: obj.image || obj.imageUrl || null, // Handle both image and imageUrl properties
   };
+  
+  // Debug: Log transformation result
+  console.log('🖼️ Transform Debug - Output:', {
+    hasImageUrl: !!result.imageUrl,
+    imageUrlLength: result.imageUrl ? result.imageUrl.length : 0,
+    mappingSource: obj.image ? 'image field' : obj.imageUrl ? 'imageUrl field' : 'none'
+  });
+  
+  return result;
 };
 
 // Get all shopping lists for a user
@@ -147,8 +165,34 @@ exports.addItem = async (req, res) => {
       return res.status(404).json({ message: 'Shopping list not found' });
     }
     
+    // Debug: Log incoming request
+    console.log('🖼️ Backend Debug - Incoming request:', {
+      hasImageUrl: !!req.body.imageUrl,
+      hasImage: !!req.body.image,
+      imageUrlLength: req.body.imageUrl ? req.body.imageUrl.length : 0,
+      imageLength: req.body.image ? req.body.image.length : 0,
+      bodyKeys: Object.keys(req.body),
+      bodyWithoutImages: Object.fromEntries(
+        Object.entries(req.body).filter(([key]) => !['imageUrl', 'image'].includes(key))
+      )
+    });
+    
+    // Map imageUrl from frontend to image field for database
+    const itemData = { ...req.body };
+    if (itemData.imageUrl) {
+      itemData.image = itemData.imageUrl;
+      delete itemData.imageUrl; // Clean up the original field
+      console.log('🖼️ Backend Debug - Mapped imageUrl to image field');
+    }
+    
+    console.log('🖼️ Backend Debug - Data before saving:', {
+      hasImage: !!itemData.image,
+      imageLength: itemData.image ? itemData.image.length : 0,
+      imagePrefix: itemData.image ? itemData.image.substring(0, 50) : 'N/A'
+    });
+    
     const item = new Item({
-      ...req.body,
+      ...itemData,
       userId: req.user.userId
     });
     
@@ -157,8 +201,26 @@ exports.addItem = async (req, res) => {
     list.items.push(savedItem._id);
     await list.save();
     
-    res.status(201).json(transformItem(savedItem));
+    // Debug: Log saved item
+    console.log('🖼️ Backend Debug - Saved item:', {
+      hasImage: !!savedItem.image,
+      imageLength: savedItem.image ? savedItem.image.length : 0,
+      savedItemKeys: Object.keys(savedItem.toObject())
+    });
+    
+    const transformedItem = transformItem(savedItem);
+    
+    // Debug: Log transformed result
+    console.log('🖼️ Backend Debug - Transformed result:', {
+      hasImageUrl: !!transformedItem.imageUrl,
+      hasImage: !!transformedItem.image,
+      imageUrlLength: transformedItem.imageUrl ? transformedItem.imageUrl.length : 0,
+      transformedKeys: Object.keys(transformedItem)
+    });
+    
+    res.status(201).json(transformedItem);
   } catch (error) {
+    console.error('✗ Backend: Error saving item:', error.message);
     res.status(400).json({ message: error.message });
   }
 };

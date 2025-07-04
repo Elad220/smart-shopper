@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Stack, MenuItem, Box, useTheme
+  TextField, Button, Stack, MenuItem, Box, useTheme,
+  Typography, IconButton
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Package, X } from 'lucide-react';
+import { Package, X, Upload, Trash2 } from 'lucide-react';
+import NewCategoryModal from './NewCategoryModal';
 
 interface AddItemModalProps {
   open: boolean;
@@ -16,6 +18,7 @@ interface AddItemModalProps {
     units: string;
     priority: 'Low' | 'Medium' | 'High';
     notes: string;
+    imageUrl?: string;
   }) => void;
 }
 
@@ -23,40 +26,128 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
-    category: 'Other',
+    category: '',
     amount: 1,
     units: 'pcs',
     priority: 'Medium' as 'Low' | 'Medium' | 'High',
     notes: '',
+    imageUrl: '',
   });
+  
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const categories = [
-    'Fruits & Vegetables',
-    'Meat & Fish', 
-    'Dairy',
-    'Bakery',
-    'Beverages',
-    'Snacks',
-    'Household',
-    'Personal Care',
-    'Health',
-    'Other'
+  // Load custom categories from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('userCustomCategories');
+    if (saved) {
+      setCustomCategories(JSON.parse(saved));
+    }
+  }, []);
+
+  // Save custom category to localStorage
+  const saveCustomCategory = (categoryName: string) => {
+    if (categoryName && !customCategories.includes(categoryName)) {
+      const updated = [...customCategories, categoryName];
+      setCustomCategories(updated);
+      localStorage.setItem('userCustomCategories', JSON.stringify(updated));
+    }
+  };
+
+  const standardCategories = [
+    { value: 'Produce', label: '🥬 Produce', emoji: '🥬' },
+    { value: 'Dairy', label: '🥛 Dairy', emoji: '🥛' },
+    { value: 'Fridge', label: '❄️ Fridge', emoji: '❄️' },
+    { value: 'Freezer', label: '🧊 Freezer', emoji: '🧊' },
+    { value: 'Bakery', label: '🍞 Bakery', emoji: '🍞' },
+    { value: 'Pantry', label: '🏺 Pantry', emoji: '🏺' },
+    { value: 'Disposable', label: '🗑️ Disposable', emoji: '🗑️' },
+    { value: 'Hygiene', label: '🧴 Hygiene', emoji: '🧴' },
+    { value: 'Canned Goods', label: '🥫 Canned Goods', emoji: '🥫' },
+    { value: 'Organics', label: '🌱 Organics', emoji: '🌱' },
+    { value: 'Deli', label: '🥓 Deli', emoji: '🥓' },
   ];
 
-  const units = ['pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp'];
+  // Combine standard and custom categories
+  const allCategories = [
+    { value: '', label: 'Select a category...', emoji: '📋' },
+    ...standardCategories,
+    ...customCategories.map(cat => ({ value: cat, label: `� ${cat}`, emoji: '�' })),
+    { value: 'Other', label: '📦 Add New Category...', emoji: '📦' },
+  ];
+
+  const units = [
+    'pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp',
+    'packs', 'bottles', 'cans', 'boxes', 'bags', 'loaves', 'bunches',
+    'dozen', 'lbs', 'gallon', 'quart', 'pint'
+  ];
   const priorities = ['Low', 'Medium', 'High'] as const;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleCategoryChange = (value: string) => {
+    if (value === 'Other') {
+      setIsNewCategoryModalOpen(true);
+    } else {
+      setFormData({ ...formData, category: value });
+    }
+  };
+
+  const handleNewCategoryAdd = (categoryName: string) => {
+    saveCustomCategory(categoryName);
+    setFormData({ ...formData, category: categoryName });
+  };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File size too large. Please select an image smaller than 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, imageUrl: '' });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+    const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.name.trim()) {
-      onAdd(formData);
+    if (formData.name.trim() && formData.category && formData.category !== '') {
+      // Ensure imageUrl is included in the data being sent
+      const itemData = {
+        ...formData,
+        name: formData.name.trim(),
+      };
+      
+      // Debug: Comprehensive image data check
+      console.log('🖼️ Modal Debug - Full form data:', {
+        hasImage: !!itemData.imageUrl,
+        imageLength: itemData.imageUrl ? itemData.imageUrl.length : 0,
+        imagePrefix: itemData.imageUrl ? itemData.imageUrl.substring(0, 50) : 'N/A',
+        formData: { ...itemData, imageUrl: itemData.imageUrl ? '[IMAGE_DATA]' : undefined }
+      });
+      
+      onAdd(itemData);
+      
+      // Reset form
       setFormData({
         name: '',
-        category: 'Other',
+        category: '',
         amount: 1,
         units: 'pcs',
         priority: 'Medium',
         notes: '',
+        imageUrl: '',
       });
     }
   };
@@ -65,13 +156,29 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
     onClose();
     setFormData({
       name: '',
-      category: 'Other',
+      category: '',
       amount: 1,
       units: 'pcs',
       priority: 'Medium',
       notes: '',
+      imageUrl: '',
     });
   };
+
+  // Reset form when modal opens
+  React.useEffect(() => {
+    if (open) {
+      setFormData({
+        name: '',
+        category: '',
+        amount: 1,
+        units: 'pcs',
+        priority: 'Medium',
+        notes: '',
+        imageUrl: '',
+      });
+    }
+  }, [open]);
 
   return (
     <Dialog 
@@ -126,6 +233,62 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
               />
 
+              {/* Image Upload Section */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Item Image (Optional)
+                </Typography>
+                {formData.imageUrl ? (
+                  <Box sx={{ position: 'relative', mb: 2 }}>
+                    <img
+                      src={formData.imageUrl}
+                      alt="Item preview"
+                      style={{
+                        width: '100%',
+                        maxHeight: '200px',
+                        objectFit: 'cover',
+                        borderRadius: '12px',
+                      }}
+                    />
+                    <IconButton
+                      onClick={handleRemoveImage}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        color: 'white',
+                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+                      }}
+                    >
+                      <Trash2 size={18} />
+                    </IconButton>
+                  </Box>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    startIcon={<Upload size={20} />}
+                    sx={{
+                      borderRadius: '12px',
+                      borderStyle: 'dashed',
+                      height: '60px',
+                      color: 'text.secondary',
+                    }}
+                  >
+                    Upload Image
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </Button>
+                )}
+              </Box>
+
               <Stack direction="row" spacing={2}>
                 <TextField
                   label="Amount"
@@ -162,12 +325,12 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                   fullWidth
                   label="Category"
                   value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
                   sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
                 >
-                  {categories.map((category) => (
-                    <MenuItem key={category} value={category}>
-                      {category}
+                  {allCategories.map((category) => (
+                    <MenuItem key={category.value} value={category.value}>
+                      {category.label}
                     </MenuItem>
                   ))}
                 </TextField>
@@ -187,6 +350,8 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
                   ))}
                 </TextField>
               </Stack>
+
+
 
               <TextField
                 fullWidth
@@ -214,7 +379,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
             <Button
               type="submit"
               variant="contained"
-              disabled={!formData.name.trim()}
+              disabled={!formData.name.trim() || !formData.category}
               startIcon={<Package size={16} />}
               sx={{
                 borderRadius: '8px',
@@ -227,6 +392,12 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd }) => 
           </DialogActions>
         </form>
       </motion.div>
+      
+      <NewCategoryModal
+        open={isNewCategoryModalOpen}
+        onClose={() => setIsNewCategoryModalOpen(false)}
+        onAdd={handleNewCategoryAdd}
+      />
     </Dialog>
   );
 };

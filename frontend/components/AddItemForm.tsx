@@ -152,7 +152,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
       amount,
       priority,
       notes,
-      image: imageUrl,
+      imageUrl: imageUrl,
     });
     onClose();
   };

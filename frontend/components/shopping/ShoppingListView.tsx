@@ -1,16 +1,18 @@
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
-  Stack, Chip, useTheme, alpha
+  Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle } from 'lucide-react';
+import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, ChevronRight, Edit, GripVertical, Search, X } from 'lucide-react';
 import { ShoppingItem } from '../../types';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
+  onEditItem: (item: ShoppingItem) => void;
   onAddItem: () => void;
 }
 
@@ -18,9 +20,156 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   items,
   onToggleComplete,
   onDeleteItem,
+  onEditItem,
   onAddItem,
 }) => {
   const theme = useTheme();
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+  const [areAllCollapsed, setAreAllCollapsed] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Category emoji mapping
+  const getCategoryEmoji = (category: string) => {
+    const emojiMap: { [key: string]: string } = {
+      'Produce': '🥬',
+      'Dairy': '🥛',
+      'Fridge': '❄️',
+      'Freezer': '🧊',
+      'Bakery': '🍞',
+      'Pantry': '🏺',
+      'Disposable': '🗑️',
+      'Hygiene': '🧴',
+      'Canned Goods': '🥫',
+      'Organics': '🌱',
+      'Deli': '🥓',
+      'Other': '📦',
+    };
+          // Return standard emoji if available, otherwise use shopping cart emoji for custom categories
+    return emojiMap[category] || '🛒';
+  };
+
+  // Filter items based on search query
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    
+    const query = searchQuery.toLowerCase();
+    return items.filter(item => 
+      item.name.toLowerCase().includes(query) ||
+      item.category.toLowerCase().includes(query) ||
+      item.notes?.toLowerCase().includes(query) ||
+      item.units.toLowerCase().includes(query)
+    );
+  }, [items, searchQuery]);
+
+  // Group filtered items by category
+  const groupedItems = filteredItems.reduce((acc, item) => {
+    const categoryKey = typeof item.category === 'string' ? item.category : 'Other';
+    if (!acc[categoryKey]) {
+      acc[categoryKey] = [];
+    }
+    acc[categoryKey].push(item);
+    return acc;
+  }, {} as Record<string, ShoppingItem[]>);
+
+  // Sort items within each category by completion and priority
+  Object.keys(groupedItems).forEach(category => {
+    groupedItems[category].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
+      const priorityA = priorityOrder[a.priority as keyof typeof priorityOrder] || 4;
+      const priorityB = priorityOrder[b.priority as keyof typeof priorityOrder] || 4;
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+      return a.name.localeCompare(b.name);
+    });
+  });
+
+  // Get sorted category names
+  const sortedCategories = (() => {
+    const categoryNames = Object.keys(groupedItems);
+    
+    // If we have a custom order, use it
+    if (categoryOrder.length > 0) {
+      return categoryNames.sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+        
+        // If both are in custom order, sort by custom order
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        // If only A is in custom order, A comes first
+        if (indexA !== -1) return -1;
+        // If only B is in custom order, B comes first
+        if (indexB !== -1) return 1;
+        // If neither is in custom order, sort alphabetically
+        return a.localeCompare(b);
+      });
+    }
+    
+    // Default alphabetical sort with Other last
+    return categoryNames.sort((a, b) => {
+      if (a === 'Other') return 1;
+      if (b === 'Other') return -1;
+      return a.localeCompare(b);
+    });
+  })();
+
+  // Load category order from localStorage and initialize if needed
+  useEffect(() => {
+    const savedOrder = localStorage.getItem('categoryOrder');
+    if (savedOrder) {
+      setCategoryOrder(JSON.parse(savedOrder));
+    } else if (categoryOrder.length === 0 && sortedCategories.length > 0) {
+      setCategoryOrder(sortedCategories);
+    }
+  }, [sortedCategories]);
+
+  const toggleCategoryCollapse = (category: string) => {
+    setCollapsedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleAllCategories = () => {
+    if (areAllCollapsed) {
+      // Expand all
+      setCollapsedCategories(new Set());
+      setAreAllCollapsed(false);
+    } else {
+      // Collapse all
+      setCollapsedCategories(new Set(sortedCategories));
+      setAreAllCollapsed(true);
+    }
+  };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    const newOrder = Array.from(sortedCategories);
+    const [reorderedItem] = newOrder.splice(sourceIndex, 1);
+    newOrder.splice(destinationIndex, 0, reorderedItem);
+
+    setCategoryOrder(newOrder);
+    
+    // Save to localStorage for persistence
+    localStorage.setItem('categoryOrder', JSON.stringify(newOrder));
+  };
 
   const getPriorityIcon = (priority: string) => {
     switch (priority) {
@@ -83,107 +232,290 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   return (
     <Box>
-      <AnimatePresence>
-        <Stack spacing={2}>
-          {items.map((item, index) => (
-            <motion.div
-              key={item.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3, delay: index * 0.05 }}
-              layout
+      {/* Search and Controls */}
+      <Box sx={{ mb: 3, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <TextField
+          size="small"
+          placeholder="Search items..."
+          value={searchQuery}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+          sx={{ 
+            flexGrow: 1,
+            '& .MuiOutlinedInput-root': { 
+              borderRadius: '8px',
+              backgroundColor: theme.palette.background.paper,
+            }
+          }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <Search size={18} color={theme.palette.text.secondary} />
+              </InputAdornment>
+            ),
+            endAdornment: searchQuery && (
+              <InputAdornment position="end">
+                <IconButton
+                  size="small"
+                  onClick={() => setSearchQuery('')}
+                  sx={{ p: 0.5 }}
+                >
+                  <X size={16} />
+                </IconButton>
+              </InputAdornment>
+            )
+          }}
+        />
+        
+        {sortedCategories.length > 1 && !searchQuery && (
+          <Button
+            variant="text"
+            size="small"
+            onClick={toggleAllCategories}
+            sx={{
+              textTransform: 'none',
+              color: theme.palette.text.secondary,
+              fontSize: '0.75rem',
+              whiteSpace: 'nowrap',
+              '&:hover': {
+                background: alpha(theme.palette.primary.main, 0.1),
+              },
+            }}
+          >
+            {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+          </Button>
+        )}
+      </Box>
+
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="categories" type="CATEGORY">
+          {(provided, snapshot) => (
+            <Box
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              sx={{
+                minHeight: snapshot.isDraggingOver ? 100 : 'auto',
+                transition: 'min-height 0.2s ease',
+              }}
             >
+              <Stack spacing={3}>
+                {sortedCategories.map((categoryName, index) => (
+                  <Draggable 
+                    key={categoryName} 
+                    draggableId={categoryName} 
+                    index={index}
+                    isDragDisabled={false}
+                  >
+                    {(provided, snapshot) => (
+                      <Box
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        style={{
+                          ...provided.draggableProps.style,
+                          transform: snapshot.isDragging 
+                            ? `${provided.draggableProps.style?.transform} rotate(2deg)` 
+                            : provided.draggableProps.style?.transform,
+                        }}
+                      >
               <Card
                 sx={{
-                  borderRadius: '12px',
+                  borderRadius: '16px',
                   border: `1px solid ${theme.palette.divider}`,
-                  transition: 'all 0.3s ease',
-                  background: item.completed
-                    ? alpha(theme.palette.success.main, 0.05)
-                    : theme.palette.background.paper,
-                  '&:hover': {
-                    transform: 'translateY(-2px)',
-                    boxShadow: theme.shadows[4],
-                  },
+                  overflow: 'hidden',
+                  transform: snapshot.isDragging ? 'rotate(3deg)' : 'rotate(0deg)',
+                  boxShadow: snapshot.isDragging ? theme.shadows[8] : theme.shadows[1],
+                  opacity: snapshot.isDragging ? 0.9 : 1,
+                  transition: snapshot.isDragging ? 'none' : 'all 0.2s ease',
                 }}
               >
-                <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                {/* Category Header */}
+                <CardContent 
+                  sx={{ 
+                    p: 2, 
+                    cursor: 'pointer',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}08, ${theme.palette.secondary.main}08)`,
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                    },
+                  }}
+                  onClick={() => toggleCategoryCollapse(categoryName)}
+                >
                   <Stack direction="row" alignItems="center" spacing={2}>
-                    <Checkbox
-                      checked={item.completed}
-                      onChange={() => onToggleComplete(item.id)}
-                      sx={{
-                        color: theme.palette.primary.main,
-                        '&.Mui-checked': {
-                          color: theme.palette.success.main,
-                        },
-                      }}
-                    />
-                    
-                    <Box sx={{ flexGrow: 1 }}>
-                      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                        <Typography
-                          variant="body1"
-                          sx={{
-                            fontWeight: 500,
-                            textDecoration: item.completed ? 'line-through' : 'none',
-                            opacity: item.completed ? 0.7 : 1,
-                          }}
-                        >
-                          {item.name}
-                        </Typography>
-                        {getPriorityIcon(item.priority)}
-                      </Stack>
-                      
-                      <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
-                        <Chip
-                          label={`${item.amount} ${item.units}`}
-                          size="small"
-                          variant="outlined"
-                          sx={{ borderRadius: '8px', fontSize: '0.75rem' }}
-                        />
-                        {item.category && (
-                          <Chip
-                            label={item.category}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                            sx={{ borderRadius: '8px', fontSize: '0.75rem' }}
-                          />
-                        )}
-                        {item.notes && (
-                          <Chip
-                            label={item.notes}
-                            size="small"
-                            color="default"
-                            sx={{ borderRadius: '8px', fontSize: '0.75rem' }}
-                          />
-                        )}
-                      </Stack>
-                    </Box>
-                    
-                    <IconButton
-                      size="small"
-                      onClick={() => onDeleteItem(item.id)}
+                    <Box 
+                      {...provided.dragHandleProps} 
                       sx={{ 
-                        color: theme.palette.error.main,
+                        display: 'flex', 
+                        cursor: 'grab',
+                        p: 0.5,
+                        borderRadius: '4px',
                         '&:hover': {
-                          background: alpha(theme.palette.error.main, 0.1),
+                          background: alpha(theme.palette.action.hover, 0.5),
+                        },
+                        '&:active': {
+                          cursor: 'grabbing',
                         },
                       }}
                     >
-                      <Trash2 size={16} />
+                      <GripVertical size={16} color={theme.palette.text.secondary} />
+                    </Box>
+                    <Typography variant="h5" sx={{ fontSize: '1.25rem' }}>
+                      {getCategoryEmoji(categoryName)}
+                    </Typography>
+                    <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
+                      {categoryName}
+                    </Typography>
+                    <Chip 
+                      label={`${groupedItems[categoryName].length} items`}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ borderRadius: '8px' }}
+                    />
+                    <IconButton size="small">
+                      {collapsedCategories.has(categoryName) ? 
+                        <ChevronRight size={20} /> : 
+                        <ChevronDown size={20} />
+                      }
                     </IconButton>
                   </Stack>
                 </CardContent>
+
+                {/* Category Items */}
+                <Collapse in={!collapsedCategories.has(categoryName)}>
+                  <Box sx={{ p: 2, pt: 0 }}>
+                    <Stack spacing={2}>
+                      {groupedItems[categoryName].map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ duration: 0.3, delay: index * 0.02 }}
+                          layout
+                        >
+                          <Card
+                            sx={{
+                              borderRadius: '12px',
+                              border: `1px solid ${theme.palette.divider}`,
+                              transition: 'all 0.3s ease',
+                              background: item.completed
+                                ? alpha(theme.palette.success.main, 0.05)
+                                : theme.palette.background.paper,
+                              '&:hover': {
+                                transform: 'translateY(-2px)',
+                                boxShadow: theme.shadows[2],
+                              },
+                            }}
+                          >
+                            <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Checkbox
+                                  checked={item.completed}
+                                  onChange={() => onToggleComplete(item.id)}
+                                  sx={{
+                                    color: theme.palette.primary.main,
+                                    '&.Mui-checked': {
+                                      color: theme.palette.success.main,
+                                    },
+                                  }}
+                                />
+                                
+                                {/* Item Image */}
+                                {item.imageUrl && (
+                                  <Box sx={{ mr: 2 }}>
+                                    <img
+                                      src={item.imageUrl}
+                                      alt={item.name}
+                                      style={{
+                                        width: '60px',
+                                        height: '60px',
+                                        objectFit: 'cover',
+                                        borderRadius: '8px',
+                                        border: `1px solid ${theme.palette.divider}`,
+                                      }}
+                                    />
+                                  </Box>
+                                )}
+                                
+                                <Box sx={{ flexGrow: 1 }}>
+                                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+                                    <Typography
+                                      variant="body1"
+                                      sx={{
+                                        fontWeight: 500,
+                                        textDecoration: item.completed ? 'line-through' : 'none',
+                                        opacity: item.completed ? 0.7 : 1,
+                                      }}
+                                    >
+                                      {item.name}
+                                    </Typography>
+                                    {getPriorityIcon(item.priority)}
+                                  </Stack>
+                                  
+                                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap">
+                                    <Chip
+                                      label={`${item.amount} ${item.units}`}
+                                      size="small"
+                                      variant="outlined"
+                                      sx={{ borderRadius: '8px', fontSize: '0.75rem' }}
+                                    />
+                                    {item.notes && (
+                                      <Chip
+                                        label={item.notes}
+                                        size="small"
+                                        color="default"
+                                        sx={{ borderRadius: '8px', fontSize: '0.75rem' }}
+                                      />
+                                    )}
+                                  </Stack>
+                                </Box>
+                                
+                                <Stack direction="row" spacing={1}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => onEditItem(item)}
+                                    sx={{ 
+                                      color: theme.palette.primary.main,
+                                      '&:hover': {
+                                        background: alpha(theme.palette.primary.main, 0.1),
+                                      },
+                                    }}
+                                  >
+                                    <Edit size={16} />
+                                  </IconButton>
+                                  <IconButton
+                                    size="small"
+                                    onClick={() => onDeleteItem(item.id)}
+                                    sx={{ 
+                                      color: theme.palette.error.main,
+                                      '&:hover': {
+                                        background: alpha(theme.palette.error.main, 0.1),
+                                      },
+                                    }}
+                                  >
+                                    <Trash2 size={16} />
+                                  </IconButton>
+                                </Stack>
+                              </Stack>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Collapse>
               </Card>
-            </motion.div>
-          ))}
-        </Stack>
-      </AnimatePresence>
-    </Box>
-  );
+                       </Box>
+                     )}
+                   </Draggable>
+                 ))}
+                 {provided.placeholder}
+               </Stack>
+             </Box>
+           )}
+         </Droppable>
+       </DragDropContext>
+     </Box>
+   );
 };
 
 export default ShoppingListView;

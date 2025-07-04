@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import * as api from '../src/services/api';
 
@@ -20,8 +20,12 @@ export const useAuth = () => {
   );
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const isAuthenticated = !!user && !!token;
+  // Update authentication status whenever user or token changes
+  useEffect(() => {
+    setIsAuthenticated(!!user && !!token);
+  }, [user, token]);
 
   const login = useCallback(async (credentials: { email?: string; username?: string; password: string }) => {
     setIsLoading(true);
@@ -40,6 +44,12 @@ export const useAuth = () => {
       localStorage.setItem('currentUser', JSON.stringify(userData));
       
       toast.success(`Welcome back, ${userData.username || userData.email}! 🎉`);
+      
+      // Force immediate redirect by reloading the page
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+      
       return { success: true };
     } catch (error: any) {
       const message = error.message || 'Login failed';
@@ -72,6 +82,11 @@ export const useAuth = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('selectedListId');
     toast.success('Logged out successfully! 👋');
+    
+    // Redirect to landing page after logout
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   }, []);
 
   return {

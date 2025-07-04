@@ -2,13 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import * as api from '../src/services/api';
 import { ShoppingItem } from '../types';
 
-export const useShoppingList = (token: string) => {
+export const useShoppingList = (token: string, listId?: string | null) => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [currentListName, setCurrentListName] = useState<string>('My Shopping List');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedListId, setSelectedListId] = useState<string | null>(
-    localStorage.getItem('selectedListId')
+    listId || localStorage.getItem('selectedListId')
   );
+
+  // Update selectedListId when listId prop changes
+  useEffect(() => {
+    if (listId !== undefined) {
+      setSelectedListId(listId);
+    }
+  }, [listId]);
 
   const fetchShoppingList = useCallback(async () => {
     if (!token || !selectedListId) return;
@@ -16,6 +24,14 @@ export const useShoppingList = (token: string) => {
     setIsLoading(true);
     setError(null);
     try {
+      // Fetch list details to get the name
+      const lists = await api.fetchShoppingLists(token);
+      const currentList = lists.find(list => list._id === selectedListId);
+      if (currentList) {
+        setCurrentListName(currentList.name);
+      }
+      
+      // Fetch list items
       const list = await api.fetchShoppingList(token, selectedListId);
       setItems(list || []);
     } catch (err: any) {
@@ -58,7 +74,12 @@ export const useShoppingList = (token: string) => {
   const addItem = useCallback(async (itemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
     
+    console.log('� Hook:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
+    
     const newItem = await api.addShoppingItem(token, selectedListId, itemData);
+    
+    console.log('� Hook result:', newItem.imageUrl ? '✅ API returned image' : '❌ API lost image');
+    
     setItems(prev => [...prev, newItem].sort((a, b) => a.name.localeCompare(b.name)));
     return newItem;
   }, [token, selectedListId]);
@@ -94,6 +115,7 @@ export const useShoppingList = (token: string) => {
 
   return {
     items,
+    currentListName,
     isLoading,
     error,
     addItem,

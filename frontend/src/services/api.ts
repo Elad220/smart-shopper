@@ -210,6 +210,16 @@ export const addShoppingItem = async (
   listId: string,
   itemData: Omit<ShoppingItem, 'id' | 'completed'>
 ): Promise<ShoppingItem> => {
+  
+  // Debug: Log what we're sending to backend
+  console.log('🖼️ API Debug - Sending to backend:', {
+    hasImage: !!itemData.imageUrl,
+    imageLength: itemData.imageUrl ? itemData.imageUrl.length : 0,
+    imagePrefix: itemData.imageUrl ? itemData.imageUrl.substring(0, 50) : 'N/A',
+    endpoint: `${BASE_URL}/api/shopping-lists/${listId}/items`,
+    payload: { ...itemData, imageUrl: itemData.imageUrl ? '[IMAGE_DATA]' : undefined }
+  });
+  
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items`, {
     method: 'POST',
     headers: {
@@ -218,7 +228,19 @@ export const addShoppingItem = async (
     },
     body: JSON.stringify(itemData),
   });
-  return handleResponse<ShoppingItem>(response);
+  
+  const result = await handleResponse<ShoppingItem>(response);
+  
+  // Debug: Check what backend returned
+  console.log('🖼️ API Debug - Backend response:', {
+    hasImageUrl: !!result.imageUrl,
+    hasImage: !!(result as any).image,
+    imageUrlLength: result.imageUrl ? result.imageUrl.length : 0,
+    imageLength: (result as any).image ? (result as any).image.length : 0,
+    fullResult: { ...result, imageUrl: result.imageUrl ? '[IMAGE_DATA]' : undefined, image: (result as any).image ? '[IMAGE_DATA]' : undefined }
+  });
+  
+  return result;
 };
 
 export const updateShoppingItem = async (

@@ -1,401 +1,387 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ShoppingItem, StandardCategory, Category } from '../types';
-import { UNIT_OPTIONS } from '../constants';
-
+import React, { useState, useEffect } from 'react';
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Box,
-  Typography,
-  IconButton,
-  SelectChangeEvent,
-  FormHelperText,
-  OutlinedInput,
-  InputAdornment,
+  Dialog, DialogTitle, DialogContent, DialogActions,
+  TextField, Button, Stack, MenuItem, Box, useTheme,
+  FormControl, InputLabel, OutlinedInput,
+  InputAdornment, IconButton, Typography
 } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
-import ClearIcon from '@mui/icons-material/Clear';
-import DeleteIcon from '@mui/icons-material/Delete';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import { motion } from 'framer-motion';
+import { Edit, X, Upload, Trash2, Plus, Minus } from 'lucide-react';
 
 interface EditItemModalProps {
-  item: ShoppingItem | null;
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  onSave: (updatedItem: ShoppingItem) => void;
-  categories: Category[];
-  onDeleteCategory: (categoryName: string) => void;
+  onSave: (item: {
+    id: string;
+    name: string;
+    category: string;
+    amount: number;
+    units: string;
+    priority: 'Low' | 'Medium' | 'High';
+    notes: string;
+    imageUrl?: string;
+    completed: boolean;
+  }) => void;
+  item?: {
+    id: string;
+    name: string;
+    category: string;
+    amount: number;
+    units: string;
+    priority: 'Low' | 'Medium' | 'High';
+    notes: string;
+    imageUrl?: string;
+    completed: boolean;
+  } | null;
 }
 
-const EditItemModal: React.FC<EditItemModalProps> = ({ item, isOpen, onClose, onSave, categories, onDeleteCategory }) => {
-  const [name, setName] = useState('');
-  const [nameError, setNameError] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<Category | ''>('');
-  const [customCategoryName, setCustomCategoryName] = useState('');
-  const [categoryError, setCategoryError] = useState('');
-  const [units, setUnits] = useState(UNIT_OPTIONS[0]);
-  const [amount, setAmount] = useState<number>(1);
-  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
-  const [notes, setNotes] = useState('');
-  const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
-  const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const standardCategories = Object.values(StandardCategory);
-
-  const sortedCategories = [...categories].sort((a, b) => {
-    const aIsStandard = standardCategories.includes(a as StandardCategory);
-    const bIsStandard = standardCategories.includes(b as StandardCategory);
-
-    if(a === StandardCategory.OTHER) return 1;
-    if(b === StandardCategory.OTHER) return -1;
-
-    if (aIsStandard && !bIsStandard) return -1;
-    if (!aIsStandard && bIsStandard) return 1;
-
-    return a.localeCompare(b);
+const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, item }) => {
+  const theme = useTheme();
+  const [formData, setFormData] = useState({
+    name: '',
+    category: 'Other',
+    amount: 1,
+    units: 'pcs',
+    priority: 'Medium' as 'Low' | 'Medium' | 'High',
+    notes: '',
+    imageUrl: '',
   });
-
-
-  useEffect(() => {
-    if (item && isOpen) {
-      setName(item.name);
-      setNameError('');
-      setUnits(item.units || UNIT_OPTIONS[0]);
-      setAmount(item.amount);
-      setPriority(item.priority || 'Medium');
-      setNotes(item.notes || '');
-      setImageUrl(item.imageUrl || undefined);
-
-      const isStandard = Object.values(StandardCategory).some(v => v === item.category);
-      
-      if (categories.includes(item.category) && item.category !== StandardCategory.OTHER) {
-          setSelectedCategory(item.category);
-          setShowCustomCategoryInput(false);
-          setCustomCategoryName('');
-      } else {
-          setSelectedCategory(StandardCategory.OTHER);
-          setShowCustomCategoryInput(true);
-          setCustomCategoryName(isStandard ? '' : item.category);
-      }
-      setCategoryError('');
-      
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset file input
-      }
-    } else if (isOpen) {
-        setSelectedCategory(''); // Set to empty for the placeholder
-    }
-  }, [item, isOpen, categories]);
-
-  const handleCategoryChange = (event: SelectChangeEvent<Category>) => {
-    const value = event.target.value as Category;
-    setSelectedCategory(value);
-    setShowCustomCategoryInput(value === StandardCategory.OTHER);
-    if (value !== StandardCategory.OTHER) {
-      setCustomCategoryName('');
-    }
-  };
   
-  const handleAmountChange = useCallback((newAmount: number) => {
-    setAmount(Math.max(1, newAmount));
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Load custom categories from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('userCustomCategories');
+    if (saved) {
+      setCustomCategories(JSON.parse(saved));
+    }
   }, []);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Populate form when item changes
+  useEffect(() => {
+    if (item && open) {
+      setFormData({
+        name: item.name || '',
+        category: item.category || '',
+        amount: item.amount || 1,
+        units: item.units || 'pcs',
+        priority: item.priority || 'Medium',
+        notes: item.notes || '',
+        imageUrl: item.imageUrl || '',
+      });
+    } else if (open && !item) {
+      // If modal opens without item, reset form
+      setFormData({
+        name: '',
+        category: '',
+        amount: 1,
+        units: 'pcs',
+        priority: 'Medium',
+        notes: '',
+        imageUrl: '',
+      });
+    }
+  }, [item, open]);
+
+  const standardCategories = [
+    { value: 'Produce', label: '🥬 Produce', emoji: '🥬' },
+    { value: 'Dairy', label: '🥛 Dairy', emoji: '🥛' },
+    { value: 'Fridge', label: '❄️ Fridge', emoji: '❄️' },
+    { value: 'Freezer', label: '🧊 Freezer', emoji: '🧊' },
+    { value: 'Bakery', label: '🍞 Bakery', emoji: '🍞' },
+    { value: 'Pantry', label: '🏺 Pantry', emoji: '🏺' },
+    { value: 'Disposable', label: '🗑️ Disposable', emoji: '🗑️' },
+    { value: 'Hygiene', label: '🧴 Hygiene', emoji: '🧴' },
+    { value: 'Canned Goods', label: '🥫 Canned Goods', emoji: '🥫' },
+    { value: 'Organics', label: '🌱 Organics', emoji: '🌱' },
+    { value: 'Deli', label: '🥓 Deli', emoji: '🥓' },
+  ];
+
+  const allCategories = [
+    ...standardCategories,
+    ...customCategories.map(cat => ({ value: cat, label: `� ${cat}`, emoji: '�' })),
+  ];
+
+  const units = [
+    'pcs', 'kg', 'g', 'lb', 'oz', 'l', 'ml', 'cups', 'tbsp', 'tsp',
+    'packs', 'bottles', 'cans', 'boxes', 'bags', 'loaves', 'bunches',
+    'dozen', 'lbs', 'gallon', 'quart', 'pint'
+  ];
+  
+  const priorities = ['Low', 'Medium', 'High'] as const;
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageUrl(reader.result as string);
-      };
-      reader.onerror = () => {
-        console.error("Error reading file.");
-        setImageUrl(item?.imageUrl || undefined); // Revert to original if error
-         alert("Could not read image file. Please try another image.");
-      }
-      if (file.size > 2 * 1024 * 1024) { // Limit file size to 2MB
-        alert("File is too large. Please select an image smaller than 2MB.");
-        event.target.value = ""; 
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File size too large. Please select an image smaller than 2MB.');
         return;
       }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+      };
       reader.readAsDataURL(file);
     }
   };
 
   const handleRemoveImage = () => {
-    setImageUrl(undefined);
+    setFormData({ ...formData, imageUrl: '' });
     if (fileInputRef.current) {
-        fileInputRef.current.value = "";
+      fileInputRef.current.value = '';
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setNameError('');
-    setCategoryError('');
-    if (!item) return;
-
-    let isValid = true;
-    if (!name.trim()) {
-      setNameError("Item name cannot be empty.");
-      isValid = false;
+    if (formData.name.trim() && item) {
+      onSave({
+        ...item,
+        ...formData,
+        name: formData.name.trim(),
+      });
+      onClose();
     }
-    if (!selectedCategory) {
-        setCategoryError("Please select a category.");
-        isValid = false;
-    }
-    if (selectedCategory === StandardCategory.OTHER && !customCategoryName.trim()) {
-      setCategoryError("Please specify a name for the 'Other' category.");
-      isValid = false;
-    }
+  };
 
-    if (!isValid) return;
-    
-    const finalCategory = selectedCategory === StandardCategory.OTHER ? customCategoryName.trim() : selectedCategory;
-
-    onSave({
-      ...item,
-      name: name.trim(),
-      category: finalCategory,
-      units: units,
-      amount,
-      priority,
-      notes,
-      imageUrl: imageUrl,
-      completed: item.completed
-    });
+  const handleClose = () => {
     onClose();
   };
 
-  if (!isOpen || !item) return null;
+  if (!item) return null;
 
   return (
-    <Dialog open={isOpen} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        Edit Item
-        <IconButton aria-label="close" onClick={onClose}>
-            <CloseIcon />
-        </IconButton>
-      </DialogTitle>
-      <DialogContent dividers>
-        <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-          <TextField
-            margin="normal"
-            required
-            fullWidth
-            id="editItemName"
-            label="Item Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            autoFocus
-            error={!!nameError}
-            helperText={nameError}
-          />
-           <Box sx={{ my: 2 }}>
-            <InputLabel shrink sx={{mb:0.5, fontSize: '0.9rem'}}>Item Image (Optional)</InputLabel>
-            <Button
-                variant="outlined"
-                component="label" 
-                startIcon={<PhotoCamera />}
-                fullWidth
+    <Dialog 
+      open={open} 
+      onClose={handleClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{
+        sx: {
+          borderRadius: '16px',
+          background: theme.palette.mode === 'dark'
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(255, 255, 255, 0.95)',
+          backdropFilter: 'blur(20px)',
+        }
+      }}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '8px',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
-                Click to upload image
-                <input
-                type="file"
-                hidden
-                accept="image/*"
-                onChange={handleImageChange}
-                ref={fileInputRef}
-                />
-            </Button>
-            <Typography variant="caption" display="block" color="text.secondary" sx={{mt: 0.5}}>
-                Max 2MB, JPG/PNG
-            </Typography>
-          </Box>
-          {imageUrl && (
-            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
-              <img 
-                src={imageUrl} 
-                alt="Preview" 
-                style={{ display: 'block', maxHeight: '150px', maxWidth: '100%', borderRadius: '4px', objectFit: 'contain', margin: '0 auto' }}
-              />
-               <IconButton 
-                aria-label="remove image" 
-                onClick={handleRemoveImage}
-                size="small"
-                sx={{position: 'absolute', top: 0, right: 0, backgroundColor: 'rgba(255,255,255,0.7)'}}
-              >
-                <ClearIcon fontSize="small"/>
-              </IconButton>
+              <Edit size={20} color="white" />
             </Box>
-          )}
+            Edit Item
+          </Stack>
+        </DialogTitle>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            <Box sx={{ width: { xs: '100%', sm: showCustomCategoryInput ? 'calc(50% - 8px)' : 'calc(50% - 8px)' } }}>
-              <FormControl fullWidth margin="normal" error={!!categoryError}>
-                <InputLabel id="edit-category-label" shrink={true}>Category</InputLabel>
-                <Select
-                  labelId="edit-category-label"
-                  value={selectedCategory}
-                  onChange={handleCategoryChange}
-                  label="Category"
-                  displayEmpty
-                  renderValue={(value) => {
-                    if (value === "") {
-                      return <em style={{ color: 'grey' }}>Select a category</em>;
-                    }
-                    return value;
-                  }}
-                >
-                  {sortedCategories.map((cat) => (
-                    <MenuItem key={cat} value={cat}>
-                       <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                        <span>{cat}</span>
-                        {!standardCategories.includes(cat as StandardCategory) && (
-                          <IconButton
-                            size="small"
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteCategory(cat);
-                            }}
-                            sx={{ p: 0.5 }}
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        )}
-                      </Box>
-                    </MenuItem>
-                  ))}
-                </Select>
-                {categoryError && <FormHelperText>{categoryError}</FormHelperText>}
-              </FormControl>
-            </Box>
-            {showCustomCategoryInput && (
-              <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-                  <TextField
-                      margin="normal"
-                      required
-                      fullWidth
-                      label="Custom Category"
-                      value={customCategoryName}
-                      onChange={(e) => setCustomCategoryName(e.target.value)}
-                      error={!!categoryError}
-                      helperText={categoryError}
-                  />
-              </Box>
-            )}
-             <Box sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)' } }}>
-               <FormControl fullWidth margin="normal">
-                 <InputLabel id="priority-label">Priority</InputLabel>
-                 <Select
-                  labelId="priority-label"
-                  value={priority}
-                  onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
-                  label="Priority"
-                >
-                  <MenuItem value="Low">Low</MenuItem>
-                  <MenuItem value="Medium">Medium</MenuItem>
-                  <MenuItem value="High">High</MenuItem>
-                </Select>
-               </FormControl>
-            </Box>
-          </Box>
-          
-          <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-            <FormControl variant="outlined" sx={{ flex: 1, mt: 2 }}>
-                <InputLabel htmlFor="edit-amount-input">Amount</InputLabel>
-                <OutlinedInput
-                    id="edit-amount-input"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => handleAmountChange(parseInt(e.target.value, 10) || 1)}
-                    inputProps={{ min: 1, style: { textAlign: 'center' } }}
-                     sx={{
-                      '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                          display: 'none',
-                      },
-                      '& input[type=number]': {
-                          '-moz-appearance': 'textfield',
-                      },
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            <Stack spacing={3} sx={{ mt: 1 }}>
+              <TextField
+                fullWidth
+                label="Item Name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                required
+                autoFocus
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+              />
+
+              {/* Image Upload Section */}
+              <Box>
+                <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Item Image (Optional)
+                </Typography>
+                {formData.imageUrl ? (
+                  <Box sx={{ position: 'relative', mb: 2 }}>
+                    <img
+                      src={formData.imageUrl}
+                      alt="Item preview"
+                      style={{
+                        width: '100%',
+                        maxHeight: '200px',
+                        objectFit: 'cover',
+                        borderRadius: '12px',
+                      }}
+                    />
+                    <IconButton
+                      onClick={handleRemoveImage}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        color: 'white',
+                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.7)' },
+                      }}
+                    >
+                      <Trash2 size={18} />
+                    </IconButton>
+                  </Box>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    fullWidth
+                    startIcon={<Upload size={20} />}
+                    sx={{
+                      borderRadius: '12px',
+                      borderStyle: 'dashed',
+                      height: '60px',
+                      color: 'text.secondary',
                     }}
+                  >
+                    Upload Image
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      hidden
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                    />
+                  </Button>
+                )}
+              </Box>
+
+              <Stack direction="row" spacing={2}>
+                <FormControl fullWidth>
+                  <InputLabel>Amount</InputLabel>
+                  <OutlinedInput
+                    type="number"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
                     label="Amount"
+                    inputProps={{ min: 1 }}
                     startAdornment={
                       <InputAdornment position="start">
                         <IconButton
-                          aria-label="decrease amount"
-                          onClick={() => handleAmountChange(amount - 1)}
-                          edge="start"
-                          disabled={amount <= 1}
+                          onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
+                          disabled={formData.amount <= 1}
                         >
-                          <KeyboardArrowDownIcon />
+                          <Minus size={16} />
                         </IconButton>
                       </InputAdornment>
                     }
                     endAdornment={
                       <InputAdornment position="end">
                         <IconButton
-                          aria-label="increase amount"
-                          onClick={() => handleAmountChange(amount + 1)}
-                          edge="end"
+                          onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
                         >
-                          <KeyboardArrowUpIcon />
+                          <Plus size={16} />
                         </IconButton>
                       </InputAdornment>
                     }
-                />
-            </FormControl>
-            <FormControl fullWidth margin="normal" sx={{ mt: 2, flex: 1 }}>
-                <InputLabel id="edit-units-label">Unit</InputLabel>
-                <Select
-                  labelId="edit-units-label"
-                  value={units}
-                  onChange={(e) => setUnits(e.target.value)}
-                  label="Unit"
-                  MenuProps={{
-                    PaperProps: {
-                      style: {
-                        maxHeight: 300,
-                      },
-                    },
+                    sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                  />
+                </FormControl>
+
+                <TextField
+                  select
+                  label="Units"
+                  value={formData.units}
+                  onChange={(e) => setFormData({ ...formData, units: e.target.value })}
+                  sx={{ 
+                    width: '140px',
+                    '& .MuiOutlinedInput-root': { borderRadius: '12px' }
                   }}
                 >
-                  {UNIT_OPTIONS.map(unit => (
-                    <MenuItem key={unit} value={unit}>{unit}</MenuItem>
+                  {units.map((unit) => (
+                    <MenuItem key={unit} value={unit}>
+                      {unit}
+                    </MenuItem>
                   ))}
-                </Select>
-            </FormControl>
-          </Box>
+                </TextField>
+              </Stack>
 
-          <TextField
-            margin="normal"
-            fullWidth
-            id="notes"
-            label="Notes (Optional)"
-            name="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            multiline
-            rows={3}
-            placeholder="Any additional notes..."
-          />
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: '16px 24px' }}>
-        <Button onClick={onClose} color="inherit">Cancel</Button>
-        <Button onClick={handleSubmit} variant="contained" color="primary">
-          Save Changes
-        </Button>
-      </DialogActions>
+              <Stack direction="row" spacing={2}>
+                <TextField
+                  select
+                  fullWidth
+                  label="Category"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                >
+                  {allCategories.map((category) => (
+                    <MenuItem key={category.value} value={category.value}>
+                      {category.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  select
+                  fullWidth
+                  label="Priority"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+                  sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+                >
+                  {priorities.map((priority) => (
+                    <MenuItem key={priority} value={priority}>
+                      {priority}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Stack>
+
+              <TextField
+                fullWidth
+                label="Notes (optional)"
+                multiline
+                rows={2}
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                sx={{ '& .MuiOutlinedInput-root': { borderRadius: '12px' } }}
+              />
+            </Stack>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 3 }}>
+            <Button
+              onClick={handleClose}
+              startIcon={<X size={16} />}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={!formData.name.trim()}
+              startIcon={<Edit size={16} />}
+              sx={{
+                borderRadius: '8px',
+                textTransform: 'none',
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+              }}
+            >
+              Save Changes
+            </Button>
+          </DialogActions>
+        </form>
+      </motion.div>
     </Dialog>
   );
 };
