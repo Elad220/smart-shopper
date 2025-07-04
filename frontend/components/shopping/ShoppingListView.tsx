@@ -530,7 +530,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                               },
                                             }}
                                           >
-                                            <CardContent sx={{ p: 3, overflow: 'hidden' }}>
+                                            <CardContent sx={{ p: item.imageUrl ? 2 : 3, overflow: 'hidden' }}>
                                               <Stack direction="row" alignItems="center" spacing={2} sx={{ width: '100%' }}>
                                                 {/* Checkbox */}
                                                 <Box sx={{ flexShrink: 0 }}>
@@ -581,110 +581,115 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                                 
                                                 {/* Content Area */}
                                                 <Box sx={{ flexGrow: 1, minWidth: 0, overflow: 'hidden' }}>
-                                                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-                                                    <Typography
-                                                      variant="h6"
-                                                      sx={{
-                                                        fontWeight: 600,
-                                                        textDecoration: item.completed ? 'line-through' : 'none',
-                                                        opacity: item.completed ? 0.7 : 1,
-                                                        fontSize: '1.1rem',
-                                                        overflow: 'hidden',
-                                                        textOverflow: 'ellipsis',
-                                                        whiteSpace: 'nowrap',
-                                                        flexGrow: 1,
-                                                      }}
-                                                    >
-                                                      {item.name}
-                                                    </Typography>
-                                                    <Box sx={{ flexShrink: 0 }}>
-                                                      <motion.div whileHover={{ scale: 1.2 }}>
-                                                        {getPriorityIcon(item.priority)}
-                                                      </motion.div>
-                                                    </Box>
-                                                  </Stack>
+                                                                                                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.5 }}>
+                                                     <Typography
+                                                       variant="subtitle1"
+                                                       sx={{
+                                                         fontWeight: 600,
+                                                         textDecoration: item.completed ? 'line-through' : 'none',
+                                                         opacity: item.completed ? 0.7 : 1,
+                                                         fontSize: item.imageUrl ? '0.95rem' : '1.05rem',
+                                                         overflow: 'hidden',
+                                                         textOverflow: 'ellipsis',
+                                                         whiteSpace: 'nowrap',
+                                                         flexGrow: 1,
+                                                         lineHeight: 1.2,
+                                                       }}
+                                                     >
+                                                       {item.name}
+                                                     </Typography>
+                                                     <Box sx={{ flexShrink: 0 }}>
+                                                       <motion.div whileHover={{ scale: 1.2 }}>
+                                                         {getPriorityIcon(item.priority)}
+                                                       </motion.div>
+                                                     </Box>
+                                                   </Stack>
                                                   
-                                                  <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" sx={{ gap: 0.5 }}>
-                                                    <motion.div whileHover={{ scale: 1.05 }}>
-                                                      <Chip
-                                                        label={`${item.amount} ${item.units}`}
-                                                        size="small"
-                                                        sx={{ 
-                                                          borderRadius: '12px', 
-                                                          fontSize: '0.75rem',
-                                                          height: '24px',
-                                                          background: alpha(theme.palette.primary.main, 0.1),
-                                                          color: theme.palette.primary.main,
-                                                          border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                                                        }}
-                                                      />
-                                                    </motion.div>
-                                                    {item.notes && (
-                                                      <motion.div whileHover={{ scale: 1.05 }}>
-                                                        <Chip
-                                                          label={item.notes}
-                                                          size="small"
-                                                          sx={{ 
-                                                            borderRadius: '12px', 
-                                                            fontSize: '0.75rem',
-                                                            height: '24px',
-                                                            maxWidth: '120px',
-                                                            background: alpha(theme.palette.secondary.main, 0.1),
-                                                            color: theme.palette.secondary.main,
-                                                            border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
-                                                            '& .MuiChip-label': {
-                                                              overflow: 'hidden',
-                                                              textOverflow: 'ellipsis',
-                                                              whiteSpace: 'nowrap',
-                                                            }
-                                                          }}
-                                                        />
-                                                      </motion.div>
-                                                    )}
-                                                  </Stack>
+                                                                                                     <Stack direction="row" alignItems="center" spacing={0.5} flexWrap="wrap" sx={{ gap: 0.5, mt: 0.5 }}>
+                                                     <motion.div whileHover={{ scale: 1.05 }}>
+                                                       <Chip
+                                                         label={`${item.amount} ${item.units}`}
+                                                         size="small"
+                                                         sx={{ 
+                                                           borderRadius: '10px', 
+                                                           fontSize: '0.7rem',
+                                                           height: '22px',
+                                                           background: alpha(theme.palette.primary.main, 0.1),
+                                                           color: theme.palette.primary.main,
+                                                           border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                                                           '& .MuiChip-label': {
+                                                             px: 1,
+                                                           }
+                                                         }}
+                                                       />
+                                                     </motion.div>
+                                                     {item.notes && (
+                                                       <motion.div whileHover={{ scale: 1.05 }}>
+                                                         <Chip
+                                                           label={item.notes}
+                                                           size="small"
+                                                           sx={{ 
+                                                             borderRadius: '10px', 
+                                                             fontSize: '0.7rem',
+                                                             height: '22px',
+                                                             maxWidth: item.imageUrl ? '100px' : '140px',
+                                                             background: alpha(theme.palette.secondary.main, 0.1),
+                                                             color: theme.palette.secondary.main,
+                                                             border: `1px solid ${alpha(theme.palette.secondary.main, 0.2)}`,
+                                                             '& .MuiChip-label': {
+                                                               px: 1,
+                                                               overflow: 'hidden',
+                                                               textOverflow: 'ellipsis',
+                                                               whiteSpace: 'nowrap',
+                                                             }
+                                                           }}
+                                                         />
+                                                       </motion.div>
+                                                     )}
+                                                   </Stack>
                                                 </Box>
                                                 
-                                                {/* Action Buttons */}
-                                                <Box sx={{ flexShrink: 0, ml: 1 }}>
-                                                  <Stack direction="row" spacing={1}>
-                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                      <IconButton
-                                                        size="small"
-                                                        onClick={() => onEditItem(item)}
-                                                        sx={{ 
-                                                          width: '36px',
-                                                          height: '36px',
-                                                          background: alpha(theme.palette.primary.main, 0.1),
-                                                          color: theme.palette.primary.main,
-                                                          '&:hover': {
-                                                            background: alpha(theme.palette.primary.main, 0.2),
-                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
-                                                          },
-                                                        }}
-                                                      >
-                                                        <Edit size={16} />
-                                                      </IconButton>
-                                                    </motion.div>
-                                                    <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                                                      <IconButton
-                                                        size="small"
-                                                        onClick={() => onDeleteItem(item.id)}
-                                                        sx={{ 
-                                                          width: '36px',
-                                                          height: '36px',
-                                                          background: alpha(theme.palette.error.main, 0.1),
-                                                          color: theme.palette.error.main,
-                                                          '&:hover': {
-                                                            background: alpha(theme.palette.error.main, 0.2),
-                                                            boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
-                                                          },
-                                                        }}
-                                                      >
-                                                        <Trash2 size={16} />
-                                                      </IconButton>
-                                                    </motion.div>
-                                                  </Stack>
-                                                </Box>
+                                                                                                 {/* Action Buttons */}
+                                                 <Box sx={{ flexShrink: 0, ml: item.imageUrl ? 0.5 : 1 }}>
+                                                   <Stack direction="row" spacing={item.imageUrl ? 0.5 : 1}>
+                                                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                                       <IconButton
+                                                         size="small"
+                                                         onClick={() => onEditItem(item)}
+                                                         sx={{ 
+                                                           width: item.imageUrl ? '32px' : '36px',
+                                                           height: item.imageUrl ? '32px' : '36px',
+                                                           background: alpha(theme.palette.primary.main, 0.1),
+                                                           color: theme.palette.primary.main,
+                                                           '&:hover': {
+                                                             background: alpha(theme.palette.primary.main, 0.2),
+                                                             boxShadow: `0 4px 12px ${alpha(theme.palette.primary.main, 0.3)}`,
+                                                           },
+                                                         }}
+                                                       >
+                                                         <Edit size={item.imageUrl ? 14 : 16} />
+                                                       </IconButton>
+                                                     </motion.div>
+                                                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
+                                                       <IconButton
+                                                         size="small"
+                                                         onClick={() => onDeleteItem(item.id)}
+                                                         sx={{ 
+                                                           width: item.imageUrl ? '32px' : '36px',
+                                                           height: item.imageUrl ? '32px' : '36px',
+                                                           background: alpha(theme.palette.error.main, 0.1),
+                                                           color: theme.palette.error.main,
+                                                           '&:hover': {
+                                                             background: alpha(theme.palette.error.main, 0.2),
+                                                             boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`,
+                                                           },
+                                                         }}
+                                                       >
+                                                         <Trash2 size={item.imageUrl ? 14 : 16} />
+                                                       </IconButton>
+                                                     </motion.div>
+                                                   </Stack>
+                                                 </Box>
                                               </Stack>
                                             </CardContent>
                                           </Card>
