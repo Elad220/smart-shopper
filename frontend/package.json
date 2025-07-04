@@ -44,7 +44,6 @@
     "react-hot-toast": "^2.5.2",
     "react-intersection-observer": "^9.16.0",
     "react-router-dom": "^6.21.3",
-    "typescript": "^5.3.3",
     "vite": "^5.0.12",
     "vitest": "^1.2.2"
   },
@@ -64,7 +63,7 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.3.4",
     "jsdom": "^22.1.0",
-    "typescript": "^5.0.2",
+    "typescript": "^5.8.3",
     "vite": "^4.3.2",
     "vitest": "^0.32.0"
   }
