@@ -24,13 +24,15 @@ interface MyListsPageProps {
   selectedListId: string | null;
   onListSelect: (listId: string) => void;
   onDataChange: () => void;
+  onNavigateToList: () => void;
 }
 
 const MyListsPage: React.FC<MyListsPageProps> = ({ 
   user, 
   selectedListId, 
   onListSelect, 
-  onDataChange 
+  onDataChange,
+  onNavigateToList
 }) => {
   const theme = useTheme();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -54,6 +56,10 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
       setListRefreshKey((prev: number) => prev + 1);
       onDataChange();
       toast.success(`Created "${newListName}" successfully! ✅`);
+      // Navigate to the new list after a short delay
+      setTimeout(() => {
+        onNavigateToList();
+      }, 1000);
     } catch (error: any) {
       toast.error(error.message || 'Failed to create shopping list');
     } finally {
@@ -64,6 +70,14 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
   const handleDataChange = () => {
     setListRefreshKey((prev: number) => prev + 1);
     onDataChange();
+  };
+
+  const handleListSelectAndNavigate = (listId: string) => {
+    onListSelect(listId);
+    // Small delay to ensure the list is selected before navigating
+    setTimeout(() => {
+      onNavigateToList();
+    }, 100);
   };
 
   return (
@@ -89,7 +103,7 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
               My Shopping Lists
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              Create, manage, and organize all your shopping lists
+              Create, manage, and select your shopping lists. Click any list to start shopping!
             </Typography>
           </Box>
         </Box>
@@ -131,7 +145,7 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
               key={listRefreshKey}
               token={user.token}
               selectedListId={selectedListId}
-              onListSelect={onListSelect}
+              onListSelect={handleListSelectAndNavigate}
               onDataChange={handleDataChange}
               onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
             />

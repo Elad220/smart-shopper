@@ -44,7 +44,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const theme = useTheme();
 
   const menuItems = [
-    { key: 'lists', icon: ListIcon, label: 'Current List' },
+    { key: 'lists', icon: ListIcon, label: 'Shopping List' },
     { key: 'mylists', icon: ListIcon, label: 'My Lists' },
     { key: 'settings', icon: Settings, label: 'Settings' },
   ];

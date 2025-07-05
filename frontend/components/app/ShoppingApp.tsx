@@ -251,6 +251,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
               selectedListId={selectedListId}
               onListSelect={handleListSelect}
               onDataChange={handleDataChange}
+              onNavigateToList={() => setCurrentView('lists')}
             />
           ) : currentView === 'lists' ? (
             <Container
@@ -405,21 +406,25 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                       onAddItem={() => setIsAddModalOpen(true)}
                     />
                   ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
-                      <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-                        No shopping list selected
-                      </Typography>
-                      <Button
-                        variant="outlined"
-                        onClick={() => setCurrentView('mylists')}
-                        sx={{
-                          borderRadius: '8px',
-                          textTransform: 'none',
-                        }}
-                      >
-                        Browse My Lists
-                      </Button>
-                    </Box>
+                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+                       <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+                         No shopping list selected
+                       </Typography>
+                       <Typography variant="body2" color="text.secondary" sx={{ mb: 3, textAlign: 'center' }}>
+                         Choose a shopping list to start adding items and managing your shopping.
+                       </Typography>
+                       <Button
+                         variant="contained"
+                         onClick={() => setCurrentView('mylists')}
+                         sx={{
+                           borderRadius: '8px',
+                           textTransform: 'none',
+                           background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                         }}
+                       >
+                         Browse My Lists
+                       </Button>
+                     </Box>
                   )}
                 </>
               )}
