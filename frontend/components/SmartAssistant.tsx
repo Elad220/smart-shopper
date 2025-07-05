@@ -189,6 +189,9 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
         sx: {
           borderRadius: '24px',
           overflow: 'hidden',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
       BackdropProps={{
@@ -262,7 +265,25 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent dividers sx={{ 
+              flex: 1,
+              overflowY: 'auto',
+              maxHeight: 'calc(90vh - 200px)',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                borderRadius: '4px',
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                },
+              },
+            }}>
               <Box sx={{ minHeight: '60px', mb: 2 }}>
                   {isCheckingStatus ? (
                       <CircularProgress size={24} />

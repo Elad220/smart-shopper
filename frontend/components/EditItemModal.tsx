@@ -165,6 +165,9 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
         sx: {
           borderRadius: '24px',
           overflow: 'hidden',
+          maxHeight: '90vh',
+          display: 'flex',
+          flexDirection: 'column',
         }
       }}
       BackdropProps={{
@@ -237,8 +240,27 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
               </motion.div>
             </DialogTitle>
 
-            <form onSubmit={handleSubmit}>
-              <DialogContent sx={{ px: 3 }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <DialogContent sx={{ 
+                px: 3,
+                flex: 1,
+                overflowY: 'auto',
+                maxHeight: 'calc(90vh - 200px)',
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                },
+              }}>
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}

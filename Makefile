@@ -42,7 +42,7 @@ frontend-lint:
 	cd frontend && npm install && npm run lint
 
 docker-up:
-	docker-compose up -d
+	docker compose up -d
 
 docker-down:
-	docker-compose down
+	docker compose down
