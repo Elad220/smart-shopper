@@ -20,6 +20,8 @@ import {
   FormControlLabel,
   Stack,
   IconButton,
+  useMediaQuery,
+  useTheme as useMuiTheme,
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
@@ -36,6 +38,8 @@ interface SmartAssistantProps {
 const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
+  const theme = useMuiTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [prompt, setPrompt] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
@@ -184,11 +188,20 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       onClose={onClose} 
       maxWidth="sm" 
       fullWidth
+      fullScreen={false}
+      scroll="paper"
+      disableScrollLock={false}
+      disableEscapeKeyDown={false}
+      keepMounted={false}
       PaperProps={{
         className: 'glass-modal',
         sx: {
-          borderRadius: '24px',
+          borderRadius: isMobile ? '0px' : '24px',
           overflow: 'hidden',
+          maxHeight: isMobile ? '90vh' : '85vh',
+          margin: isMobile ? '16px' : '32px',
+          width: isMobile ? 'calc(100% - 32px)' : 'auto',
+          position: 'relative',
         }
       }}
       BackdropProps={{
@@ -210,7 +223,13 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
               damping: 30
             }}
           >
-            <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>
+            <DialogTitle sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              pb: 1,
+              flexShrink: 0 // Prevent title from shrinking
+            }}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -262,7 +281,29 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 <CloseIcon />
               </IconButton>
             </DialogTitle>
-            <DialogContent dividers>
+            <DialogContent 
+              dividers
+              sx={{
+                maxHeight: isMobile ? '60vh' : '50vh',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                WebkitOverflowScrolling: 'touch',
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'rgba(0, 0, 0, 0.1)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: 'rgba(0, 0, 0, 0.5)',
+                },
+              }}
+            >
               <Box sx={{ minHeight: '60px', mb: 2 }}>
                   {isCheckingStatus ? (
                       <CircularProgress size={24} />
@@ -349,13 +390,26 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 )
               )}
             </DialogContent>
-            <DialogActions sx={{ p: '16px 24px' }}>
+            <DialogActions sx={{ 
+              p: '16px 24px',
+              flexShrink: 0,
+              backgroundColor: (theme) => theme.palette.mode === 'dark'
+                ? 'rgba(26, 26, 26, 0.95)'
+                : 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              borderTop: (theme) => `1px solid ${theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.1)' 
+                : 'rgba(0, 0, 0, 0.1)'}`,
+              flexDirection: isMobile ? 'column' : 'row',
+              gap: isMobile ? 1 : 1,
+            }}>
               <Button 
                 onClick={onClose} 
                 disabled={isLoading}
                 sx={{
                   borderRadius: '8px',
                   textTransform: 'none',
+                  width: isMobile ? '100%' : 'auto',
                 }}
               >
                 Cancel
@@ -367,6 +421,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 sx={{
                   borderRadius: '8px',
                   textTransform: 'none',
+                  width: isMobile ? '100%' : 'auto',
                 }}
               >
                 {isLoading && !success ? 'Generating...' : 'Generate'}
@@ -378,6 +433,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 sx={{
                   borderRadius: '8px',
                   textTransform: 'none',
+                  width: isMobile ? '100%' : 'auto',
                   background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
                 }}
               >
