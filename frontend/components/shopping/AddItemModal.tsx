@@ -453,20 +453,14 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                               value={formData.amount}
                               onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
                               label="Amount"
-                              inputProps={{ min: 1, style: { textAlign: 'center' } }}
+                              inputProps={{ min: 1 }}
                               sx={{ 
                                 borderRadius: '16px',
                                 background: 'rgba(255, 255, 255, 0.05)',
                                 backdropFilter: 'blur(10px)',
                                 '&:hover': {
                                   background: 'rgba(255, 255, 255, 0.08)',
-                                },
-                                '& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button': {
-                                  display: 'none',
-                                },
-                                '& input[type=number]': {
-                                  '-moz-appearance': 'textfield',
-                                },
+                                }
                               }}
                               startAdornment={
                                 <InputAdornment position="start">
