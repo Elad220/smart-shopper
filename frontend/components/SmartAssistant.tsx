@@ -193,10 +193,18 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       disableEscapeKeyDown={false}
       keepMounted={false}
       PaperProps={{
-        className: 'glass-modal',
         sx: {
-          borderRadius: isMobile ? '0px' : '24px',
-          overflow: 'hidden',
+          borderRadius: isMobile ? '0px' : '20px',
+          background: (theme) => theme.palette.mode === 'dark'
+            ? 'rgba(26, 26, 26, 0.7)'
+            : 'rgba(255, 255, 255, 0.8)',
+          backdropFilter: 'blur(32px)',
+          border: (theme) => theme.palette.mode === 'dark' 
+            ? '1px solid rgba(255, 255, 255, 0.15)'
+            : '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: (theme) => theme.palette.mode === 'dark'
+            ? '0 24px 48px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+            : '0 24px 48px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
           maxHeight: isMobile ? '90vh' : '85vh',
           margin: isMobile ? '16px' : '32px',
           width: isMobile ? 'calc(100% - 32px)' : 'auto',
@@ -205,8 +213,8 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
       }}
       BackdropProps={{
         sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
-          backdropFilter: 'blur(20px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+          backdropFilter: 'blur(12px)',
         }
       }}
     >
@@ -226,8 +234,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
               display: 'flex', 
               justifyContent: 'space-between', 
               alignItems: 'center', 
-              pb: 1,
-              flexShrink: 0, // Prevent title from shrinking
+              pb: 1 
             }}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -283,7 +290,6 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
             <DialogContent 
               dividers
               sx={{
-                // Make content scrollable with explicit constraints
                 maxHeight: isMobile ? '60vh' : '50vh', // Force a height constraint
                 overflowY: 'auto',
                 overflowX: 'hidden',
@@ -394,17 +400,6 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
             <DialogActions 
               sx={{ 
                 p: '16px 24px',
-                // Ensure buttons remain visible and accessible
-                flexShrink: 0, // Prevent buttons from shrinking
-                backgroundColor: (theme) => theme.palette.mode === 'dark'
-                  ? 'rgba(26, 26, 26, 0.95)'
-                  : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(8px)',
-                borderTop: (theme) => `1px solid ${theme.palette.mode === 'dark' 
-                  ? 'rgba(255, 255, 255, 0.1)' 
-                  : 'rgba(0, 0, 0, 0.1)'}`,
-                flexDirection: isMobile ? 'column' : 'row',
-                gap: isMobile ? 1 : 1,
                 '& .MuiButton-root': {
                   minHeight: '44px', // Ensure buttons are touch-friendly on mobile
                   width: isMobile ? '100%' : 'auto',
