@@ -3,9 +3,9 @@ import {
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress,
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
-  DialogContent, DialogActions, TextField
+  DialogContent, DialogActions, TextField, Tooltip
 } from '@mui/material';
-import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
+import { Plus, Package, Brain, ShoppingCart, ChevronDown, List } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
@@ -46,6 +46,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [currentView, setCurrentView] = useState<'lists' | 'settings'>('lists');
+  const [isListManagerCollapsed, setIsListManagerCollapsed] = useState(true);
   
   const {
     items,
@@ -279,19 +280,92 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
               {/* Shopping List Manager */}
               <Box sx={{ 
-                width: 360, 
+                width: isListManagerCollapsed ? 60 : 360,
                 borderRight: `1px solid ${theme.palette.divider}`,
                 background: theme.palette.background.paper,
-                overflow: 'hidden'
+                overflow: 'hidden',
+                transition: 'width 0.3s ease'
               }}>
-                <ShoppingListManager
-                  key={listRefreshKey}
-                  token={user.token}
-                  selectedListId={selectedListId}
-                  onListSelect={handleListSelect}
-                  onDataChange={handleDataChange}
-                  onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
-                />
+                {/* Collapse/Expand Button */}
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: isListManagerCollapsed ? 'center' : 'flex-end', 
+                  alignItems: 'center', 
+                  height: 48, 
+                  px: 1, 
+                  borderBottom: `1px solid ${theme.palette.divider}` 
+                }}>
+                  <Tooltip title={isListManagerCollapsed ? "Expand Lists Panel" : "Collapse Lists Panel"}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setIsListManagerCollapsed((prev) => !prev)}
+                      sx={{
+                        borderRadius: '8px',
+                        background: alpha(theme.palette.primary.main, 0.05),
+                        '&:hover': {
+                          background: alpha(theme.palette.primary.main, 0.15),
+                        },
+                        transition: 'background 0.2s',
+                      }}
+                    >
+                      {isListManagerCollapsed ? 
+                        <ChevronDown style={{ transform: 'rotate(-90deg)' }} /> : 
+                        <ChevronDown style={{ transform: 'rotate(90deg)' }} />
+                      }
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                
+                                                   {/* Collapsed state indicator */}
+                  {isListManagerCollapsed && (
+                    <Tooltip title="Click to expand shopping lists panel">
+                      <Box 
+                        sx={{ 
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          alignItems: 'center', 
+                          justifyContent: 'center',
+                          py: 2,
+                          opacity: 0.6,
+                          cursor: 'pointer',
+                          '&:hover': {
+                            opacity: 0.8,
+                            background: alpha(theme.palette.primary.main, 0.05),
+                          },
+                          transition: 'all 0.2s ease',
+                        }}
+                        onClick={() => setIsListManagerCollapsed(false)}
+                      >
+                        <List size={24} color={theme.palette.text.secondary} />
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            mt: 1, 
+                            fontSize: '0.6rem', 
+                            color: theme.palette.text.secondary,
+                            textAlign: 'center',
+                            lineHeight: 1.2,
+                            transform: 'rotate(-90deg)',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          Lists
+                        </Typography>
+                      </Box>
+                    </Tooltip>
+                  )}
+                 
+                 {/* Only render ShoppingListManager if not collapsed */}
+                 {!isListManagerCollapsed && (
+                   <ShoppingListManager
+                     key={listRefreshKey}
+                     token={user.token}
+                     selectedListId={selectedListId}
+                     onListSelect={handleListSelect}
+                     onDataChange={handleDataChange}
+                     onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+                   />
+                 )}
               </Box>
               
               {/* Shopping List Content */}
