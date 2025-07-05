@@ -67,7 +67,7 @@ exports.register = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, jti: Date.now() },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
@@ -77,7 +77,8 @@ exports.register = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
@@ -98,17 +99,18 @@ exports.login = async (req, res) => {
     if (!password) {
       return res.status(400).json({ message: 'Password is required.' });
     }
-    if ((!username || username.length < 3) && (!email || !validateEmail(email))) {
+    const orConditions = [];
+    if (username && username.length >= 3) {
+      orConditions.push({ username });
+    }
+    if (email && validateEmail(email)) {
+      orConditions.push({ email });
+    }
+    if (orConditions.length === 0) {
       return res.status(400).json({ message: 'Please provide a valid username or email.' });
     }
-
     // Find user by username or email
-    const user = await User.findOne({
-      $or: [
-        username ? { username } : {},
-        email ? { email } : {}
-      ]
-    });
+    const user = await User.findOne({ $or: orConditions });
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
@@ -121,7 +123,7 @@ exports.login = async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user._id },
+      { userId: user._id, jti: Date.now() },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
@@ -131,7 +133,8 @@ exports.login = async (req, res) => {
       user: {
         id: user._id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {

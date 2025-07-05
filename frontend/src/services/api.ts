@@ -391,3 +391,63 @@ export const updateSharePermission = async (token: string, listId: string, userI
   });
   return handleResponse<{ message: string }>(response);
 };
+
+// Smart Assistant Chat Functions
+export interface ChatMessage {
+    role: 'user' | 'assistant';
+    content: string;
+    timestamp: Date;
+}
+
+export interface UserPreferences {
+    dietaryRestrictions?: string[];
+    favoriteCuisines?: string[];
+    cookingSkillLevel?: 'beginner' | 'intermediate' | 'advanced';
+    householdSize?: number;
+    budgetPreference?: 'budget' | 'moderate' | 'premium';
+    shoppingFrequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+}
+
+export interface ChatHistoryResponse {
+    chatHistory: ChatMessage[];
+    preferences: UserPreferences;
+}
+
+export const sendChatMessage = async (token: string, message: string): Promise<{ message: string; timestamp: Date }> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message }),
+    });
+    return handleResponse<{ message: string; timestamp: Date }>(response);
+};
+
+export const getChatHistory = async (token: string): Promise<ChatHistoryResponse> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse<ChatHistoryResponse>(response);
+};
+
+export const clearChatHistory = async (token: string): Promise<{ message: string }> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+export const updateUserPreferences = async (token: string, preferences: Partial<UserPreferences>): Promise<{ message: string; preferences: UserPreferences }> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/preferences`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ preferences }),
+    });
+    return handleResponse<{ message: string; preferences: UserPreferences }>(response);
+};

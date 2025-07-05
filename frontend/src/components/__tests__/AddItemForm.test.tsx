@@ -1,11 +1,10 @@
+import React from 'react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { screen, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import AddItemForm from '../../../components/AddItemForm';
 import { StandardCategory } from '../../../types';
-
-
 
 // Create a test theme
 const testTheme = createTheme();
@@ -36,8 +35,8 @@ const mockCategories = ['Dairy', 'Bakery', 'Produce', 'My Custom Category', Stan
 const mockOnDeleteCategory = vi.fn();
 
 const selectCategory = async (user: ReturnType<typeof userEvent.setup>, category: string) => {
-  // Click the select button
-  const select = screen.getByRole('button', { name: /category/i });
+  // Click the category select (it's a combobox, not a button)
+  const select = screen.getByRole('combobox', { name: /category/i });
   await user.click(select);
   
   // Wait for the options to appear and select the category
@@ -59,9 +58,9 @@ describe('AddItemForm Component', () => {
       </TestWrapper>
     );
     
-    expect(screen.getByPlaceholderText('e.g., Whole Milk')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('e.g., Milk, Bread, Apples')).toBeInTheDocument();
     expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Units')).toBeInTheDocument();
+    expect(screen.getByLabelText('Unit')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
   });
 
@@ -82,7 +81,7 @@ describe('AddItemForm Component', () => {
     );
 
     // Fill in the form
-    await user.type(screen.getByPlaceholderText('e.g., Whole Milk'), 'New Item');
+    await user.type(screen.getByPlaceholderText('e.g., Milk, Bread, Apples'), 'New Item');
     
     // Select category
     await selectCategory(user, 'Dairy');
@@ -93,7 +92,7 @@ describe('AddItemForm Component', () => {
     // Check that onAddItem was called with the correct data
     expect(onAddItem).toHaveBeenCalledWith(expect.objectContaining({
       name: 'New Item',
-      category: StandardCategory.DAIRY,
+      category: 'Dairy',
       amount: 1,
       units: 'pcs',
     }));
@@ -119,7 +118,9 @@ describe('AddItemForm Component', () => {
     await user.click(screen.getByRole('button', { name: /add item/i }));
 
     expect(onAddItem).not.toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith('Item name cannot be empty.');
+    // The form now uses form validation instead of window.alert
+    // Check that the form doesn't submit and stays open
+    expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
   });
 
   it('calls onAddItem and onClose after successful submission', async () => {
@@ -140,7 +141,7 @@ describe('AddItemForm Component', () => {
     );
 
     // Fill in the form
-    await user.type(screen.getByPlaceholderText('e.g., Whole Milk'), 'New Item');
+    await user.type(screen.getByPlaceholderText('e.g., Milk, Bread, Apples'), 'New Item');
     
     // Select category
     await selectCategory(user, 'Dairy');

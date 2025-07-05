@@ -2,43 +2,39 @@ import '@testing-library/jest-dom';
 import { afterEach, beforeAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
-// Global test utilities
-globalThis.ResizeObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Robust ResizeObserver mock for all usages
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+Object.defineProperty(window, 'ResizeObserver', {
+  writable: true,
+  configurable: true,
+  value: ResizeObserver,
+});
+globalThis.ResizeObserver = ResizeObserver;
 
 // Mock window.matchMedia for Material-UI
+const matchMediaMock = vi.fn().mockImplementation((query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addListener: vi.fn(), // deprecated
+  removeListener: vi.fn(), // deprecated
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
+  dispatchEvent: vi.fn(),
+}));
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query: string) => {
-    const mediaQuery = {
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(), // deprecated
-      removeListener: vi.fn(), // deprecated
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    };
-    return mediaQuery;
-  }),
+  value: matchMediaMock,
 });
 
 // Ensure window.matchMedia is available
 if (!window.matchMedia) {
-  window.matchMedia = vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }));
+  window.matchMedia = matchMediaMock;
 }
 
 // Mock window.scroll
@@ -99,14 +95,23 @@ Object.defineProperty(window, 'prompt', {
 // Mock fetch for API calls
 globalThis.fetch = vi.fn();
 
-// Mock Material-UI useMediaQuery
+// Mock Material-UI useMediaQuery more comprehensively
 vi.mock('@mui/material/useMediaQuery', () => ({
-  default: () => false, // Always return false (not mobile)
+  default: vi.fn(() => false), // Always return false (not mobile)
 }));
 
 vi.mock('@mui/system/useMediaQuery', () => ({
-  default: () => false,
+  default: vi.fn(() => false),
 }));
+
+// Mock the actual useMediaQuery hook that's being used
+vi.mock('@mui/material', async () => {
+  const actual = await vi.importActual('@mui/material') as any;
+  return {
+    ...actual,
+    useMediaQuery: vi.fn(() => false),
+  };
+});
 
 // Setup and teardown
 beforeAll(() => {

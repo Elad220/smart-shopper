@@ -30,6 +30,45 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  // New fields for smart assistant chatbot
+  chatHistory: [{
+    role: {
+      type: String,
+      enum: ['user', 'assistant'],
+      required: true
+    },
+    content: {
+      type: String,
+      required: true
+    },
+    timestamp: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+  preferences: {
+    dietaryRestrictions: [String],
+    favoriteCuisines: [String],
+    cookingSkillLevel: {
+      type: String,
+      enum: ['beginner', 'intermediate', 'advanced'],
+      default: 'intermediate'
+    },
+    householdSize: {
+      type: Number,
+      default: 2
+    },
+    budgetPreference: {
+      type: String,
+      enum: ['budget', 'moderate', 'premium'],
+      default: 'moderate'
+    },
+    shoppingFrequency: {
+      type: String,
+      enum: ['daily', 'weekly', 'biweekly', 'monthly'],
+      default: 'weekly'
+    }
+  },
   createdAt: {
     type: Date,
     default: Date.now
