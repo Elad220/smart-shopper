@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
-  AppBar, Toolbar, Typography, IconButton, Button, Box, useTheme 
+  AppBar, Toolbar, Typography, IconButton, Box, useTheme 
 } from '@mui/material';
-import { Moon, Sun, ShoppingCart, Menu, LogOut } from 'lucide-react';
+import { Moon, Sun, ShoppingCart, Menu } from 'lucide-react';
 import { User } from '../../hooks/useAuth';
 
 interface HeaderProps {
@@ -10,7 +10,6 @@ interface HeaderProps {
   onToggleMode: () => void;
   isAuthenticated: boolean;
   user?: User;
-  onLogout?: () => void;
   onMenuOpen?: () => void;
   isMobile?: boolean;
 }
@@ -20,7 +19,6 @@ const Header: React.FC<HeaderProps> = ({
   onToggleMode, 
   isAuthenticated, 
   user, 
-  onLogout,
   onMenuOpen,
   isMobile
 }) => {

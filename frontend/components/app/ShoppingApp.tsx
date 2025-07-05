@@ -233,7 +233,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
         onToggleMode={onToggleMode}
         isAuthenticated={true}
         user={user}
-        onLogout={onLogout}
         onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
         isMobile={isMobile}
       />

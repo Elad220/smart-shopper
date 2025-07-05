@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
-import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
+import { generateItemsFromApi, checkApiKeyStatus } from '../src/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SmartAssistantProps {
@@ -33,7 +33,7 @@ interface SmartAssistantProps {
   token: string | null;
 }
 
-const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
+
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
   const [prompt, setPrompt] = useState('');
@@ -258,7 +258,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 disabled={isLoading || !hasApiKey}
               />
               {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-              {isLoading && !success ? (
+              {isLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
                   <CircularProgress />
                 </Box>

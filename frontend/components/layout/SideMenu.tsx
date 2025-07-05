@@ -8,7 +8,6 @@ import {
   ListItemIcon,
   ListItemText,
   Typography,
-  Divider,
   IconButton,
   useTheme,
   Avatar,
@@ -19,8 +18,7 @@ import {
   Settings, 
   LogOut, 
   X, 
-  User,
-  ShoppingCart 
+  User
 } from 'lucide-react';
 import { User as UserType } from '../../hooks/useAuth';
 
