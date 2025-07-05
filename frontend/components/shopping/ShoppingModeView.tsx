@@ -39,43 +39,47 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   // Enhanced toggle function with toast notification
   const handleToggleComplete = (itemId: string) => {
     const item = items.find((i: ShoppingItem) => i.id === itemId);
-    if (item) {
-      onToggleComplete(itemId);
+    if (!item) return;
+    
+    // Store the current state before toggling
+    const wasCompleted = item.completed;
+    
+    // Call the original toggle function
+    onToggleComplete(itemId);
+    
+    // Show toast based on the state BEFORE toggling (since we're about to change it)
+    if (!wasCompleted) {
+      // Item is being completed
+      const encouragingMessages = [
+        `✅ Got ${item.name}!`,
+        `🎉 ${item.name} checked off!`,
+        `✨ ${item.name} added to cart!`,
+        `🛒 ${item.name} found!`,
+        `👏 ${item.name} completed!`,
+      ];
+      const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+      toast.success(randomMessage, {
+        duration: 2000,
+        position: 'top-center',
+      });
       
-      // Show different messages based on completion status
-      if (!item.completed) {
-        // Item is being completed
-        const encouragingMessages = [
-          `✅ Got ${item.name}!`,
-          `🎉 ${item.name} checked off!`,
-          `✨ ${item.name} added to cart!`,
-          `🛒 ${item.name} found!`,
-          `👏 ${item.name} completed!`,
-        ];
-        const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
-        toast.success(randomMessage, {
-          duration: 2000,
-          position: 'top-center',
-        });
-        
-        // Check if this was the last item to complete
-        const remainingAfterThis = items.filter((i: ShoppingItem) => !i.completed && i.id !== itemId).length;
-        if (remainingAfterThis === 0) {
-          // All items completed!
-          setTimeout(() => {
-            toast.success('🎉 Shopping complete! Great job! 🛍️', {
-              duration: 4000,
-              position: 'top-center',
-            });
-          }, 500); // Small delay to show after the individual item toast
-        }
-      } else {
-        // Item is being unchecked
-        toast(`📝 ${item.name} back on the list`, {
-          duration: 1500,
-          position: 'top-center',
-        });
+      // Check if this was the last item to complete
+      const remainingAfterThis = items.filter((i: ShoppingItem) => !i.completed && i.id !== itemId).length;
+      if (remainingAfterThis === 0) {
+        // All items completed!
+        setTimeout(() => {
+          toast.success('🎉 Shopping complete! Great job! 🛍️', {
+            duration: 4000,
+            position: 'top-center',
+          });
+        }, 500); // Small delay to show after the individual item toast
       }
+    } else {
+      // Item is being unchecked
+      toast(`📝 ${item.name} back on the list`, {
+        duration: 1500,
+        position: 'top-center',
+      });
     }
   };
   
@@ -136,20 +140,27 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
           <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
             Your list is empty
           </Typography>
-          <Button
-            variant="contained"
-            startIcon={<ArrowLeft />}
-            onClick={onExitShoppingMode}
-            sx={{
-              px: 4,
-              py: 1.5,
-              borderRadius: '12px',
-              textTransform: 'none',
-              fontSize: '1.1rem',
-            }}
-          >
-            Exit Shopping Mode
-          </Button>
+                     <Button
+             variant="contained"
+             startIcon={<ArrowLeft />}
+             onClick={() => {
+               try {
+                 onExitShoppingMode();
+               } catch (error) {
+                 console.error('Error exiting shopping mode:', error);
+                 toast.error('Error exiting shopping mode');
+               }
+             }}
+             sx={{
+               px: 4,
+               py: 1.5,
+               borderRadius: '12px',
+               textTransform: 'none',
+               fontSize: '1.1rem',
+             }}
+           >
+             Exit Shopping Mode
+           </Button>
         </Paper>
       </Container>
     );
@@ -184,24 +195,31 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
                   {remainingItems} items remaining
                 </Typography>
               </Box>
-              <Button
-                variant="outlined"
-                startIcon={<ArrowLeft />}
-                onClick={onExitShoppingMode}
-                sx={{
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  px: 3,
-                  py: 1.5,
-                  borderWidth: 2,
-                  '&:hover': {
-                    borderWidth: 2,
-                  },
-                }}
-              >
-                Exit
-              </Button>
+                             <Button
+                 variant="outlined"
+                 startIcon={<ArrowLeft />}
+                 onClick={() => {
+                   try {
+                     onExitShoppingMode();
+                   } catch (error) {
+                     console.error('Error exiting shopping mode:', error);
+                     toast.error('Error exiting shopping mode');
+                   }
+                 }}
+                 sx={{
+                   borderRadius: '12px',
+                   textTransform: 'none',
+                   fontSize: '1rem',
+                   px: 3,
+                   py: 1.5,
+                   borderWidth: 2,
+                   '&:hover': {
+                     borderWidth: 2,
+                   },
+                 }}
+               >
+                 Exit
+               </Button>
             </Stack>
           </CardContent>
         </Card>
