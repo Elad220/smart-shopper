@@ -405,15 +405,16 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                   : 'rgba(0, 0, 0, 0.1)'}`,
                 flexDirection: isMobile ? 'column' : 'row',
                 gap: isMobile ? 1 : 1,
+                '& .MuiButton-root': {
+                  minHeight: '44px', // Ensure buttons are touch-friendly on mobile
+                  width: isMobile ? '100%' : 'auto',
+                }
               }}
             >
               <Button 
                 onClick={onClose} 
                 disabled={isLoading}
-                sx={{
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                }}
+                color="inherit"
               >
                 Cancel
               </Button>
@@ -421,10 +422,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 onClick={handleGenerate} 
                 variant="outlined" 
                 disabled={isLoading || !hasApiKey}
-                sx={{
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                }}
+                color="primary"
               >
                 {isLoading && !success ? 'Generating...' : 'Generate'}
               </Button>
@@ -432,11 +430,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 onClick={handleAddClick} 
                 variant="contained" 
                 disabled={isLoading || generatedItems.length === 0}
-                sx={{
-                  borderRadius: '8px',
-                  textTransform: 'none',
-                  background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                }}
+                color="primary"
               >
                 Add Selected Items
               </Button>

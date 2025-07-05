@@ -558,59 +558,21 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                     : 'rgba(0, 0, 0, 0.1)'}`,
                   flexDirection: isMobile ? 'column' : 'row',
                   gap: isMobile ? 1 : 1,
+                  '& .MuiButton-root': {
+                    minHeight: '44px', // Ensure buttons are touch-friendly on mobile
+                    width: isMobile ? '100%' : 'auto',
+                  }
                 }}
               >
-                <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ width: '100%' }}>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: 1 }}>
-                    <Button
-                      onClick={handleClose}
-                      startIcon={<X size={16} />}
-                      sx={{
-                        width: '100%',
-                        borderRadius: '16px',
-                        textTransform: 'none',
-                        height: '48px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        backdropFilter: 'blur(10px)',
-                        border: `1px solid ${theme.palette.divider}`,
-                        color: theme.palette.text.primary,
-                        '&:hover': {
-                          background: 'rgba(255, 255, 255, 0.1)',
-                          transform: 'translateY(-1px)',
-                        }
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: 1 }}>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      disabled={!formData.name.trim()}
-                      startIcon={<Edit size={16} />}
-                      sx={{
-                        width: '100%',
-                        borderRadius: '16px',
-                        textTransform: 'none',
-                        height: '48px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        boxShadow: `0 8px 24px ${theme.palette.primary.main}40`,
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                          boxShadow: `0 12px 32px ${theme.palette.primary.main}50`,
-                          transform: 'translateY(-2px)',
-                        },
-                        '&:disabled': {
-                          background: theme.palette.action.disabledBackground,
-                          color: theme.palette.action.disabled,
-                        }
-                      }}
-                    >
-                      Save Changes
-                    </Button>
-                  </motion.div>
-                </Stack>
+                <Button onClick={handleClose} color="inherit">Cancel</Button>
+                <Button 
+                  type="submit" 
+                  variant="contained" 
+                  color="primary"
+                  disabled={!formData.name.trim()}
+                >
+                  Save Changes
+                </Button>
               </DialogActions>
             </form>
           </motion.div>
