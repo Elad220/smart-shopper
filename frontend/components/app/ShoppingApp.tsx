@@ -441,14 +441,21 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                     onExitShoppingMode={handleExitShoppingMode}
                     currentListName={currentListName}
                   />
-                ) : (
+                ) : selectedListId ? (
                   <ShoppingListView
                     items={items}
+                    listId={selectedListId}
                     onToggleComplete={handleToggleComplete}
                     onDeleteItem={handleDeleteItem}
                     onEditItem={handleEditItem}
                     onAddItem={() => setIsAddModalOpen(true)}
                   />
+                ) : (
+                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                    <Typography variant="h6" color="text.secondary">
+                      Select a shopping list to view items
+                    </Typography>
+                  </Box>
                 )}
               </>
             )}
