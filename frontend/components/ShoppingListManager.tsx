@@ -16,6 +16,11 @@ import {
   useTheme,
   alpha,
   CircularProgress,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Chip,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -23,11 +28,11 @@ import {
   Delete as DeleteIcon,
   UploadFile as ImportIcon,
   Download as ExportIcon,
+  Share as ShareIcon,
 } from '@mui/icons-material';
 import SortIcon from '@mui/icons-material/Sort';
 import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList } from '../src/services/api';
+import { fetchShoppingLists, updateShoppingList, deleteShoppingList, exportShoppingList, importShoppingList, shareShoppingList } from '../src/services/api';
 
 interface ShoppingList {
   _id: string;
@@ -35,6 +40,13 @@ interface ShoppingList {
   items: any[];
   createdAt: string;
   updatedAt: string;
+  isOwner?: boolean;
+  sharedPermission?: 'read' | 'write';
+  isShared?: boolean;
+  sharedWith?: Array<{
+    user: { _id: string; username: string; email: string };
+    permission: 'read' | 'write';
+  }>;
 }
 
 interface ShoppingListManagerProps {
@@ -70,6 +82,12 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // Sharing state
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermission, setSharePermission] = useState<'read' | 'write'>('read');
+  const [sharingListId, setSharingListId] = useState<string | null>(null);
+  const [sharingListName, setSharingListName] = useState('');
 
   useEffect(() => {
     if (token) {
@@ -219,6 +237,44 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     }
   };
 
+  // Sharing functions
+  const openShareDialog = (list: ShoppingList) => {
+    setSharingListId(list._id);
+    setSharingListName(list.name);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShare = async () => {
+    if (!sharingListId || !shareEmail.trim()) {
+      setError('Please enter an email address');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      await shareShoppingList(token, sharingListId, shareEmail.trim(), sharePermission);
+      setShareEmail('');
+      setSharePermission('read');
+      setIsShareDialogOpen(false);
+      await loadLists();
+      setError(null);
+    } catch (error: any) {
+      setError(error.message || 'Failed to share list');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const closeShareDialog = () => {
+    setIsShareDialogOpen(false);
+    setShareEmail('');
+    setSharePermission('read');
+    setSharingListId(null);
+    setSharingListName('');
+    setError(null);
+  };
+
   // The import/export functionality is now handled in the parent component (ShoppingApp)
 
   return (
@@ -346,58 +402,100 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             >
               <Stack direction="row" alignItems="center" spacing={1.5}>
                 <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                  <Typography
-                    variant="body1"
-                    noWrap
-                    sx={{ 
-                      fontWeight: selectedListId === list._id ? 600 : 500,
-                      mb: 0.25,
-                    }}
-                  >
-                    {list.name}
-                  </Typography>
+                  <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 0.25 }}>
+                    <Typography
+                      variant="body1"
+                      noWrap
+                      sx={{ 
+                        fontWeight: selectedListId === list._id ? 600 : 500,
+                      }}
+                    >
+                      {list.name}
+                    </Typography>
+                    {list.isShared && (
+                      <Chip
+                        label="Shared"
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ fontSize: '0.7rem', height: 16 }}
+                      />
+                    )}
+                    {!list.isOwner && (
+                      <Chip
+                        label={list.sharedPermission === 'write' ? 'Write' : 'Read'}
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                        sx={{ fontSize: '0.7rem', height: 16 }}
+                      />
+                    )}
+                  </Stack>
                   <Typography variant="caption" color="text.secondary">
                     {list.items.length} items
                   </Typography>
                 </Box>
                 
                 <Stack direction="row" spacing={0.5}>
-                  <IconButton
-                    size="small"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      openEditDialog(list);
-                    }}
-                    disabled={isLoading || !!deletingListId}
-                    sx={{
-                      borderRadius: '6px',
-                      '&:hover': {
-                        background: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    <EditIcon sx={{ fontSize: 16 }} />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e: React.MouseEvent) => {
-                      e.stopPropagation();
-                      handleDeleteList(list._id);
-                    }}
-                    disabled={isLoading || !!deletingListId}
-                    sx={{
-                      borderRadius: '6px',
-                      '&:hover': {
-                        background: theme.palette.action.hover,
-                      },
-                    }}
-                  >
-                    {deletingListId === list._id ? (
-                      <CircularProgress size={16} sx={{ color: theme.palette.error.main }} />
-                    ) : (
-                      <DeleteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
-                    )}
-                  </IconButton>
+                  {/* Show share button only for owners, edit button for owners and write permission users */}
+                  {list.isOwner && (
+                    <IconButton
+                      size="small"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        openShareDialog(list);
+                      }}
+                      disabled={isLoading || !!deletingListId}
+                      sx={{
+                        borderRadius: '6px',
+                        '&:hover': {
+                          background: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <ShareIcon sx={{ fontSize: 16, color: theme.palette.primary.main }} />
+                    </IconButton>
+                  )}
+                  {(list.isOwner || list.sharedPermission === 'write') && (
+                    <IconButton
+                      size="small"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        openEditDialog(list);
+                      }}
+                      disabled={isLoading || !!deletingListId}
+                      sx={{
+                        borderRadius: '6px',
+                        '&:hover': {
+                          background: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      <EditIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  )}
+                  {list.isOwner && (
+                    <IconButton
+                      size="small"
+                      onClick={(e: React.MouseEvent) => {
+                        e.stopPropagation();
+                        handleDeleteList(list._id);
+                      }}
+                      disabled={isLoading || !!deletingListId}
+                      sx={{
+                        borderRadius: '6px',
+                        '&:hover': {
+                          background: theme.palette.action.hover,
+                        },
+                      }}
+                    >
+                      {deletingListId === list._id ? (
+                        <CircularProgress size={16} sx={{ color: theme.palette.error.main }} />
+                      ) : (
+                        <DeleteIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+                      )}
+                    </IconButton>
+                  )}
                 </Stack>
               </Stack>
             </Paper>
@@ -432,6 +530,73 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             disabled={isLoading || !!deletingListId || !newListName.trim()}
           >
             {isLoading ? 'Saving...' : 'Save'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Share List Dialog */}
+      <Dialog open={isShareDialogOpen} onClose={() => !isLoading && closeShareDialog()} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <ShareIcon />
+            <Typography variant="h6">Share "{sharingListName}"</Typography>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              Share your shopping list with friends and family. They can view or edit the list based on the permissions you give them.
+            </Alert>
+            
+            <TextField
+              label="Email address"
+              type="email"
+              value={shareEmail}
+              onChange={(e) => setShareEmail(e.target.value)}
+              fullWidth
+              disabled={isLoading}
+              helperText="Enter the email address of the person you want to share with"
+            />
+            
+            <FormControl fullWidth>
+              <InputLabel>Permission</InputLabel>
+              <Select
+                value={sharePermission}
+                onChange={(e) => setSharePermission(e.target.value as 'read' | 'write')}
+                label="Permission"
+                disabled={isLoading}
+              >
+                <MenuItem value="read">
+                  <Stack>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Read only</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Can view the list but cannot add, edit, or delete items
+                    </Typography>
+                  </Stack>
+                </MenuItem>
+                <MenuItem value="write">
+                  <Stack>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>Read & write</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Can view and edit the list, add or remove items
+                    </Typography>
+                  </Stack>
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeShareDialog} disabled={isLoading}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleShare} 
+            variant="contained"
+            disabled={isLoading || !shareEmail.trim()}
+            startIcon={<ShareIcon />}
+          >
+            {isLoading ? 'Sharing...' : 'Share List'}
           </Button>
         </DialogActions>
       </Dialog>

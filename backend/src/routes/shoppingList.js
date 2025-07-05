@@ -40,4 +40,10 @@ router.post('/:listId/items/delete-checked', shoppingListController.deleteChecke
 router.get('/:listId/export', shoppingListController.exportList);
 router.post('/:listId/import', shoppingListController.importList);
 
+// Sharing routes
+router.post('/:listId/share', shoppingListController.shareList);
+router.post('/:listId/unshare', shoppingListController.unshareList);
+router.get('/:listId/shares', shoppingListController.getListShares);
+router.put('/:listId/share-permission', shoppingListController.updateSharePermission);
+
 module.exports = router;

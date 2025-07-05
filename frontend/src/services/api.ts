@@ -347,3 +347,47 @@ export const importShoppingList = async (token: string, listId: string, items: O
   });
   return handleResponse<ShoppingItem[]>(response);
 };
+
+// Sharing functionality
+export const shareShoppingList = async (token: string, listId: string, email: string, permission: 'read' | 'write' = 'read'): Promise<{ message: string; sharedWith: any[] }> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/share`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ email, permission }),
+  });
+  return handleResponse<{ message: string; sharedWith: any[] }>(response);
+};
+
+export const unshareShoppingList = async (token: string, listId: string, userId: string): Promise<{ message: string }> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/unshare`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ userId }),
+  });
+  return handleResponse<{ message: string }>(response);
+};
+
+export const getShoppingListShares = async (token: string, listId: string): Promise<{ owner: any; sharedWith: any[]; isShared: boolean }> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/shares`, {
+    headers: { 'Authorization': `Bearer ${token}` },
+  });
+  return handleResponse<{ owner: any; sharedWith: any[]; isShared: boolean }>(response);
+};
+
+export const updateSharePermission = async (token: string, listId: string, userId: string, permission: 'read' | 'write'): Promise<{ message: string }> => {
+  const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/share-permission`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ userId, permission }),
+  });
+  return handleResponse<{ message: string }>(response);
+};
