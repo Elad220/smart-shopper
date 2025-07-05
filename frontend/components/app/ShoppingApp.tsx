@@ -5,7 +5,7 @@ import {
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from '@mui/material';
-import { Plus, Package, Brain } from 'lucide-react';
+import { Plus, Package, Brain, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
@@ -41,6 +41,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
+  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   
   const {
     items,
@@ -213,261 +214,286 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
       {/* Main Content Area */}
       <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
         {/* Drawer for Shopping List Manager */}
-      <Drawer
-        variant={isMobile ? 'temporary' : 'persistent'}
-        anchor="left"
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        sx={{
-          width: 360,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: 360,
-            boxSizing: 'border-box',
-            top: 64, // Account for header height
-            height: 'calc(100vh - 64px)',
-            borderRight: `1px solid ${theme.palette.divider}`,
-          },
-        }}
-      >
-        <ShoppingListManager
-          key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
-          token={user.token}
-          selectedListId={selectedListId}
-          onListSelect={handleListSelect}
-          onDataChange={handleDataChange}
-          onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
-        />
-      </Drawer>
-
-      {/* Main Content */}
-      <Box sx={{ 
-        flexGrow: 1, 
-        py: 3, 
-        ml: !isMobile && isDrawerOpen ? '360px' : 0,
-        transition: 'margin-left 0.3s ease',
-        minWidth: 0, // Prevent overflow
-        width: !isMobile && isDrawerOpen ? 'calc(100vw - 360px)' : '100%',
-        overflow: 'hidden',
-      }}>
-        <Container 
-          maxWidth="lg" 
-          sx={{ 
-            width: '100%',
-            maxWidth: '100%',
-            px: { xs: 2, sm: 3 }
+        <Drawer
+          variant={isMobile ? 'temporary' : 'persistent'}
+          anchor="left"
+          open={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          sx={{
+            width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
+              boxSizing: 'border-box',
+              top: 64, // Account for header height
+              height: 'calc(100vh - 64px)',
+              borderRight: `1px solid ${theme.palette.divider}`,
+              transition: 'width 0.3s',
+              overflowX: 'hidden',
+              p: 0,
+            },
           }}
         >
-          {/* Loading State */}
-          {isLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+          {/* Collapse/Expand Button (desktop only) */}
+          {!isMobile && (
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 48, px: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
+              <IconButton
+                size="small"
+                onClick={() => setIsDrawerCollapsed((prev) => !prev)}
+                sx={{
+                  borderRadius: '8px',
+                  background: alpha(theme.palette.primary.main, 0.05),
+                  '&:hover': {
+                    background: alpha(theme.palette.primary.main, 0.15),
+                  },
+                  transition: 'background 0.2s',
+                }}
               >
-                <Package size={40} color={theme.palette.primary.main} />
-              </motion.div>
+                {isDrawerCollapsed ? <ChevronDown style={{ transform: 'rotate(-90deg)' }} /> : <ChevronDown style={{ transform: 'rotate(90deg)' }} />}
+              </IconButton>
             </Box>
-          ) : (
-            <>
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card
-                  sx={{
-                    mb: 3,
-                    borderRadius: '16px',
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-                    border: `1px solid ${theme.palette.divider}`,
-                  }}
+          )}
+          {/* Only render ShoppingListManager if not collapsed */}
+          {!isDrawerCollapsed && (
+            <ShoppingListManager
+              key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
+              token={user.token}
+              selectedListId={selectedListId}
+              onListSelect={handleListSelect}
+              onDataChange={handleDataChange}
+              onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+            />
+          )}
+        </Drawer>
+
+        {/* Main Content */}
+        <Box sx={{
+          flexGrow: 1,
+          py: 3,
+          ml: !isMobile && isDrawerOpen ? (isDrawerCollapsed ? '60px' : '360px') : 0,
+          transition: 'margin-left 0.3s ease',
+          minWidth: 0,
+          width: '100%',
+          overflow: 'hidden',
+        }}>
+          <Container
+            maxWidth="md"
+            sx={{
+              mx: 'auto',
+              px: { xs: 2, sm: 3 },
+              width: '100%',
+            }}
+          >
+            {/* Loading State */}
+            {isLoading ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 >
-                  <CardContent sx={{ p: 2.5 }}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                        <Box sx={{ minWidth: 0 }}>
-                          <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                            {currentListName}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {totalItems} items • {completedItems} completed
-                          </Typography>
+                  <Package size={40} color={theme.palette.primary.main} />
+                </motion.div>
+              </Box>
+            ) : (
+              <>
+                {/* Header */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card
+                    sx={{
+                      mb: 3,
+                      borderRadius: '16px',
+                      background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                      border: `1px solid ${theme.palette.divider}`,
+                    }}
+                  >
+                    <CardContent sx={{ p: 2.5 }}>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                          <Box sx={{ minWidth: 0 }}>
+                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                              {currentListName}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {totalItems} items • {completedItems} completed
+                            </Typography>
+                          </Box>
                         </Box>
-                      </Box>
-                      
-                      <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                        {completedItems > 0 && (
-                          <Button
-                            variant="text"
-                            size="small"
-                            onClick={handleClearCompleted}
-                            sx={{ 
-                              borderRadius: '8px', 
-                              textTransform: 'none',
-                              color: theme.palette.error.main,
-                              minWidth: 'auto',
-                              px: 1.5,
-                              fontSize: '0.75rem',
+                        
+                        <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                          {completedItems > 0 && (
+                            <Button
+                              variant="text"
+                              size="small"
+                              onClick={handleClearCompleted}
+                              sx={{ 
+                                borderRadius: '8px', 
+                                textTransform: 'none',
+                                color: theme.palette.error.main,
+                                minWidth: 'auto',
+                                px: 1.5,
+                                fontSize: '0.75rem',
+                                '&:hover': {
+                                  background: alpha(theme.palette.error.main, 0.1),
+                                },
+                              }}
+                            >
+                              Clear
+                            </Button>
+                          )}
+                          <IconButton
+                            onClick={() => setIsAddModalOpen(true)}
+                            sx={{
+                              borderRadius: '8px',
+                              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                              color: 'white',
                               '&:hover': {
-                                background: alpha(theme.palette.error.main, 0.1),
+                                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
                               },
                             }}
                           >
-                            Clear
-                          </Button>
-                        )}
-                        <IconButton
-                          onClick={() => setIsAddModalOpen(true)}
-                          sx={{
-                            borderRadius: '8px',
-                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                            color: 'white',
-                            '&:hover': {
-                              background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                            },
-                          }}
-                        >
-                          <Plus size={18} />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => setIsSmartAssistantOpen(true)}
-                          sx={{ 
-                            borderRadius: '8px',
-                            border: `1px solid ${theme.palette.divider}`,
-                            '&:hover': {
-                              background: alpha(theme.palette.primary.main, 0.1),
-                            },
-                          }}
-                        >
-                          <Brain size={18} />
-                        </IconButton>
+                            <Plus size={18} />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => setIsSmartAssistantOpen(true)}
+                            sx={{ 
+                              borderRadius: '8px',
+                              border: `1px solid ${theme.palette.divider}`,
+                              '&:hover': {
+                                background: alpha(theme.palette.primary.main, 0.1),
+                              },
+                            }}
+                          >
+                            <Brain size={18} />
+                          </IconButton>
+                        </Stack>
                       </Stack>
-                    </Stack>
-                  
-                  {totalItems > 0 && (
-                    <Box sx={{ mt: 3 }}>
-                      <LinearProgress
-                        variant="determinate"
-                        value={completionPercentage}
-                        sx={{
-                          height: 8,
-                          borderRadius: 4,
-                          backgroundColor: `${theme.palette.primary.main}20`,
-                          '& .MuiLinearProgress-bar': {
+                    
+                    {totalItems > 0 && (
+                      <Box sx={{ mt: 3 }}>
+                        <LinearProgress
+                          variant="determinate"
+                          value={completionPercentage}
+                          sx={{
+                            height: 8,
                             borderRadius: 4,
-                            background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                          },
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                        {completionPercentage}% complete
-                      </Typography>
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
+                            backgroundColor: `${theme.palette.primary.main}20`,
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 4,
+                              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            },
+                          }}
+                        />
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                          {completionPercentage}% complete
+                        </Typography>
+                      </Box>
+                    )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
-            {/* Shopping List */}
-            <ShoppingListView
-              items={items}
-              onToggleComplete={handleToggleComplete}
-              onDeleteItem={handleDeleteItem}
-              onEditItem={handleEditItem}
-              onAddItem={() => setIsAddModalOpen(true)}
-            />
-          </>
-        )}
+                {/* Shopping List */}
+                <ShoppingListView
+                  items={items}
+                  onToggleComplete={handleToggleComplete}
+                  onDeleteItem={handleDeleteItem}
+                  onEditItem={handleEditItem}
+                  onAddItem={() => setIsAddModalOpen(true)}
+                />
+              </>
+            )}
 
-        {/* Floating Action Button */}
-        <Fab
-          color="primary"
-          sx={{
-            position: 'fixed',
-            bottom: 24,
-            right: 24,
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-          }}
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <Plus size={24} />
-        </Fab>
-
-        {/* Add Item Modal */}
-        <AddItemModal
-          open={isAddModalOpen}
-          onClose={() => !isAddingItem && setIsAddModalOpen(false)}
-          onAdd={handleAddItem}
-          isLoading={isAddingItem}
-        />
-
-        {/* Edit Item Modal */}
-        <EditItemModal
-          open={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setEditingItem(null);
-          }}
-          onSave={handleUpdateItem}
-          item={editingItem}
-        />
-
-        {/* Smart Assistant Modal */}
-        <SmartAssistant
-          open={isSmartAssistantOpen}
-          onClose={() => setIsSmartAssistantOpen(false)}
-          onAddItems={handleSmartAssistantAddItems}
-          token={user.token}
-        />
-
-        {/* Create Shopping List Dialog */}
-        <Dialog 
-          open={isCreateDialogOpen} 
-          onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <DialogTitle>Create New Shopping List</DialogTitle>
-          <DialogContent>
-            <TextField
-              autoFocus
-              margin="dense"
-              label="List Name"
-              fullWidth
-              variant="outlined"
-              value={newListName}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
-              disabled={isCreatingList}
-              onKeyPress={(e: React.KeyboardEvent) => {
-                if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
-                  handleCreateList();
-                }
+            {/* Floating Action Button */}
+            <Fab
+              color="primary"
+              sx={{
+                position: 'fixed',
+                bottom: 24,
+                right: 24,
+                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
               }}
-              sx={{ mt: 1 }}
+              onClick={() => setIsAddModalOpen(true)}
+            >
+              <Plus size={24} />
+            </Fab>
+
+            {/* Add Item Modal */}
+            <AddItemModal
+              open={isAddModalOpen}
+              onClose={() => !isAddingItem && setIsAddModalOpen(false)}
+              onAdd={handleAddItem}
+              isLoading={isAddingItem}
             />
-          </DialogContent>
-          <DialogActions>
-            <Button 
-              onClick={() => setIsCreateDialogOpen(false)} 
-              disabled={isCreatingList}
+
+            {/* Edit Item Modal */}
+            <EditItemModal
+              open={isEditModalOpen}
+              onClose={() => {
+                setIsEditModalOpen(false);
+                setEditingItem(null);
+              }}
+              onSave={handleUpdateItem}
+              item={editingItem}
+            />
+
+            {/* Smart Assistant Modal */}
+            <SmartAssistant
+              open={isSmartAssistantOpen}
+              onClose={() => setIsSmartAssistantOpen(false)}
+              onAddItems={handleSmartAssistantAddItems}
+              token={user.token}
+            />
+
+            {/* Create Shopping List Dialog */}
+            <Dialog 
+              open={isCreateDialogOpen} 
+              onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
+              maxWidth="sm"
+              fullWidth
             >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateList} 
-              variant="contained" 
-              disabled={isCreatingList || !newListName.trim()}
-            >
-              {isCreatingList ? 'Creating...' : 'Create'}
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Container>
+              <DialogTitle>Create New Shopping List</DialogTitle>
+              <DialogContent>
+                <TextField
+                  autoFocus
+                  margin="dense"
+                  label="List Name"
+                  fullWidth
+                  variant="outlined"
+                  value={newListName}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
+                  disabled={isCreatingList}
+                  onKeyPress={(e: React.KeyboardEvent) => {
+                    if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
+                      handleCreateList();
+                    }
+                  }}
+                  sx={{ mt: 1 }}
+                />
+              </DialogContent>
+              <DialogActions>
+                <Button 
+                  onClick={() => setIsCreateDialogOpen(false)} 
+                  disabled={isCreatingList}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleCreateList} 
+                  variant="contained" 
+                  disabled={isCreatingList || !newListName.trim()}
+                >
+                  {isCreatingList ? 'Creating...' : 'Create'}
+                </Button>
+              </DialogActions>
+            </Dialog>
+          </Container>
+        </Box>
+      </Box>
     </Box>
-    </Box>
-  </Box>
   );
 };
 
