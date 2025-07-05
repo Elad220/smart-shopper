@@ -6,7 +6,6 @@ import {
   InputAdornment, IconButton, Typography, useMediaQuery
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Edit, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
@@ -233,7 +232,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                       animate={{ rotate: [0, 10, 0] }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     >
-                      <Edit size={24} color="white" />
+                      ✏️
                     </motion.div>
                   </Box>
                   <Box>
@@ -241,8 +240,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                       Edit Item
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ opacity: 0.8 }}>
-                      <Sparkles size={14} style={{ marginRight: '4px', verticalAlign: 'middle' }} />
-                      Update your shopping item details
+                      ✨ Update your shopping item details
                     </Typography>
                   </Box>
                 </Stack>
@@ -315,8 +313,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                     {/* Enhanced Image Upload Section */}
                     <Box>
                       <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.primary' }}>
-                        <ImageIcon size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-                        Item Image (Optional)
+                        📷 Item Image (Optional)
                       </Typography>
                       {formData.imageUrl ? (
                         <motion.div
@@ -356,7 +353,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                                   },
                                 }}
                               >
-                                <Trash2 size={18} />
+                                🗑️
                               </IconButton>
                             </motion.div>
                           </Box>
@@ -367,7 +364,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                             variant="outlined"
                             component="label"
                             fullWidth
-                            startIcon={<Upload size={20} />}
+                            startIcon={<span>📤</span>}
                             sx={{
                               borderRadius: '20px',
                               borderStyle: 'dashed',
