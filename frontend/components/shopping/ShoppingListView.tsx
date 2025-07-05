@@ -72,6 +72,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
   // Category emoji mapping
@@ -93,18 +94,28 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     return emojiMap[category] || '🛒';
   };
 
-  // Filter items based on search query
+  // Filter items based on search query and unchecked filter
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+    let result = items;
     
-    const query = searchQuery.toLowerCase();
-    return items.filter(item => 
-      item.name.toLowerCase().includes(query) ||
-      item.category.toLowerCase().includes(query) ||
-      item.notes?.toLowerCase().includes(query) ||
-      item.units.toLowerCase().includes(query)
-    );
-  }, [items, searchQuery]);
+    // Apply unchecked filter
+    if (showUncheckedOnly) {
+      result = result.filter(item => !item.completed);
+    }
+    
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(item => 
+        item.name.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.notes?.toLowerCase().includes(query) ||
+        item.units.toLowerCase().includes(query)
+      );
+    }
+    
+    return result;
+  }, [items, searchQuery, showUncheckedOnly]);
 
   // Group filtered items by category
   const groupedItems = filteredItems.reduce((acc, item) => {
@@ -585,7 +596,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             transition: 'all 0.6s ease',
           }}
         >
-          <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
+                    <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
             <Stack direction="row" spacing={2} alignItems="center">
               <TextField
                 size="small"
@@ -617,7 +628,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       <Search size={18} color={theme.palette.primary.main} />
                     </InputAdornment>
                   ),
-                                                      endAdornment: searchQuery && (
+                  endAdornment: searchQuery && (
                     <InputAdornment position="end">
                       <Box
                         sx={{
@@ -642,6 +653,46 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   )
                 }}
               />
+              
+              {/* Filter for unchecked items */}
+              <Box
+                sx={{
+                  transition: 'transform 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                  },
+                  '&:active': {
+                    transform: 'scale(0.95)',
+                  },
+                }}
+              >
+                <Button
+                  variant={showUncheckedOnly ? 'contained' : 'outlined'}
+                  size="small"
+                  onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
+                  startIcon={<Circle size={16} />}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '12px',
+                    borderColor: alpha(theme.palette.warning.main, 0.3),
+                    color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
+                    background: showUncheckedOnly 
+                      ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
+                      : alpha(theme.palette.warning.main, 0.05),
+                    backdropFilter: 'blur(10px)',
+                    whiteSpace: 'nowrap',
+                    '&:hover': {
+                      background: showUncheckedOnly 
+                        ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
+                        : alpha(theme.palette.warning.main, 0.1),
+                      borderColor: theme.palette.warning.main,
+                      boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
+                    },
+                  }}
+                >
+                  Unchecked Only
+                </Button>
+              </Box>
               
               {sortedCategories.length > 1 && !searchQuery && (
                 <>
