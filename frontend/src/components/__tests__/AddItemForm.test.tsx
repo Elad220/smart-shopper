@@ -1,8 +1,21 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { screen, render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import AddItemForm from '../../../components/AddItemForm';
 import { StandardCategory } from '../../../types';
+
+
+
+// Create a test theme
+const testTheme = createTheme();
+
+// Test wrapper component
+const TestWrapper = ({ children }: { children: React.ReactNode }) => (
+  <ThemeProvider theme={testTheme}>
+    {children}
+  </ThemeProvider>
+);
 
 // Mock the alert function
 beforeAll(() => {
@@ -35,13 +48,15 @@ const selectCategory = async (user: ReturnType<typeof userEvent.setup>, category
 describe('AddItemForm Component', () => {
   it('renders form elements', async () => {
     render(
-      <AddItemForm
-        isOpen={true}
-        onClose={() => {}}
-        onAddItem={vi.fn()}
-        categories={mockCategories}
-        onDeleteCategory={mockOnDeleteCategory}
-      />
+      <TestWrapper>
+        <AddItemForm
+          isOpen={true}
+          onClose={() => {}}
+          onAddItem={vi.fn()}
+          categories={mockCategories}
+          onDeleteCategory={mockOnDeleteCategory}
+        />
+      </TestWrapper>
     );
     
     expect(screen.getByPlaceholderText('e.g., Whole Milk')).toBeInTheDocument();
@@ -55,13 +70,15 @@ describe('AddItemForm Component', () => {
     const user = userEvent.setup();
     
     render(
-      <AddItemForm
-        isOpen={true}
-        onClose={() => {}}
-        onAddItem={onAddItem}
-        categories={mockCategories}
-        onDeleteCategory={mockOnDeleteCategory}
-      />
+      <TestWrapper>
+        <AddItemForm
+          isOpen={true}
+          onClose={() => {}}
+          onAddItem={onAddItem}
+          categories={mockCategories}
+          onDeleteCategory={mockOnDeleteCategory}
+        />
+      </TestWrapper>
     );
 
     // Fill in the form
@@ -87,13 +104,15 @@ describe('AddItemForm Component', () => {
     const user = userEvent.setup();
     
     render(
-      <AddItemForm
-        isOpen={true}
-        onClose={() => {}}
-        onAddItem={onAddItem}
-        categories={mockCategories}
-        onDeleteCategory={mockOnDeleteCategory}
-      />
+      <TestWrapper>
+        <AddItemForm
+          isOpen={true}
+          onClose={() => {}}
+          onAddItem={onAddItem}
+          categories={mockCategories}
+          onDeleteCategory={mockOnDeleteCategory}
+        />
+      </TestWrapper>
     );
 
     // Try to submit without filling required fields
@@ -109,13 +128,15 @@ describe('AddItemForm Component', () => {
     const user = userEvent.setup();
     
     render(
-      <AddItemForm
-        isOpen={true}
-        onClose={onClose}
-        onAddItem={onAddItem}
-        categories={mockCategories}
-        onDeleteCategory={mockOnDeleteCategory}
-      />
+      <TestWrapper>
+        <AddItemForm
+          isOpen={true}
+          onClose={onClose}
+          onAddItem={onAddItem}
+          categories={mockCategories}
+          onDeleteCategory={mockOnDeleteCategory}
+        />
+      </TestWrapper>
     );
 
     // Fill in the form

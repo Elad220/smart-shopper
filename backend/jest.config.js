@@ -27,7 +27,6 @@ module.exports = {
   forceExit: true,
   // Better error reporting
   verbose: true,
-  bail: false,
   // Test organization
   testPathIgnorePatterns: ['/node_modules/', '/dist/', '/build/'],
   // Mock configuration
@@ -36,27 +35,4 @@ module.exports = {
   restoreMocks: true,
   // Environment variables
   setupFiles: ['<rootDir>/jest.env.js'],
-  // Transform and module handling
-  transform: {
-    '^.+\\.js$': 'babel-jest'
-  },
-  // Test result reporting
-  reporters: [
-    'default',
-    ['jest-html-reporter', {
-      pageTitle: 'Backend Test Results',
-      outputPath: 'test-results.html',
-      includeFailureMsg: true,
-      includeSuiteFailure: true
-    }]
-  ],
-  // Collect coverage from all files
-  collectCoverageFrom: [
-    'src/**/*.js',
-    '!src/index.js',
-    '!src/config/**',
-    '!src/test/**',
-    '!**/*.config.js',
-    '!**/node_modules/**',
-  ],
 }; 

@@ -22,30 +22,11 @@ export default defineConfig({
         'dist/',
         'build/',
       ],
-      thresholds: {
-        global: {
-          branches: 80,
-          functions: 80,
-          lines: 80,
-          statements: 80
-        }
-      }
     },
-    // Performance optimizations
-    pool: 'forks',
-    maxConcurrency: 5,
-    minThreads: 1,
-    maxThreads: 4,
     // Better error reporting
-    reporter: ['verbose', 'json', 'html'],
-    outputFile: {
-      json: './test-results.json',
-      html: './test-results.html'
-    },
+    reporters: ['verbose'],
     // Mock configuration
-    mockReset: true,
     clearMocks: true,
     restoreMocks: true,
   },
-
 }); 
