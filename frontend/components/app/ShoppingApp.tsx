@@ -17,6 +17,8 @@ import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
 import SmartAssistant from '../SmartAssistant';
 import Header from '../layout/Header';
+import SideMenu from '../layout/SideMenu';
+import SettingsPage from '../settings/SettingsPage';
 import { createShoppingList } from '../../src/services/api';
 
 interface ShoppingAppProps {
@@ -44,6 +46,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   const [isShoppingMode, setIsShoppingMode] = useState(false);
+  const [currentView, setCurrentView] = useState<'lists' | 'settings'>('lists');
   
   const {
     items,
@@ -197,6 +200,14 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     toast.success('Shopping Mode deactivated! 📝');
   };
 
+  const handleNavigate = (view: 'lists' | 'settings') => {
+    setCurrentView(view);
+    // If navigating away from lists view, exit shopping mode
+    if (view !== 'lists' && isShoppingMode) {
+      setIsShoppingMode(false);
+    }
+  };
+
   // Shopping list actions are now handled in ShoppingListManager
 
   if (error) {
@@ -229,8 +240,21 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
 
       {/* Main Content Area */}
       <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-        {/* Drawer for Shopping List Manager - Hidden in Shopping Mode */}
+        {/* Side Menu - Hidden in Shopping Mode */}
         {!isShoppingMode && (
+          <SideMenu
+            open={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            user={user}
+            onLogout={onLogout}
+            onNavigate={handleNavigate}
+            currentView={currentView}
+            isMobile={isMobile}
+          />
+        )}
+
+        {/* List Manager Drawer - Only shown when on lists view and not in shopping mode */}
+        {!isShoppingMode && currentView === 'lists' && (
           <Drawer
             variant={isMobile ? 'temporary' : 'persistent'}
             anchor="left"
@@ -239,6 +263,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             sx={{
               width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
               flexShrink: 0,
+              ml: !isMobile ? '280px' : 0, // Offset for side menu
               '& .MuiDrawer-paper': {
                 width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
                 boxSizing: 'border-box',
@@ -248,6 +273,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                 transition: 'width 0.3s',
                 overflowX: 'hidden',
                 p: 0,
+                left: !isMobile ? '280px' : 0, // Offset for side menu
               },
             }}
           >
@@ -287,23 +313,28 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
         {/* Main Content */}
         <Box sx={{
           flexGrow: 1,
-          py: 3,
-          ml: !isMobile && isDrawerOpen && !isShoppingMode ? (isDrawerCollapsed ? '60px' : '360px') : 0,
+          py: currentView === 'settings' ? 0 : 3,
+          ml: !isMobile && isDrawerOpen && !isShoppingMode ? 
+            (currentView === 'lists' ? (isDrawerCollapsed ? '340px' : '640px') : '280px') : 0,
           transition: 'margin-left 0.3s ease',
           minWidth: 0,
           width: '100%',
           overflow: 'hidden',
         }}>
-          <Container
-            maxWidth="md"
-            sx={{
-              mx: 'auto',
-              px: { xs: 2, sm: 3 },
-              width: '100%',
-            }}
-          >
-            {/* Loading State */}
-            {isLoading ? (
+          {/* Render Settings Page or Shopping List Content */}
+          {currentView === 'settings' ? (
+            <SettingsPage user={user} />
+          ) : (
+            <Container
+              maxWidth="md"
+              sx={{
+                mx: 'auto',
+                px: { xs: 2, sm: 3 },
+                width: '100%',
+              }}
+            >
+              {/* Loading State */}
+              {isLoading ? (
               <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
                 <motion.div
                   animate={{ rotate: 360 }}
@@ -546,7 +577,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                 </Button>
               </DialogActions>
             </Dialog>
-          </Container>
+            </Container>
+          )}
         </Box>
       </Box>
     </Box>
