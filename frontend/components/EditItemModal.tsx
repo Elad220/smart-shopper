@@ -3,7 +3,7 @@ import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack, MenuItem, Box, useTheme,
   FormControl, InputLabel, OutlinedInput,
-  InputAdornment, IconButton, Typography
+  InputAdornment, IconButton, Typography, useMediaQuery
 } from '@mui/material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Edit, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
@@ -39,6 +39,7 @@ interface EditItemModalProps {
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, item }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [formData, setFormData] = useState({
     name: '',
     category: 'Other',
@@ -160,11 +161,19 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      scroll="paper"
+      disableScrollLock={false}
+      disableEscapeKeyDown={false}
+      keepMounted={false}
       PaperProps={{
         className: 'glass-modal',
         sx: {
-          borderRadius: '24px',
+          borderRadius: isMobile ? '0px' : '24px',
           overflow: 'hidden',
+          maxHeight: isMobile ? '90vh' : '85vh',
+          margin: isMobile ? '16px' : '32px',
+          width: isMobile ? 'calc(100% - 32px)' : 'auto',
+          position: 'relative',
         }
       }}
       BackdropProps={{
@@ -186,7 +195,10 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
               damping: 30
             }}
           >
-            <DialogTitle sx={{ pb: 1 }}>
+            <DialogTitle sx={{ 
+              pb: 1,
+              flexShrink: 0, // Prevent title from shrinking
+            }}>
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -238,7 +250,32 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
             </DialogTitle>
 
             <form onSubmit={handleSubmit}>
-              <DialogContent sx={{ px: 3 }}>
+              <DialogContent 
+                dividers
+                sx={{ 
+                  px: 3,
+                  // Make content scrollable with explicit constraints
+                  maxHeight: isMobile ? '60vh' : '50vh', // Force a height constraint
+                  overflowY: 'auto',
+                  overflowX: 'hidden',
+                  paddingBottom: '16px',
+                  WebkitOverflowScrolling: 'touch', // Enable momentum scrolling on iOS
+                  '&::-webkit-scrollbar': {
+                    width: '8px',
+                  },
+                  '&::-webkit-scrollbar-track': {
+                    background: 'rgba(0, 0, 0, 0.1)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb': {
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    borderRadius: '4px',
+                  },
+                  '&::-webkit-scrollbar-thumb:hover': {
+                    background: 'rgba(0, 0, 0, 0.5)',
+                  },
+                }}
+              >
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -507,8 +544,23 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                 </motion.div>
               </DialogContent>
 
-              <DialogActions sx={{ p: 3, pt: 2 }}>
-                <Stack direction="row" spacing={2} sx={{ width: '100%' }}>
+              <DialogActions 
+                sx={{ 
+                  p: '16px 24px',
+                  // Ensure buttons remain visible and accessible
+                  flexShrink: 0, // Prevent buttons from shrinking
+                  backgroundColor: (theme) => theme.palette.mode === 'dark'
+                    ? 'rgba(26, 26, 26, 0.95)'
+                    : 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(8px)',
+                  borderTop: (theme) => `1px solid ${theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.1)' 
+                    : 'rgba(0, 0, 0, 0.1)'}`,
+                  flexDirection: isMobile ? 'column' : 'row',
+                  gap: isMobile ? 1 : 1,
+                }}
+              >
+                <Stack direction={isMobile ? 'column' : 'row'} spacing={2} sx={{ width: '100%' }}>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: 1 }}>
                     <Button
                       onClick={handleClose}
