@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   user, 
   onLogout,
   onMenuOpen,
-  isMobile 
+  isMobile
 }) => {
   const theme = useTheme();
 
