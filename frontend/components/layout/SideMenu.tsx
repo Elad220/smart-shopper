@@ -27,7 +27,7 @@ interface SideMenuProps {
   onClose: () => void;
   user: UserType;
   onLogout: () => void;
-  onNavigate: (view: 'lists' | 'settings') => void;
+  onNavigate: (view: 'lists' | 'mylists' | 'settings') => void;
   currentView: string;
   isMobile?: boolean;
 }
@@ -44,11 +44,12 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const theme = useTheme();
 
   const menuItems = [
-    { key: 'lists', icon: ListIcon, label: 'List Manager' },
+    { key: 'lists', icon: ListIcon, label: 'Current List' },
+    { key: 'mylists', icon: ListIcon, label: 'My Lists' },
     { key: 'settings', icon: Settings, label: 'Settings' },
   ];
 
-  const handleNavigate = (view: 'lists' | 'settings') => {
+  const handleNavigate = (view: 'lists' | 'mylists' | 'settings') => {
     onNavigate(view);
     if (isMobile) {
       onClose();
@@ -130,7 +131,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
             {menuItems.map((item) => (
               <ListItem key={item.key} disablePadding>
                 <ListItemButton
-                  onClick={() => handleNavigate(item.key as 'lists' | 'settings')}
+                  onClick={() => handleNavigate(item.key as 'lists' | 'mylists' | 'settings')}
                   selected={currentView === item.key}
                   sx={{
                     mx: 1,
