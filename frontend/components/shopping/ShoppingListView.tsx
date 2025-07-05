@@ -598,106 +598,112 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             transition: 'all 0.6s ease',
           }}
         >
-                    <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
-            <Stack direction="row" spacing={2} alignItems="center">
-              <TextField
-                size="small"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                sx={{ 
-                  flexGrow: 1,
-                  '& .MuiOutlinedInput-root': { 
-                    borderRadius: '16px',
-                    background: alpha(theme.palette.background.paper, 0.5),
-                    backdropFilter: 'blur(10px)',
-                    border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      background: alpha(theme.palette.background.paper, 0.7),
-                      borderColor: theme.palette.primary.main,
-                    },
-                    '&.Mui-focused': {
-                      background: alpha(theme.palette.background.paper, 0.8),
-                      borderColor: theme.palette.primary.main,
-                      boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.2)}`,
-                    }
-                  }
-                }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <Search size={18} color={theme.palette.primary.main} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: searchQuery && (
-                    <InputAdornment position="end">
-                      <Box
-                        sx={{
-                          transition: 'transform 0.2s ease',
-                          '&:hover': {
-                            transform: 'scale(1.1)',
-                          },
-                          '&:active': {
-                            transform: 'scale(0.9)',
-                          },
-                        }}
-                      >
-                        <IconButton
-                          size="small"
-                          onClick={() => setSearchQuery('')}
-                          sx={{ p: 0.5 }}
-                        >
-                          <X size={16} />
-                        </IconButton>
-                      </Box>
-                    </InputAdornment>
-                  )
-                }}
-              />
-              
-              {/* Filter for unchecked items */}
-              <Box
-                sx={{
-                  transition: 'transform 0.2s ease',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                  },
-                  '&:active': {
-                    transform: 'scale(0.95)',
-                  },
-                }}
-              >
-                <Button
-                  variant={showUncheckedOnly ? 'contained' : 'outlined'}
+                              <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
+            <Stack spacing={2}>
+              {/* Search Input Row */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TextField
                   size="small"
-                  onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
-                  startIcon={<Circle size={16} />}
+                  placeholder="Search"
+                  value={searchQuery}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                  sx={{ 
+                    flexGrow: 1,
+                    minWidth: '200px', // Ensure minimum width for search input
+                    '& .MuiOutlinedInput-root': { 
+                      borderRadius: '16px',
+                      background: alpha(theme.palette.background.paper, 0.5),
+                      backdropFilter: 'blur(10px)',
+                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        background: alpha(theme.palette.background.paper, 0.7),
+                        borderColor: theme.palette.primary.main,
+                      },
+                      '&.Mui-focused': {
+                        background: alpha(theme.palette.background.paper, 0.8),
+                        borderColor: theme.palette.primary.main,
+                        boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.2)}`,
+                      }
+                    }
+                  }}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Search size={18} color={theme.palette.primary.main} />
+                      </InputAdornment>
+                    ),
+                    endAdornment: searchQuery && (
+                      <InputAdornment position="end">
+                        <Box
+                          sx={{
+                            transition: 'transform 0.2s ease',
+                            '&:hover': {
+                              transform: 'scale(1.1)',
+                            },
+                            '&:active': {
+                              transform: 'scale(0.9)',
+                            },
+                          }}
+                        >
+                          <IconButton
+                            size="small"
+                            onClick={() => setSearchQuery('')}
+                            sx={{ p: 0.5 }}
+                          >
+                            <X size={16} />
+                          </IconButton>
+                        </Box>
+                      </InputAdornment>
+                    )
+                  }}
+                />
+                
+                {/* Filter for unchecked items - always visible */}
+                <Box
                   sx={{
-                    textTransform: 'none',
-                    borderRadius: '12px',
-                    borderColor: alpha(theme.palette.warning.main, 0.3),
-                    color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
-                    background: showUncheckedOnly 
-                      ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
-                      : alpha(theme.palette.warning.main, 0.05),
-                    backdropFilter: 'blur(10px)',
-                    whiteSpace: 'nowrap',
+                    transition: 'transform 0.2s ease',
+                    flexShrink: 0, // Prevent button from shrinking
                     '&:hover': {
-                      background: showUncheckedOnly 
-                        ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
-                        : alpha(theme.palette.warning.main, 0.1),
-                      borderColor: theme.palette.warning.main,
-                      boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
+                      transform: 'scale(1.05)',
+                    },
+                    '&:active': {
+                      transform: 'scale(0.95)',
                     },
                   }}
                 >
-                  Unchecked Only
-                </Button>
+                  <Button
+                    variant={showUncheckedOnly ? 'contained' : 'outlined'}
+                    size="small"
+                    onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
+                    startIcon={<Circle size={16} />}
+                    sx={{
+                      textTransform: 'none',
+                      borderRadius: '12px',
+                      borderColor: alpha(theme.palette.warning.main, 0.3),
+                      color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
+                      background: showUncheckedOnly 
+                        ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
+                        : alpha(theme.palette.warning.main, 0.05),
+                      backdropFilter: 'blur(10px)',
+                      whiteSpace: 'nowrap',
+                      '&:hover': {
+                        background: showUncheckedOnly 
+                          ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
+                          : alpha(theme.palette.warning.main, 0.1),
+                        borderColor: theme.palette.warning.main,
+                        boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
+                      },
+                    }}
+                  >
+                    Unchecked Only
+                  </Button>
+                </Box>
               </Box>
               
+              {/* Additional Control Buttons Row - only show when needed */}
               {sortedCategories.length > 1 && !searchQuery && (
-                <>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
                   <Box
                     sx={{
                       transition: 'transform 0.2s ease',
@@ -732,42 +738,42 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     </Button>
                   </Box>
                   
-                                                                              {categoryOrder.length > 0 && (
-                      <Box
+                  {categoryOrder.length > 0 && (
+                    <Box
+                      sx={{
+                        transition: 'transform 0.2s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                        },
+                        '&:active': {
+                          transform: 'scale(0.95)',
+                        },
+                      }}
+                    >
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        onClick={resetCategoryOrder}
                         sx={{
-                          transition: 'transform 0.2s ease',
+                          textTransform: 'none',
+                          borderRadius: '12px',
+                          borderColor: alpha(theme.palette.secondary.main, 0.3),
+                          color: theme.palette.secondary.main,
+                          background: alpha(theme.palette.secondary.main, 0.05),
+                          backdropFilter: 'blur(10px)',
+                          whiteSpace: 'nowrap',
                           '&:hover': {
-                            transform: 'scale(1.05)',
-                          },
-                          '&:active': {
-                            transform: 'scale(0.95)',
+                            background: alpha(theme.palette.secondary.main, 0.1),
+                            borderColor: theme.palette.secondary.main,
+                            boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
                           },
                         }}
                       >
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          onClick={resetCategoryOrder}
-                          sx={{
-                            textTransform: 'none',
-                            borderRadius: '12px',
-                            borderColor: alpha(theme.palette.secondary.main, 0.3),
-                            color: theme.palette.secondary.main,
-                            background: alpha(theme.palette.secondary.main, 0.05),
-                            backdropFilter: 'blur(10px)',
-                            whiteSpace: 'nowrap',
-                            '&:hover': {
-                              background: alpha(theme.palette.secondary.main, 0.1),
-                              borderColor: theme.palette.secondary.main,
-                              boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
-                            },
-                          }}
-                        >
-                          Reset Order
-                        </Button>
-                      </Box>
-                    )}
-                </>
+                        Reset Order
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
               )}
             </Stack>
           </Box>
