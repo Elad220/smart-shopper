@@ -43,12 +43,14 @@ export const useAuth = () => {
       localStorage.setItem('authToken', data.token);
       localStorage.setItem('currentUser', JSON.stringify(userData));
       
-      toast.success(`Welcome back, ${userData.username || userData.email}! 🎉`);
+      toast.success(`Welcome back, ${userData.username || userData.email}! 🎉`, {
+        duration: 8000, // Show login toast for 8 seconds
+      });
       
-      // Force immediate redirect by reloading the page
+      // Allow time for the toast to be seen before reloading
       setTimeout(() => {
         window.location.reload();
-      }, 100);
+      }, 2000);
       
       return { success: true };
     } catch (error: any) {

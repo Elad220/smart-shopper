@@ -17,7 +17,7 @@ const App: React.FC = () => {
       <Toaster 
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 6000,
           style: {
             borderRadius: '8px',
             background: theme.palette.background.paper,
