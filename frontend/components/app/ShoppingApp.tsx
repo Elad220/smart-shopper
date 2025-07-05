@@ -225,8 +225,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
         onLogout={onLogout}
         onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
         isMobile={isMobile}
-        isShoppingMode={isShoppingMode}
-        onToggleShoppingMode={handleToggleShoppingMode}
       />
 
       {/* Main Content Area */}
