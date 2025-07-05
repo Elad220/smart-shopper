@@ -445,6 +445,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                   <ShoppingListView
                     items={items}
                     listId={selectedListId}
+                    userId={user.id}
                     onToggleComplete={handleToggleComplete}
                     onDeleteItem={handleDeleteItem}
                     onEditItem={handleEditItem}

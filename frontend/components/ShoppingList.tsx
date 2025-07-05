@@ -13,6 +13,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 interface ShoppingListProps {
   items: ShoppingItem[];
   listId: string;
+  userId?: string; // Optional for backward compatibility
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
@@ -26,6 +27,7 @@ interface ShoppingListProps {
 const ShoppingList: React.FC<ShoppingListProps> = ({
   items,
   listId,
+  userId,
   onToggleComplete,
   onDeleteItem,
   onEditItem,
@@ -38,7 +40,8 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
 
   // Load custom order from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem(`categoryOrder_${listId}`);
+    const storageKey = userId ? `categoryOrder_${userId}_${listId}` : `categoryOrder_${listId}`;
+    const stored = localStorage.getItem(storageKey);
     if (stored) {
       try {
         const parsedOrder = JSON.parse(stored);
@@ -48,20 +51,21 @@ const ShoppingList: React.FC<ShoppingListProps> = ({
       } catch (error) {
         console.warn('Failed to parse stored category order:', error);
         // Clear invalid data
-        localStorage.removeItem(`categoryOrder_${listId}`);
+        localStorage.removeItem(storageKey);
       }
     }
-  }, [listId]);
+  }, [userId, listId]);
 
   // Save custom order to localStorage
   useEffect(() => {
+    const storageKey = userId ? `categoryOrder_${userId}_${listId}` : `categoryOrder_${listId}`;
     if (categoryOrder.length > 0) {
-      localStorage.setItem(`categoryOrder_${listId}`, JSON.stringify(categoryOrder));
+      localStorage.setItem(storageKey, JSON.stringify(categoryOrder));
     } else {
       // Remove from localStorage if we reset to alphabetical order
-      localStorage.removeItem(`categoryOrder_${listId}`);
+      localStorage.removeItem(storageKey);
     }
-  }, [categoryOrder, listId]);
+  }, [categoryOrder, userId, listId]);
 
   if (items.length === 0) {
     return (

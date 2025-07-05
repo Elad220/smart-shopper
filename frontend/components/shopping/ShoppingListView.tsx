@@ -11,6 +11,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 interface ShoppingListViewProps {
   items: ShoppingItem[];
   listId: string;
+  userId: string;
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
@@ -62,6 +63,7 @@ const FloatingParticles: React.FC = () => {
 const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   items,
   listId,
+  userId,
   onToggleComplete,
   onDeleteItem,
   onEditItem,
@@ -160,7 +162,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   // Load category order from localStorage
   useEffect(() => {
-    const savedOrder = localStorage.getItem(`categoryOrder_${listId}`);
+    const savedOrder = localStorage.getItem(`categoryOrder_${userId}_${listId}`);
     if (savedOrder) {
       try {
         const parsedOrder = JSON.parse(savedOrder);
@@ -170,10 +172,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       } catch (error) {
         console.warn('Failed to parse stored category order:', error);
         // Clear invalid data
-        localStorage.removeItem(`categoryOrder_${listId}`);
+        localStorage.removeItem(`categoryOrder_${userId}_${listId}`);
       }
     }
-  }, [listId]);
+  }, [userId, listId]);
 
   // Reset custom order if categories have changed significantly
   useEffect(() => {
@@ -185,10 +187,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       if (!hasValidCustomOrder) {
         // Reset to empty array to fall back to alphabetical sorting
         setCategoryOrder([]);
-        localStorage.removeItem(`categoryOrder_${listId}`);
+        localStorage.removeItem(`categoryOrder_${userId}_${listId}`);
       }
     }
-  }, [groupedItems, categoryOrder, listId]);
+  }, [groupedItems, categoryOrder, userId, listId]);
 
   const toggleCategoryCollapse = useCallback((category: string) => {
     setCollapsedCategories(prev => {
@@ -216,8 +218,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   const resetCategoryOrder = useCallback(() => {
     setCategoryOrder([]);
-    localStorage.removeItem(`categoryOrder_${listId}`);
-  }, [listId]);
+    localStorage.removeItem(`categoryOrder_${userId}_${listId}`);
+  }, [userId, listId]);
 
   const handleDragStart = useCallback(() => {
     setIsDragging(true);
@@ -242,8 +244,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
     // Update state and persist to localStorage
     setCategoryOrder(newOrder);
-    localStorage.setItem(`categoryOrder_${listId}`, JSON.stringify(newOrder));
-  }, [sortedCategories, listId]);
+    localStorage.setItem(`categoryOrder_${userId}_${listId}`, JSON.stringify(newOrder));
+  }, [sortedCategories, userId, listId]);
 
   const getPriorityIcon = useCallback((priority: string) => {
     switch (priority) {
