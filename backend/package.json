@@ -6,9 +6,13 @@
   "scripts": {
     "start": "node -r dotenv/config src/index.js",
     "dev": "nodemon -r dotenv/config src/index.js",
-    "test": "jest --detectOpenHandles",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test": "jest --detectOpenHandles --forceExit",
+    "test:watch": "jest --watch --detectOpenHandles",
+    "test:coverage": "jest --coverage --detectOpenHandles --forceExit",
+    "test:ci": "jest --ci --coverage --detectOpenHandles --forceExit --verbose",
+    "test:debug": "node --inspect-brk=0.0.0.0:9229 node_modules/.bin/jest --runInBand",
+    "test:integration": "jest --testPathPattern=integration --detectOpenHandles --forceExit",
+    "test:unit": "jest --testPathPattern=unit --detectOpenHandles --forceExit"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
