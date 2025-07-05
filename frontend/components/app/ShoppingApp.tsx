@@ -5,12 +5,13 @@ import {
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from '@mui/material';
-import { Plus, Package, Brain, ChevronDown } from 'lucide-react';
+import { Plus, Package, Brain, ChevronDown, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
+import ShoppingModeView from '../shopping/ShoppingModeView';
 import AddItemModal from '../shopping/AddItemModal';
 import EditItemModal from '../EditItemModal';
 import { ShoppingListManager } from '../ShoppingListManager';
@@ -42,6 +43,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
   const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
+  const [isShoppingMode, setIsShoppingMode] = useState(false);
   
   const {
     items,
@@ -181,6 +183,20 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     }
   };
 
+  const handleToggleShoppingMode = () => {
+    setIsShoppingMode(!isShoppingMode);
+    if (!isShoppingMode) {
+      toast.success('Shopping Mode activated! 🛒');
+    } else {
+      toast.success('Shopping Mode deactivated! 📝');
+    }
+  };
+
+  const handleExitShoppingMode = () => {
+    setIsShoppingMode(false);
+    toast.success('Shopping Mode deactivated! 📝');
+  };
+
   // Shopping list actions are now handled in ShoppingListManager
 
   if (error) {
@@ -209,31 +225,34 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
         onLogout={onLogout}
         onMenuOpen={() => setIsDrawerOpen(!isDrawerOpen)}
         isMobile={isMobile}
+        isShoppingMode={isShoppingMode}
+        onToggleShoppingMode={handleToggleShoppingMode}
       />
 
       {/* Main Content Area */}
       <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
-        {/* Drawer for Shopping List Manager */}
-        <Drawer
-          variant={isMobile ? 'temporary' : 'persistent'}
-          anchor="left"
-          open={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          sx={{
-            width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
-            flexShrink: 0,
-            '& .MuiDrawer-paper': {
+        {/* Drawer for Shopping List Manager - Hidden in Shopping Mode */}
+        {!isShoppingMode && (
+          <Drawer
+            variant={isMobile ? 'temporary' : 'persistent'}
+            anchor="left"
+            open={isDrawerOpen}
+            onClose={() => setIsDrawerOpen(false)}
+            sx={{
               width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
-              boxSizing: 'border-box',
-              top: 64, // Account for header height
-              height: 'calc(100vh - 64px)',
-              borderRight: `1px solid ${theme.palette.divider}`,
-              transition: 'width 0.3s',
-              overflowX: 'hidden',
-              p: 0,
-            },
-          }}
-        >
+              flexShrink: 0,
+              '& .MuiDrawer-paper': {
+                width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
+                boxSizing: 'border-box',
+                top: 64, // Account for header height
+                height: 'calc(100vh - 64px)',
+                borderRight: `1px solid ${theme.palette.divider}`,
+                transition: 'width 0.3s',
+                overflowX: 'hidden',
+                p: 0,
+              },
+            }}
+          >
           {/* Collapse/Expand Button (desktop only) */}
           {!isMobile && (
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 48, px: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
@@ -253,24 +272,25 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
               </IconButton>
             </Box>
           )}
-          {/* Only render ShoppingListManager if not collapsed */}
-          {!isDrawerCollapsed && (
-            <ShoppingListManager
-              key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
-              token={user.token}
-              selectedListId={selectedListId}
-              onListSelect={handleListSelect}
-              onDataChange={handleDataChange}
-              onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
-            />
-          )}
-        </Drawer>
+            {/* Only render ShoppingListManager if not collapsed */}
+            {!isDrawerCollapsed && (
+              <ShoppingListManager
+                key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
+                token={user.token}
+                selectedListId={selectedListId}
+                onListSelect={handleListSelect}
+                onDataChange={handleDataChange}
+                onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+              />
+            )}
+          </Drawer>
+        )}
 
         {/* Main Content */}
         <Box sx={{
           flexGrow: 1,
           py: 3,
-          ml: !isMobile && isDrawerOpen ? (isDrawerCollapsed ? '60px' : '360px') : 0,
+          ml: !isMobile && isDrawerOpen && !isShoppingMode ? (isDrawerCollapsed ? '60px' : '360px') : 0,
           transition: 'margin-left 0.3s ease',
           minWidth: 0,
           width: '100%',
@@ -296,130 +316,160 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
               </Box>
             ) : (
               <>
-                {/* Header */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Card
-                    sx={{
-                      mb: 3,
-                      borderRadius: '16px',
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-                      border: `1px solid ${theme.palette.divider}`,
-                    }}
+                {/* Header - Hidden in Shopping Mode */}
+                {!isShoppingMode && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
                   >
-                    <CardContent sx={{ p: 2.5 }}>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                              {currentListName}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {totalItems} items • {completedItems} completed
-                            </Typography>
+                    <Card
+                      sx={{
+                        mb: 3,
+                        borderRadius: '16px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                        border: `1px solid ${theme.palette.divider}`,
+                      }}
+                    >
+                      <CardContent sx={{ p: 2.5 }}>
+                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                            <Box sx={{ minWidth: 0 }}>
+                              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                {currentListName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {totalItems} items • {completedItems} completed
+                              </Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                        
-                        <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                          {completedItems > 0 && (
-                            <Button
-                              variant="text"
-                              size="small"
-                              onClick={handleClearCompleted}
-                              sx={{ 
-                                borderRadius: '8px', 
-                                textTransform: 'none',
-                                color: theme.palette.error.main,
-                                minWidth: 'auto',
-                                px: 1.5,
-                                fontSize: '0.75rem',
+                          
+                          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                            {completedItems > 0 && (
+                              <Button
+                                variant="text"
+                                size="small"
+                                onClick={handleClearCompleted}
+                                sx={{ 
+                                  borderRadius: '8px', 
+                                  textTransform: 'none',
+                                  color: theme.palette.error.main,
+                                  minWidth: 'auto',
+                                  px: 1.5,
+                                  fontSize: '0.75rem',
+                                  '&:hover': {
+                                    background: alpha(theme.palette.error.main, 0.1),
+                                  },
+                                }}
+                              >
+                                Clear
+                              </Button>
+                            )}
+                            <IconButton
+                              onClick={handleToggleShoppingMode}
+                              sx={{
+                                borderRadius: '8px',
+                                background: isShoppingMode 
+                                  ? `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`
+                                  : `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                                color: 'white',
                                 '&:hover': {
-                                  background: alpha(theme.palette.error.main, 0.1),
+                                  background: isShoppingMode 
+                                    ? `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`
+                                    : `linear-gradient(135deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})`,
                                 },
                               }}
                             >
-                              Clear
-                            </Button>
-                          )}
-                          <IconButton
-                            onClick={() => setIsAddModalOpen(true)}
-                            sx={{
-                              borderRadius: '8px',
-                              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                              color: 'white',
-                              '&:hover': {
-                                background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                              },
-                            }}
-                          >
-                            <Plus size={18} />
-                          </IconButton>
-                          <IconButton
-                            onClick={() => setIsSmartAssistantOpen(true)}
-                            sx={{ 
-                              borderRadius: '8px',
-                              border: `1px solid ${theme.palette.divider}`,
-                              '&:hover': {
-                                background: alpha(theme.palette.primary.main, 0.1),
-                              },
-                            }}
-                          >
-                            <Brain size={18} />
-                          </IconButton>
+                              <ShoppingCart size={18} />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => setIsAddModalOpen(true)}
+                              sx={{
+                                borderRadius: '8px',
+                                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                                color: 'white',
+                                '&:hover': {
+                                  background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                                },
+                              }}
+                            >
+                              <Plus size={18} />
+                            </IconButton>
+                            <IconButton
+                              onClick={() => setIsSmartAssistantOpen(true)}
+                              sx={{ 
+                                borderRadius: '8px',
+                                border: `1px solid ${theme.palette.divider}`,
+                                '&:hover': {
+                                  background: alpha(theme.palette.primary.main, 0.1),
+                                },
+                              }}
+                            >
+                              <Brain size={18} />
+                            </IconButton>
+                          </Stack>
                         </Stack>
-                      </Stack>
-                    
-                    {totalItems > 0 && (
-                      <Box sx={{ mt: 3 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={completionPercentage}
-                          sx={{
-                            height: 8,
-                            borderRadius: 4,
-                            backgroundColor: `${theme.palette.primary.main}20`,
-                            '& .MuiLinearProgress-bar': {
+                      
+                      {totalItems > 0 && (
+                        <Box sx={{ mt: 3 }}>
+                          <LinearProgress
+                            variant="determinate"
+                            value={completionPercentage}
+                            sx={{
+                              height: 8,
                               borderRadius: 4,
-                              background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                            },
-                          }}
-                        />
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                          {completionPercentage}% complete
-                        </Typography>
-                      </Box>
-                    )}
-                    </CardContent>
-                  </Card>
-                </motion.div>
+                              backgroundColor: `${theme.palette.primary.main}20`,
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 4,
+                                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                              },
+                            }}
+                          />
+                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                            {completionPercentage}% complete
+                          </Typography>
+                        </Box>
+                      )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
 
                 {/* Shopping List */}
-                <ShoppingListView
-                  items={items}
-                  onToggleComplete={handleToggleComplete}
-                  onDeleteItem={handleDeleteItem}
-                  onEditItem={handleEditItem}
-                  onAddItem={() => setIsAddModalOpen(true)}
-                />
+                {isShoppingMode ? (
+                  <ShoppingModeView
+                    items={items}
+                    onToggleComplete={handleToggleComplete}
+                    onExitShoppingMode={handleExitShoppingMode}
+                    currentListName={currentListName}
+                  />
+                ) : (
+                  <ShoppingListView
+                    items={items}
+                    onToggleComplete={handleToggleComplete}
+                    onDeleteItem={handleDeleteItem}
+                    onEditItem={handleEditItem}
+                    onAddItem={() => setIsAddModalOpen(true)}
+                  />
+                )}
               </>
             )}
 
-            {/* Floating Action Button */}
-            <Fab
-              color="primary"
-              sx={{
-                position: 'fixed',
-                bottom: 24,
-                right: 24,
-                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-              }}
-              onClick={() => setIsAddModalOpen(true)}
-            >
-              <Plus size={24} />
-            </Fab>
+            {/* Floating Action Button - Hidden in Shopping Mode */}
+            {!isShoppingMode && (
+              <Fab
+                color="primary"
+                sx={{
+                  position: 'fixed',
+                  bottom: 24,
+                  right: 24,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                }}
+                onClick={() => setIsAddModalOpen(true)}
+              >
+                <Plus size={24} />
+              </Fab>
+            )}
 
             {/* Add Item Modal */}
             <AddItemModal

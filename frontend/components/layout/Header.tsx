@@ -13,6 +13,8 @@ interface HeaderProps {
   onLogout?: () => void;
   onMenuOpen?: () => void;
   isMobile?: boolean;
+  isShoppingMode?: boolean;
+  onToggleShoppingMode?: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -22,7 +24,9 @@ const Header: React.FC<HeaderProps> = ({
   user, 
   onLogout,
   onMenuOpen,
-  isMobile 
+  isMobile,
+  isShoppingMode,
+  onToggleShoppingMode
 }) => {
   const theme = useTheme();
 
@@ -101,6 +105,30 @@ const Header: React.FC<HeaderProps> = ({
               Welcome, {user.username || user.email.split('@')[0]}
             </Typography>
           </Box>
+        )}
+
+        {/* Shopping Mode Toggle */}
+        {isAuthenticated && onToggleShoppingMode && (
+          <IconButton 
+            onClick={onToggleShoppingMode}
+            sx={{ 
+              mr: 1,
+              color: 'white',
+              backgroundColor: isShoppingMode 
+                ? theme.palette.success.main 
+                : theme.palette.secondary.main,
+              border: `1px solid ${isShoppingMode ? theme.palette.success.main : theme.palette.secondary.main}`,
+              '&:hover': {
+                backgroundColor: isShoppingMode 
+                  ? theme.palette.success.dark 
+                  : theme.palette.secondary.dark,
+                transform: 'scale(1.05)',
+              },
+              transition: 'all 0.2s ease-in-out',
+            }}
+          >
+            <ShoppingCart size={20} />
+          </IconButton>
         )}
 
         {/* Theme Toggle */}
