@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
-  AppBar, Toolbar, Typography, IconButton, Button, Box, useTheme 
+  AppBar, Toolbar, Typography, IconButton, Box, useTheme 
 } from '@mui/material';
-import { Moon, Sun, ShoppingCart, Menu, LogOut } from 'lucide-react';
+import { Moon, Sun, ShoppingCart, Menu } from 'lucide-react';
 import { User } from '../../hooks/useAuth';
 
 interface HeaderProps {
@@ -10,7 +10,6 @@ interface HeaderProps {
   onToggleMode: () => void;
   isAuthenticated: boolean;
   user?: User;
-  onLogout?: () => void;
   onMenuOpen?: () => void;
   isMobile?: boolean;
 }
@@ -20,7 +19,6 @@ const Header: React.FC<HeaderProps> = ({
   onToggleMode, 
   isAuthenticated, 
   user, 
-  onLogout,
   onMenuOpen,
   isMobile
 }) => {
@@ -121,26 +119,7 @@ const Header: React.FC<HeaderProps> = ({
           {mode === 'light' ? <Moon size={20} /> : <Sun size={20} />}
         </IconButton>
 
-        {/* Logout Button */}
-        {isAuthenticated && onLogout && (
-          <Button
-            onClick={onLogout}
-            startIcon={<LogOut size={16} />}
-            sx={{
-              textTransform: 'none',
-              borderRadius: '8px',
-              color: theme.palette.text.primary,
-              backgroundColor: 'transparent',
-              border: `1px solid ${theme.palette.divider}`,
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover,
-              },
-              transition: 'all 0.2s ease-in-out',
-            }}
-          >
-            Logout
-          </Button>
-        )}
+        {/* Logout button moved to side menu */}
       </Toolbar>
     </AppBar>
   );

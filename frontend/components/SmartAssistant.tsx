@@ -23,7 +23,7 @@ import {
 } from '@mui/material';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
-import { saveApiKey, generateItemsFromApi, removeApiKey, checkApiKeyStatus } from '../src/services/api';
+import { generateItemsFromApi, checkApiKeyStatus } from '../src/services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SmartAssistantProps {
@@ -33,24 +33,20 @@ interface SmartAssistantProps {
   token: string | null;
 }
 
-const API_KEY_PLACEHOLDER = '••••••••••••••••••••••••••••••••••••••••';
+
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddItems, token }) => {
   const [prompt, setPrompt] = useState('');
-  const [apiKey, setApiKey] = useState('');
   const [hasApiKey, setHasApiKey] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [generatedItems, setGeneratedItems] = useState<{ name: string; category: string }[]>([]);
   const [selectedItems, setSelectedItems] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (open && token) {
       setError(null);
-      setSuccess(null);
-      setApiKey('');
       setGeneratedItems([]);
       setSelectedItems(new Set());
       setIsCheckingStatus(true);
@@ -59,9 +55,6 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
         try {
           const { hasApiKey: keyExists } = await checkApiKeyStatus(token);
           setHasApiKey(keyExists);
-          if (keyExists) {
-            setApiKey(API_KEY_PLACEHOLDER);
-          }
         } catch (err) {
           setError("Could not verify API key status.");
           setHasApiKey(false);
@@ -102,49 +95,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     }
   };
 
-  const handleSaveApiKey = async () => {
-    if (!token) {
-        setError("You must be logged in to save an API key.");
-        return;
-    }
-    if (!apiKey.trim() || apiKey === API_KEY_PLACEHOLDER) {
-        setError("API Key cannot be empty.");
-        return;
-    }
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-        await saveApiKey(token, apiKey);
-        setSuccess("API Key saved successfully!");
-        setHasApiKey(true);
-        setApiKey(API_KEY_PLACEHOLDER);
-    } catch (err: any) {
-        setError(err.message || "Failed to save API key.");
-    } finally {
-        setIsLoading(false);
-    }
-  };
 
-  const handleRemoveApiKey = async () => {
-    if (!token) {
-      setError("You must be logged in to remove an API key.");
-      return;
-    }
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      await removeApiKey(token);
-      setSuccess("API Key removed successfully!");
-      setHasApiKey(false);
-      setApiKey('');
-    } catch (err: any) {
-      setError(err.message || "Failed to remove API key.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleToggleItem = (index: number) => {
     setSelectedItems(prev => {
@@ -172,11 +123,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
     onClose();
   };
   
-  const handleApiKeyFocus = () => {
-    if (apiKey === API_KEY_PLACEHOLDER) {
-      setApiKey('');
-    }
-  };
+
 
   return (
     <Dialog 
@@ -289,39 +236,16 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                       <CircularProgress size={24} />
                   ) : hasApiKey ? (
                       <Alert severity="success" icon={<CheckCircleOutlineIcon fontSize="inherit" />}>
-                          An API key is saved to your account. You can enter a new key to overwrite it.
+                          API key is configured. You can manage your API key in Settings.
                       </Alert>
                   ) : (
                       <Alert severity="info">
-                          No API key found. Please enter a key to use the Smart Assistant.
+                          No API key found. Please configure your API key in Settings to use the Smart Assistant.
                       </Alert>
                   )}
               </Box>
-              <Typography variant="body2" sx={{ mb: 2 }}>
-                Enter your Gemini API Key. It will be stored securely for future use.
-              </Typography>
-              <TextField
-                margin="dense"
-                label="Gemini API Key"
-                fullWidth
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                onFocus={handleApiKeyFocus}
-                disabled={isLoading}
-                type="password"
-                placeholder={hasApiKey ? "" : "Enter your API Key"}
-              />
-              <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
-                  <Button onClick={handleSaveApiKey} variant="outlined" disabled={isLoading}>
-                    Save Key
-                  </Button>
-                  <Button onClick={handleRemoveApiKey} color="error" variant="outlined" disabled={isLoading || !hasApiKey}>
-                    Remove Key
-                  </Button>
-              </Box>
-              {success && <Alert severity="success" sx={{ mt: 2 }}>{success}</Alert>}
               
-              <Typography variant="body1" sx={{ mt: 4, mb: 2 }}>
+              <Typography variant="body1" sx={{ mb: 2 }}>
                 Enter a theme (e.g., "Taco Night", "Pasta Dinner", "Beach Picnic") and the assistant will generate a list of suggested items.
               </Typography>
               <TextField
@@ -334,7 +258,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                 disabled={isLoading || !hasApiKey}
               />
               {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-              {isLoading && !success ? (
+              {isLoading ? (
                 <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
                   <CircularProgress />
                 </Box>
@@ -390,7 +314,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, onAddIte
                   textTransform: 'none',
                 }}
               >
-                {isLoading && !success ? 'Generating...' : 'Generate'}
+                {isLoading ? 'Generating...' : 'Generate'}
               </Button>
               <Button 
                 onClick={handleAddClick} 
