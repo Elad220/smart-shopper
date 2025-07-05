@@ -271,12 +271,13 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
                         <Checkbox
                           edge="start"
                           checked={item.completed}
-                          onChange={() => handleToggleComplete(item.id)}
+                          readOnly
                           sx={{
                             transform: 'scale(1.5)',
                             '& .MuiSvgIcon-root': {
                               fontSize: '2rem',
                             },
+                            pointerEvents: 'none', // Disable checkbox interaction
                           }}
                           color="success"
                         />
