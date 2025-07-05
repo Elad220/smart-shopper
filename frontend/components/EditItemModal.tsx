@@ -385,7 +385,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                     </Box>
 
                     <Stack direction="row" spacing={2}>
-                      <motion.div whileHover={{ scale: 1.02 }} style={{ width: '40%' }}>
+                      <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
                         <FormControl fullWidth>
                           <InputLabel>Amount</InputLabel>
                           <OutlinedInput
@@ -407,6 +407,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                                 <IconButton
                                   onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
                                   disabled={formData.amount <= 1}
+                                  size="small"
                                 >
                                   <KeyboardArrowDownIcon />
                                 </IconButton>
@@ -416,6 +417,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                               <InputAdornment position="end">
                                 <IconButton
                                   onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
+                                  size="small"
                                 >
                                   <KeyboardArrowUpIcon />
                                 </IconButton>
@@ -424,7 +426,7 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                           />
                         </FormControl>
                       </motion.div>
-                      <motion.div whileHover={{ scale: 1.02 }} style={{ width: '60%' }}>
+                      <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
                         <TextField
                           select
                           label="Units"

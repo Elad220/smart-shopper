@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, Button, Stack, MenuItem, Box, useTheme,
-  Typography, IconButton, CircularProgress
+  Typography, IconButton, CircularProgress, FormControl,
+  InputLabel, OutlinedInput, InputAdornment
 } from '@mui/material';
+import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
 import NewCategoryModal from './NewCategoryModal';
@@ -442,27 +445,48 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                       </Box>
 
                       <Stack direction="row" spacing={2}>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '40%' }}>
-                          <TextField
-                            label="Amount"
-                            type="number"
-                            value={formData.amount}
-                            onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                            inputProps={{ min: 1 }}
-                            sx={{ 
-                              width: '100%',
-                              '& .MuiOutlinedInput-root': { 
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
+                          <FormControl fullWidth>
+                            <InputLabel>Amount</InputLabel>
+                            <OutlinedInput
+                              type="number"
+                              value={formData.amount}
+                              onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
+                              label="Amount"
+                              inputProps={{ min: 1 }}
+                              sx={{ 
                                 borderRadius: '16px',
                                 background: 'rgba(255, 255, 255, 0.05)',
                                 backdropFilter: 'blur(10px)',
                                 '&:hover': {
                                   background: 'rgba(255, 255, 255, 0.08)',
                                 }
+                              }}
+                              startAdornment={
+                                <InputAdornment position="start">
+                                  <IconButton
+                                    onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
+                                    disabled={formData.amount <= 1}
+                                    size="small"
+                                  >
+                                    <KeyboardArrowDownIcon />
+                                  </IconButton>
+                                </InputAdornment>
                               }
-                            }}
-                          />
+                              endAdornment={
+                                <InputAdornment position="end">
+                                  <IconButton
+                                    onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
+                                    size="small"
+                                  >
+                                    <KeyboardArrowUpIcon />
+                                  </IconButton>
+                                </InputAdornment>
+                              }
+                            />
+                          </FormControl>
                         </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '60%' }}>
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
                           <TextField
                             select
                             label="Units"
