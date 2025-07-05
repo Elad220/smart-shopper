@@ -19,6 +19,7 @@ import {
 import { motion } from 'framer-motion';
 import { ShoppingCart, Check, ArrowLeft } from 'lucide-react';
 import { ShoppingItem, Category } from '../../types';
+import toast from 'react-hot-toast';
 
 interface ShoppingModeViewProps {
   items: ShoppingItem[];
@@ -35,8 +36,51 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
 }) => {
   const theme = useTheme();
   
+  // Enhanced toggle function with toast notification
+  const handleToggleComplete = (itemId: string) => {
+    const item = items.find((i: ShoppingItem) => i.id === itemId);
+    if (item) {
+      onToggleComplete(itemId);
+      
+      // Show different messages based on completion status
+      if (!item.completed) {
+        // Item is being completed
+        const encouragingMessages = [
+          `✅ Got ${item.name}!`,
+          `🎉 ${item.name} checked off!`,
+          `✨ ${item.name} added to cart!`,
+          `🛒 ${item.name} found!`,
+          `👏 ${item.name} completed!`,
+        ];
+        const randomMessage = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
+        toast.success(randomMessage, {
+          duration: 2000,
+          position: 'top-center',
+        });
+        
+        // Check if this was the last item to complete
+        const remainingAfterThis = items.filter((i: ShoppingItem) => !i.completed && i.id !== itemId).length;
+        if (remainingAfterThis === 0) {
+          // All items completed!
+          setTimeout(() => {
+            toast.success('🎉 Shopping complete! Great job! 🛍️', {
+              duration: 4000,
+              position: 'top-center',
+            });
+          }, 500); // Small delay to show after the individual item toast
+        }
+      } else {
+        // Item is being unchecked
+        toast(`📝 ${item.name} back on the list`, {
+          duration: 1500,
+          position: 'top-center',
+        });
+      }
+    }
+  };
+  
   // Group items by category
-  const groupedItems = items.reduce((acc, item) => {
+  const groupedItems = items.reduce((acc: Record<Category, ShoppingItem[]>, item: ShoppingItem) => {
     const categoryKey = typeof item.category === 'string' ? item.category : 'Unknown';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
@@ -55,7 +99,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   // Sort items within each category - incomplete items first, then by priority
   const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
   Object.keys(groupedItems).forEach(category => {
-    groupedItems[category].sort((a, b) => {
+    groupedItems[category].sort((a: ShoppingItem, b: ShoppingItem) => {
       if (a.completed !== b.completed) {
         return a.completed ? 1 : -1;
       }
@@ -69,7 +113,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   });
 
   const totalItems = items.length;
-  const completedItems = items.filter(item => item.completed).length;
+  const completedItems = items.filter((item: ShoppingItem) => item.completed).length;
   const remainingItems = totalItems - completedItems;
 
   if (items.length === 0) {
@@ -203,7 +247,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
                     transition={{ duration: 0.3, delay: itemIndex * 0.05 }}
                   >
                     <ListItem
-                      onClick={() => onToggleComplete(item.id)}
+                      onClick={() => handleToggleComplete(item.id)}
                       sx={{
                         py: 2.5,
                         px: 3,
@@ -227,7 +271,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
                         <Checkbox
                           edge="start"
                           checked={item.completed}
-                          onChange={() => onToggleComplete(item.id)}
+                          onChange={() => handleToggleComplete(item.id)}
                           sx={{
                             transform: 'scale(1.5)',
                             '& .MuiSvgIcon-root': {
