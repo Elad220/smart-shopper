@@ -445,7 +445,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                       </Box>
 
                       <Stack direction="row" spacing={2}>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '40%' }}>
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
                           <FormControl fullWidth>
                             <InputLabel>Amount</InputLabel>
                             <OutlinedInput
@@ -467,6 +467,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                   <IconButton
                                     onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
                                     disabled={formData.amount <= 1}
+                                    size="small"
                                   >
                                     <KeyboardArrowDownIcon />
                                   </IconButton>
@@ -476,6 +477,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                 <InputAdornment position="end">
                                   <IconButton
                                     onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
+                                    size="small"
                                   >
                                     <KeyboardArrowUpIcon />
                                   </IconButton>
@@ -484,7 +486,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                             />
                           </FormControl>
                         </motion.div>
-                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '60%' }}>
+                        <motion.div whileHover={{ scale: 1.02 }} style={{ width: '50%' }}>
                           <TextField
                             select
                             label="Units"
