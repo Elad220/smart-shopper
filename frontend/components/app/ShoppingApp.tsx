@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
-  CardContent, Fab, useTheme, LinearProgress, Drawer,
+  CardContent, Fab, useTheme, LinearProgress,
   IconButton, useMediaQuery, alpha, Dialog, DialogTitle,
   DialogContent, DialogActions, TextField
 } from '@mui/material';
-import { Plus, Package, Brain, ChevronDown, ShoppingCart } from 'lucide-react';
+import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
@@ -44,7 +44,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [newListName, setNewListName] = useState('');
   const [isCreatingList, setIsCreatingList] = useState(false);
   const [listRefreshKey, setListRefreshKey] = useState(0);
-  const [isDrawerCollapsed, setIsDrawerCollapsed] = useState(false);
   const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [currentView, setCurrentView] = useState<'lists' | 'settings'>('lists');
   
@@ -252,333 +251,302 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           />
         )}
 
-        {/* List Manager Drawer - Only shown when on lists view and not in shopping mode */}
-        {!isShoppingMode && currentView === 'lists' && (
-          <Drawer
-            variant={isMobile ? 'temporary' : 'persistent'}
-            anchor="left"
-            open={isDrawerOpen}
-            onClose={() => setIsDrawerOpen(false)}
-            sx={{
-              width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
-              flexShrink: 0,
-              ml: !isMobile ? '280px' : 0, // Offset for side menu
-              '& .MuiDrawer-paper': {
-                width: !isMobile ? (isDrawerCollapsed ? 60 : 360) : 360,
-                boxSizing: 'border-box',
-                top: 64, // Account for header height
-                height: 'calc(100vh - 64px)',
-                borderRight: `1px solid ${theme.palette.divider}`,
-                transition: 'width 0.3s',
-                overflowX: 'hidden',
-                p: 0,
-                left: !isMobile ? '280px' : 0, // Offset for side menu
-              },
-            }}
-          >
-          {/* Collapse/Expand Button (desktop only) */}
-          {!isMobile && (
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', height: 48, px: 1, borderBottom: `1px solid ${theme.palette.divider}` }}>
-              <IconButton
-                size="small"
-                onClick={() => setIsDrawerCollapsed((prev) => !prev)}
-                sx={{
-                  borderRadius: '8px',
-                  background: alpha(theme.palette.primary.main, 0.05),
-                  '&:hover': {
-                    background: alpha(theme.palette.primary.main, 0.15),
-                  },
-                  transition: 'background 0.2s',
-                }}
-              >
-                {isDrawerCollapsed ? <ChevronDown style={{ transform: 'rotate(-90deg)' }} /> : <ChevronDown style={{ transform: 'rotate(90deg)' }} />}
-              </IconButton>
-            </Box>
-          )}
-            {/* Only render ShoppingListManager if not collapsed */}
-            {!isDrawerCollapsed && (
-              <ShoppingListManager
-                key={`${isDrawerOpen ? 'open' : 'closed'}-${listRefreshKey}`}
-                token={user.token}
-                selectedListId={selectedListId}
-                onListSelect={handleListSelect}
-                onDataChange={handleDataChange}
-                onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
-              />
-            )}
-          </Drawer>
-        )}
+
 
         {/* Main Content */}
         <Box sx={{
           flexGrow: 1,
           py: currentView === 'settings' ? 0 : 3,
-          ml: !isMobile && isDrawerOpen && !isShoppingMode ? 
-            (currentView === 'lists' ? (isDrawerCollapsed ? '340px' : '640px') : '280px') : 0,
+          ml: !isMobile && isDrawerOpen && !isShoppingMode ? '280px' : 0,
           transition: 'margin-left 0.3s ease',
           minWidth: 0,
           width: '100%',
           overflow: 'hidden',
         }}>
-          {/* Render Settings Page or Shopping List Content */}
-          {currentView === 'settings' ? (
+          {/* Shopping Mode takes priority */}
+          {isShoppingMode ? (
+            <Container maxWidth="md" sx={{ mx: 'auto', px: { xs: 2, sm: 3 }, py: 3 }}>
+              <ShoppingModeView
+                items={items}
+                onToggleComplete={handleToggleComplete}
+                onExitShoppingMode={handleExitShoppingMode}
+                currentListName={currentListName}
+              />
+            </Container>
+          ) : currentView === 'settings' ? (
             <SettingsPage user={user} />
-          ) : (
-            <Container
-              maxWidth="md"
-              sx={{
-                mx: 'auto',
-                px: { xs: 2, sm: 3 },
-                width: '100%',
-              }}
-            >
-              {/* Loading State */}
-              {isLoading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Package size={40} color={theme.palette.primary.main} />
-                </motion.div>
+          ) : currentView === 'lists' ? (
+            <Box sx={{ display: 'flex', height: 'calc(100vh - 64px)' }}>
+              {/* Shopping List Manager */}
+              <Box sx={{ 
+                width: 360, 
+                borderRight: `1px solid ${theme.palette.divider}`,
+                background: theme.palette.background.paper,
+                overflow: 'hidden'
+              }}>
+                <ShoppingListManager
+                  key={listRefreshKey}
+                  token={user.token}
+                  selectedListId={selectedListId}
+                  onListSelect={handleListSelect}
+                  onDataChange={handleDataChange}
+                  onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+                />
               </Box>
-            ) : (
-              <>
-                {/* Header - Hidden in Shopping Mode */}
-                {!isShoppingMode && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Card
-                      sx={{
-                        mb: 3,
-                        borderRadius: '16px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-                        border: `1px solid ${theme.palette.divider}`,
-                      }}
-                    >
-                      <CardContent sx={{ p: 2.5 }}>
-                        <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                            <Box sx={{ minWidth: 0 }}>
-                              <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                                {currentListName}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {totalItems} items • {completedItems} completed
-                              </Typography>
-                            </Box>
-                          </Box>
-                          
-                          <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                            {completedItems > 0 && (
-                              <Button
-                                variant="text"
-                                size="small"
-                                onClick={handleClearCompleted}
-                                sx={{ 
-                                  borderRadius: '8px', 
-                                  textTransform: 'none',
-                                  color: theme.palette.error.main,
-                                  minWidth: 'auto',
-                                  px: 1.5,
-                                  fontSize: '0.75rem',
-                                  '&:hover': {
-                                    background: alpha(theme.palette.error.main, 0.1),
-                                  },
-                                }}
-                              >
-                                Clear
-                              </Button>
-                            )}
-                            <IconButton
-                              onClick={handleToggleShoppingMode}
-                              sx={{
-                                borderRadius: '8px',
-                                background: isShoppingMode 
-                                  ? `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`
-                                  : `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                                color: 'white',
-                                '&:hover': {
-                                  background: isShoppingMode 
-                                    ? `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`
-                                    : `linear-gradient(135deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})`,
-                                },
-                              }}
-                            >
-                              <ShoppingCart size={18} />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => setIsAddModalOpen(true)}
-                              sx={{
-                                borderRadius: '8px',
-                                background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                                color: 'white',
-                                '&:hover': {
-                                  background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                                },
-                              }}
-                            >
-                              <Plus size={18} />
-                            </IconButton>
-                            <IconButton
-                              onClick={() => setIsSmartAssistantOpen(true)}
-                              sx={{ 
-                                borderRadius: '8px',
-                                border: `1px solid ${theme.palette.divider}`,
-                                '&:hover': {
-                                  background: alpha(theme.palette.primary.main, 0.1),
-                                },
-                              }}
-                            >
-                              <Brain size={18} />
-                            </IconButton>
-                          </Stack>
-                        </Stack>
-                      
-                      {totalItems > 0 && (
-                        <Box sx={{ mt: 3 }}>
-                          <LinearProgress
-                            variant="determinate"
-                            value={completionPercentage}
+              
+              {/* Shopping List Content */}
+              <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+                <Container
+                  maxWidth="md"
+                  sx={{
+                    mx: 'auto',
+                    px: { xs: 2, sm: 3 },
+                    py: 3,
+                    width: '100%',
+                  }}
+                >
+                  {/* Loading State */}
+                  {isLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Package size={40} color={theme.palette.primary.main} />
+                      </motion.div>
+                    </Box>
+                  ) : (
+                    <>
+                      {/* Header - Hidden in Shopping Mode */}
+                      {!isShoppingMode && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          <Card
                             sx={{
-                              height: 8,
-                              borderRadius: 4,
-                              backgroundColor: `${theme.palette.primary.main}20`,
-                              '& .MuiLinearProgress-bar': {
-                                borderRadius: 4,
-                                background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                              },
+                              mb: 3,
+                              borderRadius: '16px',
+                              background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+                              border: `1px solid ${theme.palette.divider}`,
                             }}
-                          />
-                          <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                            {completionPercentage}% complete
+                          >
+                            <CardContent sx={{ p: 2.5 }}>
+                              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                                  <Box sx={{ minWidth: 0 }}>
+                                    <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                      {currentListName}
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                      {totalItems} items • {completedItems} completed
+                                    </Typography>
+                                  </Box>
+                                </Box>
+                                
+                                <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                                  {completedItems > 0 && (
+                                    <Button
+                                      variant="text"
+                                      size="small"
+                                      onClick={handleClearCompleted}
+                                      sx={{ 
+                                        borderRadius: '8px', 
+                                        textTransform: 'none',
+                                        color: theme.palette.error.main,
+                                        minWidth: 'auto',
+                                        px: 1.5,
+                                        fontSize: '0.75rem',
+                                        '&:hover': {
+                                          background: alpha(theme.palette.error.main, 0.1),
+                                        },
+                                      }}
+                                    >
+                                      Clear
+                                    </Button>
+                                  )}
+                                  <IconButton
+                                    onClick={handleToggleShoppingMode}
+                                    sx={{
+                                      borderRadius: '8px',
+                                      background: isShoppingMode 
+                                        ? `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`
+                                        : `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                                      color: 'white',
+                                      '&:hover': {
+                                        background: isShoppingMode 
+                                          ? `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`
+                                          : `linear-gradient(135deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})`,
+                                      },
+                                    }}
+                                  >
+                                    <ShoppingCart size={18} />
+                                  </IconButton>
+                                  <IconButton
+                                    onClick={() => setIsAddModalOpen(true)}
+                                    sx={{
+                                      borderRadius: '8px',
+                                      background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                                      color: 'white',
+                                      '&:hover': {
+                                        background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                                      },
+                                    }}
+                                  >
+                                    <Plus size={18} />
+                                  </IconButton>
+                                  <IconButton
+                                    onClick={() => setIsSmartAssistantOpen(true)}
+                                    sx={{ 
+                                      borderRadius: '8px',
+                                      border: `1px solid ${theme.palette.divider}`,
+                                      '&:hover': {
+                                        background: alpha(theme.palette.primary.main, 0.1),
+                                      },
+                                    }}
+                                  >
+                                    <Brain size={18} />
+                                  </IconButton>
+                                </Stack>
+                              </Stack>
+                            
+                            {totalItems > 0 && (
+                              <Box sx={{ mt: 3 }}>
+                                <LinearProgress
+                                  variant="determinate"
+                                  value={completionPercentage}
+                                  sx={{
+                                    height: 8,
+                                    borderRadius: 4,
+                                    backgroundColor: `${theme.palette.primary.main}20`,
+                                    '& .MuiLinearProgress-bar': {
+                                      borderRadius: 4,
+                                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                                    },
+                                  }}
+                                />
+                                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                  {completionPercentage}% complete
+                                </Typography>
+                              </Box>
+                            )}
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      )}
+
+                      {/* Shopping List */}
+                      {selectedListId ? (
+                        <ShoppingListView
+                          items={items}
+                          listId={selectedListId}
+                          userId={user.id}
+                          onToggleComplete={handleToggleComplete}
+                          onDeleteItem={handleDeleteItem}
+                          onEditItem={handleEditItem}
+                          onAddItem={() => setIsAddModalOpen(true)}
+                        />
+                      ) : (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                          <Typography variant="h6" color="text.secondary">
+                            Select a shopping list to view items
                           </Typography>
                         </Box>
                       )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                )}
-
-                {/* Shopping List */}
-                {isShoppingMode ? (
-                  <ShoppingModeView
-                    items={items}
-                    onToggleComplete={handleToggleComplete}
-                    onExitShoppingMode={handleExitShoppingMode}
-                    currentListName={currentListName}
-                  />
-                ) : selectedListId ? (
-                  <ShoppingListView
-                    items={items}
-                    listId={selectedListId}
-                    userId={user.id}
-                    onToggleComplete={handleToggleComplete}
-                    onDeleteItem={handleDeleteItem}
-                    onEditItem={handleEditItem}
-                    onAddItem={() => setIsAddModalOpen(true)}
-                  />
-                ) : (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-                    <Typography variant="h6" color="text.secondary">
-                      Select a shopping list to view items
-                    </Typography>
-                  </Box>
-                )}
-              </>
-            )}
-
-            {/* Floating Action Button - Hidden in Shopping Mode */}
-            {!isShoppingMode && (
-              <Fab
-                color="primary"
-                sx={{
-                  position: 'fixed',
-                  bottom: 24,
-                  right: 24,
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                }}
-                onClick={() => setIsAddModalOpen(true)}
-              >
-                <Plus size={24} />
-              </Fab>
-            )}
-
-            {/* Add Item Modal */}
-            <AddItemModal
-              open={isAddModalOpen}
-              onClose={() => !isAddingItem && setIsAddModalOpen(false)}
-              onAdd={handleAddItem}
-              isLoading={isAddingItem}
-            />
-
-            {/* Edit Item Modal */}
-            <EditItemModal
-              open={isEditModalOpen}
-              onClose={() => {
-                setIsEditModalOpen(false);
-                setEditingItem(null);
-              }}
-              onSave={handleUpdateItem}
-              item={editingItem}
-            />
-
-            {/* Smart Assistant Modal */}
-            <SmartAssistant
-              open={isSmartAssistantOpen}
-              onClose={() => setIsSmartAssistantOpen(false)}
-              onAddItems={handleSmartAssistantAddItems}
-              token={user.token}
-            />
-
-            {/* Create Shopping List Dialog */}
-            <Dialog 
-              open={isCreateDialogOpen} 
-              onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
-              maxWidth="sm"
-              fullWidth
-            >
-              <DialogTitle>Create New Shopping List</DialogTitle>
-              <DialogContent>
-                <TextField
-                  autoFocus
-                  margin="dense"
-                  label="List Name"
-                  fullWidth
-                  variant="outlined"
-                  value={newListName}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
-                  disabled={isCreatingList}
-                  onKeyPress={(e: React.KeyboardEvent) => {
-                    if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
-                      handleCreateList();
-                    }
-                  }}
-                  sx={{ mt: 1 }}
-                />
-              </DialogContent>
-              <DialogActions>
-                <Button 
-                  onClick={() => setIsCreateDialogOpen(false)} 
-                  disabled={isCreatingList}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleCreateList} 
-                  variant="contained" 
-                  disabled={isCreatingList || !newListName.trim()}
-                >
-                  {isCreatingList ? 'Creating...' : 'Create'}
-                </Button>
-              </DialogActions>
-            </Dialog>
-            </Container>
-          )}
+                    </>
+                  )}
+                </Container>
+              </Box>
+            </Box>
+                                  ) : null}
         </Box>
+        
+        {/* Floating Action Button - Hidden in Shopping Mode */}
+        {!isShoppingMode && currentView === 'lists' && (
+          <Fab
+            color="primary"
+            sx={{
+              position: 'fixed',
+              bottom: 24,
+              right: 24,
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+            }}
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus size={24} />
+          </Fab>
+        )}
+
+        {/* Add Item Modal */}
+        <AddItemModal
+          open={isAddModalOpen}
+          onClose={() => !isAddingItem && setIsAddModalOpen(false)}
+          onAdd={handleAddItem}
+          isLoading={isAddingItem}
+        />
+
+        {/* Edit Item Modal */}
+        <EditItemModal
+          open={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingItem(null);
+          }}
+          onSave={handleUpdateItem}
+          item={editingItem}
+        />
+
+        {/* Smart Assistant Modal */}
+        <SmartAssistant
+          open={isSmartAssistantOpen}
+          onClose={() => setIsSmartAssistantOpen(false)}
+          onAddItems={handleSmartAssistantAddItems}
+          token={user.token}
+        />
+
+        {/* Create Shopping List Dialog */}
+        <Dialog 
+          open={isCreateDialogOpen} 
+          onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>Create New Shopping List</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="List Name"
+              fullWidth
+              variant="outlined"
+              value={newListName}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
+              disabled={isCreatingList}
+              onKeyPress={(e: React.KeyboardEvent) => {
+                if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
+                  handleCreateList();
+                }
+              }}
+              sx={{ mt: 1 }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button 
+              onClick={() => setIsCreateDialogOpen(false)} 
+              disabled={isCreatingList}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCreateList} 
+              variant="contained" 
+              disabled={isCreatingList || !newListName.trim()}
+            >
+              {isCreatingList ? 'Creating...' : 'Create'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Box>
   );
