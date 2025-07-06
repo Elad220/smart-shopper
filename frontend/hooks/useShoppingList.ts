@@ -139,12 +139,26 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
     return newItem;
   }, [token, selectedListId]);
 
+  // Simple recursive merge to preserve nested objects
+  const deepMerge = (target: any, source: any): any => {
+    if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
+      return source;
+    }
+    const output: any = { ...target };
+    Object.keys(source).forEach(key => {
+      if (source[key] !== undefined) {
+        output[key] = deepMerge(target[key], source[key]);
+      }
+    });
+    return output;
+  };
+
   const updateItem = useCallback(async (id: string, updates: Partial<ShoppingItem>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
 
     // Optimistically update UI immediately (shallow merge preserves all fields)
     setItems(prev => prev.map(item => 
-      item.id === id ? { ...item, ...updates } : item
+      item.id === id ? deepMerge(item, updates) : item
     ));
 
     try {
@@ -157,7 +171,7 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
 
     // Return the merged item for API consistency (no await needed)
     const existing = items.find(i => i.id === id);
-    return { ...(existing ?? {} as ShoppingItem), ...updates } as ShoppingItem;
+    return deepMerge(existing ?? {}, updates) as ShoppingItem;
   }, [token, selectedListId, items]);
 
   const deleteItem = useCallback(async (id: string) => {
