@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "@types/localforage": "^0.0.33"
+  },
+  "dependencies": {
+    "localforage": "^1.10.0"
   }
 }
