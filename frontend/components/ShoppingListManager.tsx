@@ -89,6 +89,27 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const [sharingListId, setSharingListId] = useState<string | null>(null);
   const [sharingListName, setSharingListName] = useState('');
 
+  // Gradient style for list control buttons (import, export, new, sort)
+  const controlBtnStyles = {
+    borderRadius: '10px',
+    p: 1,
+    color: '#fff',
+    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+    boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
+    '&:hover': {
+      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+      transform: 'translateY(-1px)',
+      boxShadow: `0 6px 16px ${theme.palette.primary.main}50`,
+    },
+    '&:disabled': {
+      opacity: 0.5,
+      background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.3)}, ${alpha(theme.palette.secondary.main, 0.3)})`,
+      boxShadow: 'none',
+      transform: 'none',
+    },
+    transition: 'all 0.2s ease',
+  };
+
   useEffect(() => {
     if (token) {
       loadLists();
@@ -284,65 +305,41 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
           My Lists
         </Typography>
         
-        <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+        <Stack direction="row" spacing={1.5} sx={{ mb: 2 }}>
           <Tooltip title="Create New List">
             <IconButton
               onClick={onOpenCreateDialog}
               disabled={isLoading || !!deletingListId}
-              sx={{
-                borderRadius: '8px',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': {
-                  background: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
+              sx={controlBtnStyles}
             >
-              <AddIcon fontSize="small" />
+              <AddIcon fontSize="medium" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Sort Lists">
             <IconButton
               onClick={handleSortClick}
               disabled={!!deletingListId}
-              sx={{
-                borderRadius: '8px',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': {
-                  background: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
+              sx={controlBtnStyles}
             >
-              <SortIcon fontSize="small" />
+              <SortIcon fontSize="medium" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Import Items">
             <IconButton
               onClick={handleImportClick}
               disabled={isLoading || !selectedListId || !!deletingListId}
-              sx={{
-                borderRadius: '8px',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': {
-                  background: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
+              sx={controlBtnStyles}
             >
-              <ImportIcon fontSize="small" />
+              <ImportIcon fontSize="medium" />
             </IconButton>
           </Tooltip>
           <Tooltip title="Export Selected List">
             <IconButton
               onClick={handleExport}
               disabled={isLoading || !selectedListId || !!deletingListId}
-              sx={{
-                borderRadius: '8px',
-                border: `1px solid ${theme.palette.divider}`,
-                '&:hover': {
-                  background: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
+              sx={controlBtnStyles}
             >
-              <ExportIcon fontSize="small" />
+              <ExportIcon fontSize="medium" />
             </IconButton>
           </Tooltip>
         </Stack>
