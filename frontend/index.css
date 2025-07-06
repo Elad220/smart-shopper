@@ -173,3 +173,18 @@ html {
 .glow-error {
   box-shadow: 0 0 20px rgba(211, 47, 47, 0.3) !important;
 }
+
+/* Mobile Safari safe area support */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Ensure drawer content respects safe areas */
+  .MuiDrawer-paper {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
