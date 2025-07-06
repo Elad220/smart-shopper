@@ -28,7 +28,7 @@ interface SideMenuProps {
   user: UserType;
   onLogout: () => void;
   onNavigate: (view: 'lists' | 'mylists' | 'settings') => void;
-  currentView: string;
+  currentView: 'lists' | 'mylists' | 'settings';
   isMobile?: boolean;
 }
 
