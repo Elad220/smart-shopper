@@ -46,11 +46,6 @@ export const useAuth = () => {
         duration: 8000, // Show login toast for 8 seconds
       });
       
-      // Allow time for the toast to be seen before reloading
-      setTimeout(() => {
-        window.location.reload();
-      }, 2000);
-      
       return { success: true };
     } catch (error: any) {
       const message = error.message || 'Login failed';
@@ -84,10 +79,8 @@ export const useAuth = () => {
     localStorage.removeItem('selectedListId');
     toast.success('Logged out successfully! 👋');
     
-    // Redirect to landing page after logout
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+    // Remove reload - React Router will handle navigation
+    // The ProtectedRoute component will automatically redirect to the auth page
   }, []);
 
   return {
