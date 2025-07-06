@@ -26,7 +26,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
-    return <Navigate to="/list" replace />;
+    return <Navigate to="/app" replace />;
   }
   
   return <>{children}</>;
@@ -47,15 +47,21 @@ const LandingPageWithNavigation: React.FC = () => {
 // Login Form with Navigation
 const LoginFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
+  
+  const handleLogin = async (credentials: { email: string; password: string }) => {
+    const result = await login(credentials);
+    if (result.success) {
+      navigate('/app');
+    }
+    return result;
+  };
   
   return (
     <LoginForm 
-      onLogin={async (_credentials) => {
-        // This will be handled by the LoginForm component
-        return { success: true };
-      }}
+      onLogin={handleLogin}
       onSwitchToRegister={() => navigate('/register')}
-      isLoading={false}
+      isLoading={isLoading}
     />
   );
 };
@@ -63,15 +69,13 @@ const LoginFormWithNavigation: React.FC = () => {
 // Register Form with Navigation
 const RegisterFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
+  const { register, isLoading } = useAuth();
   
   return (
     <RegisterForm 
-      onRegister={async (_data) => {
-        // This will be handled by the RegisterForm component
-        return { success: true };
-      }}
+      onRegister={register}
       onSwitchToLogin={() => navigate('/auth')}
-      isLoading={false}
+      isLoading={isLoading}
     />
   );
 };
