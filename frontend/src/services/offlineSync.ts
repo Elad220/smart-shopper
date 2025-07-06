@@ -101,6 +101,35 @@ const flushQueue = async () => {
 };
 
 /* -------------------------------------------------------------------------- */
+/* List cache helpers                                                          */
+/* -------------------------------------------------------------------------- */
+
+const extractIds = (pathname: string) => {
+  const listMatch = pathname.match(/\/shopping-lists\/([^/]+)/);
+  const listId = listMatch ? listMatch[1] : null;
+  const itemMatch = pathname.match(/\/items\/([^/]+)$/);
+  const itemId = itemMatch ? itemMatch[1] : null;
+  return { listId, itemId };
+};
+
+const updateListCache = async (
+  urlOrigin: string,
+  listId: string,
+  updater: (list: any) => any
+) => {
+  const listUrl = `${urlOrigin}/api/shopping-lists/${listId}`;
+  const cacheKey = getCacheKey(listUrl);
+  try {
+    const existing = (await localforage.getItem<any>(cacheKey)) || null;
+    if (!existing) return; // Nothing cached yet
+    const updated = updater(JSON.parse(JSON.stringify(existing))); // deep-ish clone
+    await localforage.setItem(cacheKey, updated);
+  } catch (err) {
+    console.warn('[OfflineSync] Failed to update list cache', err);
+  }
+};
+
+/* -------------------------------------------------------------------------- */
 /* fetch() Override                                                            */
 /* -------------------------------------------------------------------------- */
 
@@ -243,15 +272,15 @@ export const setupOfflineFetch = () => {
       // `/api/shopping-lists/<id>/items`). This avoids accidentally matching unrelated
       // URLs such as `/categories/items` or `/items-backup`.
 
-      const pathname = (() => {
+      const parsedUrl = (() => {
         try {
-          // Handle both absolute and relative request URLs gracefully.
-          return new URL(url, typeof location !== 'undefined' ? location.origin : 'http://dummy').pathname;
+          return new URL(url, typeof location !== 'undefined' ? location.origin : 'http://dummy');
         } catch {
-          // In case URL parsing fails (should be rare), fall back to using the raw string.
-          return url;
+          return new URL('http://dummy');
         }
       })();
+
+      const pathname = parsedUrl.pathname;
 
       const isItemCreationEndpoint =
         method === 'POST' &&
@@ -291,6 +320,15 @@ export const setupOfflineFetch = () => {
           ...bodyJson,
         };
 
+        // Update cached list
+        const { listId } = extractIds(pathname);
+        if (listId) {
+          await updateListCache(parsedUrl.origin, listId, (list) => {
+            list.items = [...(list.items || []), optimisticItem];
+            return list;
+          });
+        }
+
         return new Response(JSON.stringify(optimisticItem), {
           status: 202,
           headers: { 'Content-Type': 'application/json' },
@@ -315,14 +353,33 @@ export const setupOfflineFetch = () => {
 
         const optimisticItem = { id: itemId, ...bodyJson };
 
+        // Update cached list
+        const { listId } = extractIds(pathname);
+        if (listId) {
+          await updateListCache(parsedUrl.origin, listId, (list) => {
+            list.items = (list.items || []).map((it: any) =>
+              it.id === itemId || it._id === itemId ? { ...it, ...bodyJson } : it
+            );
+            return list;
+          });
+        }
+
         return new Response(JSON.stringify(optimisticItem), {
           status: 202,
           headers: { 'Content-Type': 'application/json' },
         });
       }
 
-      // For DELETE requests, simply acknowledge
+      // For DELETE requests, update cache and acknowledge
       if (method === 'DELETE') {
+        const { listId, itemId } = extractIds(pathname);
+        if (listId && itemId) {
+          await updateListCache(parsedUrl.origin, listId, (list) => {
+            list.items = (list.items || []).filter((it: any) => it.id !== itemId && it._id !== itemId);
+            return list;
+          });
+        }
+
         return new Response(null, { status: 202 });
       }
     } catch {/* Fallback to generic response */}
