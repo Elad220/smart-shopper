@@ -133,11 +133,14 @@ const App: React.FC = () => {
           } />
           
           {/* Protected routes - all handled by MainApp */}
-          <Route path="/*" element={
+          <Route path="/app/*" element={
             <ProtectedRoute>
               <MainApp />
             </ProtectedRoute>
           } />
+          
+          {/* Catch-all route: redirect unknown paths to root */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
