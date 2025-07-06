@@ -10,7 +10,6 @@ import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
 import { ShoppingItem } from '../../types';
 import { useShoppingList } from '../../hooks/useShoppingList';
-import { useThemeChange } from '../../hooks/useThemeChange';
 import ShoppingListView from '../shopping/ShoppingListView';
 import ShoppingModeView from '../shopping/ShoppingModeView';
 import AddItemModal from '../shopping/AddItemModal';
@@ -30,7 +29,6 @@ interface ShoppingAppProps {
 
 const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
   const theme = useTheme();
-  const themeChangeKey = useThemeChange();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -196,7 +194,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   }
 
   return (
-    <Box key={themeChangeKey} sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Header
         mode={mode}

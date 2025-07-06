@@ -4,7 +4,6 @@ import {
 } from '@mui/material';
 import { Moon, Sun, ShoppingCart, Menu } from 'lucide-react';
 import { User } from '../../hooks/useAuth';
-import { useThemeChange } from '../../hooks/useThemeChange';
 
 interface HeaderProps {
   mode: 'light' | 'dark';
@@ -24,11 +23,9 @@ const Header: React.FC<HeaderProps> = ({
   isMobile
 }) => {
   const theme = useTheme();
-  const themeChangeKey = useThemeChange();
 
   return (
     <AppBar 
-      key={themeChangeKey}
       position="sticky" 
       elevation={0}
       sx={{ 

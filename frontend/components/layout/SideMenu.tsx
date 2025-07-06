@@ -21,7 +21,6 @@ import {
   User
 } from 'lucide-react';
 import { User as UserType } from '../../hooks/useAuth';
-import { useThemeChange } from '../../hooks/useThemeChange';
 
 interface SideMenuProps {
   open: boolean;
@@ -43,7 +42,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
   isMobile = false,
 }) => {
   const theme = useTheme();
-  const themeChangeKey = useThemeChange();
 
   const menuItems = [
     { key: 'lists', icon: ListIcon, label: 'Shopping List' },
@@ -60,7 +58,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
   return (
     <Drawer
-      key={themeChangeKey}
       variant={isMobile ? 'temporary' : 'persistent'}
       anchor="left"
       open={open}

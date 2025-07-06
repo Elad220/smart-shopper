@@ -2,15 +2,12 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
-import { useThemeChange } from '../hooks/useThemeChange';
 
 const Footer: React.FC = () => {
   const theme = useTheme();
-  const themeChangeKey = useThemeChange();
 
   return (
     <Box
-      key={themeChangeKey}
       component="footer"
       sx={{
         py: 2,

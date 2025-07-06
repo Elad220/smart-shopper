@@ -10,7 +10,6 @@ import {
   Popover,
   useTheme,
 } from '@mui/material';
-import { useThemeChange } from '../hooks/useThemeChange';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -54,7 +53,6 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
   onDrawerOpen,
 }) => {
   const theme = useTheme();
-  const themeChangeKey = useThemeChange();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -70,7 +68,6 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
 
   return (
     <AppBar 
-      key={themeChangeKey}
       position="fixed" 
       elevation={1} 
       sx={{ 
