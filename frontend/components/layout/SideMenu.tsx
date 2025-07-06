@@ -56,6 +56,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
     }
   };
 
+  const headerHeight = isMobile ? 56 : 64;
+
   return (
     <Drawer
       variant={isMobile ? 'temporary' : 'persistent'}
@@ -68,8 +70,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
         '& .MuiDrawer-paper': {
           width: 280,
           boxSizing: 'border-box',
-          top: 64, // Account for header height
-          height: 'calc(100vh - 64px)',
+          top: `${headerHeight}px`,
+          height: `calc(100vh - ${headerHeight}px)`,
           borderRight: `1px solid ${theme.palette.divider}`,
           background: theme.palette.background.default,
           overflowY: 'auto',
