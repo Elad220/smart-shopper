@@ -15,6 +15,7 @@ import {
   Chip,
   Avatar,
   useTheme,
+  useMediaQuery,
   alpha,
   Fab,
   Tooltip,
@@ -56,6 +57,7 @@ interface SmartAssistantProps {
 
 const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -302,12 +304,13 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
       onClose={onClose} 
       maxWidth="md" 
       fullWidth
+      fullScreen={isMobile}
       PaperProps={{
         className: 'glass-modal',
         sx: {
-          borderRadius: '24px',
+          borderRadius: isMobile ? 0 : '24px',
           overflow: 'hidden',
-          maxHeight: '90vh',
+          maxHeight: isMobile ? '100vh' : '90vh',
           display: 'flex',
           flexDirection: 'column',
         }
@@ -419,7 +422,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
               sx={{ 
                 flex: 1,
                 overflowY: 'auto',
-                maxHeight: 'calc(90vh - 200px)',
+                maxHeight: `calc(${isMobile ? '100vh' : '90vh'} - 200px)`,
                 p: 0,
                 '&::-webkit-scrollbar': {
                   width: '8px',
