@@ -383,14 +383,14 @@ export const sendChatMessage = async (token: string, message: string): Promise<{
 };
 
 export const getChatHistory = async (token: string): Promise<ChatHistoryResponse> => {
-    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat`, {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
         headers: { 'Authorization': `Bearer ${token}` },
     });
     return handleResponse<ChatHistoryResponse>(response);
 };
 
 export const clearChatHistory = async (token: string): Promise<{ message: string }> => {
-    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat`, {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
     });
