@@ -72,6 +72,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
           height: 'calc(100vh - 64px)',
           borderRight: `1px solid ${theme.palette.divider}`,
           background: theme.palette.background.default,
+          overflowY: 'auto',
+          overflowX: 'hidden',
         },
       }}
     >
@@ -126,7 +128,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Navigation Items */}
-        <Box sx={{ flexGrow: 1, py: 1 }}>
+        <Box sx={{ flexGrow: 1, py: 1, overflowY: 'auto' }}>
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.key} disablePadding>
