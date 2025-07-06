@@ -278,7 +278,7 @@ const AddItemForm: React.FC<AddItemFormProps> = ({ isOpen, onClose, onAddItem, c
             </Typography>
           </Box>
           {imageUrl && (
-            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
+            <Box mt={1} textAlign="center" sx={{ position: 'relative', border: `1px solid ${theme.palette.divider}`, padding: '8px', borderRadius: '4px' }}>
               <img
                 src={imageUrl}
                 alt="Preview"

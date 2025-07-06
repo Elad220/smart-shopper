@@ -93,7 +93,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   const controlBtnStyles = {
     borderRadius: '10px',
     p: 1,
-    color: '#fff',
+    color: theme.palette.common.white,
     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
     boxShadow: `0 4px 12px ${theme.palette.primary.main}40`,
     '&:hover': {

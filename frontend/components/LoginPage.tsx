@@ -159,24 +159,24 @@ const LoginPage: React.FC<LoginPageProps> = ({
             sx={{
               borderRadius: '9999px',
               height: 48,
-              backgroundColor: '#3b82f6 !important',
-              color: '#ffffff !important',
+              backgroundColor: `${theme.palette.primary.main} !important`,
+              color: `${theme.palette.common.white} !important`,
               fontWeight: 'bold',
               textTransform: 'none',
               fontSize: '1rem',
               transition: 'all 0.2s ease-in-out',
               '&:hover': {
-                backgroundColor: '#2563eb !important',
-                color: '#ffffff !important',
+                backgroundColor: `${theme.palette.primary.dark} !important`,
+                color: `${theme.palette.common.white} !important`,
               },
               '&:disabled': {
-                backgroundColor: '#6b7280 !important',
-                color: '#ffffff !important',
+                backgroundColor: `${theme.palette.action.disabled} !important`,
+                color: `${theme.palette.common.white} !important`,
                 opacity: 0.8,
               }
             }}
           >
-            {isLoading ? <CircularProgress size={24} sx={{ color: '#ffffff' }} /> : 'Sign In →'}
+            {isLoading ? <CircularProgress size={24} sx={{ color: theme.palette.common.white }} /> : 'Sign In →'}
           </Button>
         </Box>
         <Typography

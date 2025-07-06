@@ -6,6 +6,9 @@ export const useTheme = () => {
     (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
   );
 
+  // Add a key that changes when mode changes to force re-renders
+  const [themeKey, setThemeKey] = useState(0);
+
   useEffect(() => {
     localStorage.setItem('themeMode', mode);
     
@@ -28,6 +31,12 @@ export const useTheme = () => {
       root.style.setProperty('--paper-color', '#f8fafc');
       root.style.setProperty('--border-color', '#e2e8f0');
     }
+
+    // Force a new theme key to ensure re-renders
+    setThemeKey(prev => prev + 1);
+    
+    // Dispatch custom event for components that need to know about theme changes
+    window.dispatchEvent(new CustomEvent('themeChange', { detail: { mode } }));
   }, [mode]);
 
   const theme = useMemo(() => createTheme({
@@ -176,11 +185,11 @@ export const useTheme = () => {
         }
       }
     }
-  }), [mode]);
+  }), [mode, themeKey]); // Add themeKey to dependencies to force recreation
 
   const toggleMode = useCallback(() => {
     setMode(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
-  return { theme, mode, setMode, toggleMode };
+  return { theme, mode, setMode, toggleMode, themeKey };
 };
