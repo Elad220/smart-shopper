@@ -117,7 +117,16 @@ export const setupOfflineFetch = () => {
     input: RequestInfo | URL,
     init: RequestInit = {}
   ): Promise<Response> => {
-    const method = (init.method || 'GET').toUpperCase();
+    // Derive HTTP method giving precedence in the following order:
+    //   1. `init.method` if explicitly provided when calling fetch()
+    //   2. `input.method` when `input` is a Request instance (covers the common
+    //      pattern of passing a Request object to fetch())
+    //   3. Default to "GET" as per the Fetch spec
+    const method = (
+      init.method ||
+      (input instanceof Request ? input.method : undefined) ||
+      'GET'
+    ).toUpperCase();
     // Ensure we correctly derive the request URL regardless of the input type.
     // - When `input` is a string we can use it directly.
     // - When `input` is a Request object we need to read the `url` property – calling
@@ -160,19 +169,71 @@ export const setupOfflineFetch = () => {
           headers: { 'Content-Type': 'application/json' },
         });
       }
-      // No cached copy — return empty array/object so UI can still render
-      return new Response(JSON.stringify([]), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // No cached copy – return a 503 Service Unavailable so the caller can
+      // decide how to handle the offline case. Using an error status avoids
+      // accidental type mismatches that can occur when we guess a fallback
+      // payload shape (e.g. `[]`).
+      return new Response(
+        JSON.stringify({ error: 'Offline and no cached data available' }),
+        {
+          status: 503,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
-    // For write requests while offline -> queue them and return ACK
+    // For write requests while offline -> serialise and queue them, then return ACK
+
+    const buildOptionsForQueue = async (): Promise<RequestInit> => {
+      // Start with anything the caller passed in `init` so it has precedence
+      const base: RequestInit = { ...init, method };
+
+      if (input instanceof Request) {
+        // Copy properties from the original Request that are not explicitly
+        // overridden in `init`.
+        const originalReq = input.clone();
+
+        // Headers -----------------------------------------------------------------
+        if (!base.headers) {
+          base.headers = Object.fromEntries(originalReq.headers.entries());
+        }
+
+        // Body --------------------------------------------------------------------
+        // Only serialise a body if the method allows it and the caller has not
+        // already provided one via `init`.
+        if (!base.body && !['GET', 'HEAD'].includes(method)) {
+          try {
+            base.body = await originalReq.text();
+          } catch {
+            /* gracefully ignore body extraction failures */
+          }
+        }
+
+        // Credentials, mode, etc. --------------------------------------------------
+        base.credentials = base.credentials ?? originalReq.credentials;
+        base.mode = base.mode ?? originalReq.mode;
+        base.cache = base.cache ?? originalReq.cache;
+        base.redirect = base.redirect ?? originalReq.redirect;
+        base.referrer = base.referrer ?? originalReq.referrer;
+        base.referrerPolicy = base.referrerPolicy ?? originalReq.referrerPolicy;
+        base.integrity = base.integrity ?? originalReq.integrity;
+        // `keepalive` is not part of the standard RequestInit typings pre-v3.
+        // @ts-ignore – copy if it exists
+        if (base.keepalive === undefined && (originalReq as any).keepalive !== undefined) {
+          // @ts-ignore
+          base.keepalive = (originalReq as any).keepalive;
+        }
+      }
+
+      return base;
+    };
+
     const requestToQueue: QueuedRequest = {
       url,
-      options: { ...init, method },
+      options: await buildOptionsForQueue(),
       timestamp: Date.now(),
     };
+
     await enqueueRequest(requestToQueue);
 
     // Try to craft a best-effort optimistic result for certain endpoints
