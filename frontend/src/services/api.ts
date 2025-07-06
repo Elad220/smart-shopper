@@ -408,3 +408,25 @@ export const updateUserPreferences = async (token: string, preferences: Partial<
     });
     return handleResponse<{ message: string; preferences: UserPreferences }>(response);
 };
+
+// Last used list functions
+export const updateLastUsedList = async (token: string, listId: string): Promise<{ message: string }> => {
+    const response = await fetch(`${BASE_URL}/api/user/last-used-list`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ listId }),
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+export const getLastUsedList = async (token: string): Promise<{ lastUsedList: ShoppingList | null }> => {
+    const response = await fetch(`${BASE_URL}/api/user/last-used-list`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse<{ lastUsedList: ShoppingList | null }>(response);
+};

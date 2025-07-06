@@ -16,7 +16,7 @@ import {
 import { Plus, List } from 'lucide-react';
 import { User as UserType } from '../../hooks/useAuth';
 import { ShoppingListManager } from '../ShoppingListManager';
-import { createShoppingList } from '../../src/services/api';
+import { createShoppingList, updateLastUsedList } from '../../src/services/api';
 import toast from 'react-hot-toast';
 
 interface MyListsPageProps {
@@ -51,6 +51,15 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
       const newList = await createShoppingList(user.token, newListName.trim());
       onListSelect(newList._id);
       localStorage.setItem('selectedListId', newList._id);
+      
+      // Update the last used list in the backend
+      try {
+        await updateLastUsedList(user.token, newList._id);
+        console.log('💾 Updated last used list in backend');
+      } catch (error) {
+        console.log('⚠️ Could not update last used list in backend');
+      }
+      
       setIsCreateDialogOpen(false);
       setNewListName('');
       setListRefreshKey((prev: number) => prev + 1);
@@ -148,6 +157,7 @@ const MyListsPage: React.FC<MyListsPageProps> = ({
               onListSelect={handleListSelectAndNavigate}
               onDataChange={handleDataChange}
               onOpenCreateDialog={() => setIsCreateDialogOpen(true)}
+              autoSelectFirst={false}
             />
           </Box>
         </CardContent>

@@ -62,6 +62,9 @@ const SideMenu: React.FC<SideMenuProps> = ({
       anchor="left"
       open={open}
       onClose={onClose}
+      ModalProps={{
+        keepMounted: true, // Better mobile performance
+      }}
       sx={{
         width: 280,
         flexShrink: 0,
@@ -72,10 +75,14 @@ const SideMenu: React.FC<SideMenuProps> = ({
           height: 'calc(100vh - 64px)',
           borderRight: `1px solid ${theme.palette.divider}`,
           background: theme.palette.background.default,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          zIndex: theme.zIndex.drawer,
         },
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
         {/* Header */}
         <Box sx={{ 
           display: 'flex', 
@@ -83,6 +90,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
           justifyContent: 'space-between',
           p: 2,
           borderBottom: `1px solid ${theme.palette.divider}`,
+          flexShrink: 0,
         }}>
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
             Menu
@@ -105,6 +113,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
           p: 2, 
           borderBottom: `1px solid ${theme.palette.divider}`,
           background: `linear-gradient(135deg, ${theme.palette.primary.main}10, ${theme.palette.secondary.main}10)`,
+          flexShrink: 0,
         }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar sx={{ 
@@ -126,7 +135,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Navigation Items */}
-        <Box sx={{ flexGrow: 1, py: 1 }}>
+        <Box sx={{ flexGrow: 1, py: 1, overflow: 'auto', minHeight: 0 }}>
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.key} disablePadding>
@@ -169,7 +178,13 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Logout Button */}
-        <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+        <Box sx={{ 
+          p: 2, 
+          pb: 3, 
+          borderTop: `1px solid ${theme.palette.divider}`, 
+          flexShrink: 0,
+          background: theme.palette.background.paper,
+        }}>
           <ListItemButton
             onClick={onLogout}
             sx={{

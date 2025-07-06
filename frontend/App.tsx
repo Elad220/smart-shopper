@@ -47,15 +47,24 @@ const LandingPageWithNavigation: React.FC = () => {
 // Login Form with Navigation
 const LoginFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
+  const { login, isLoading } = useAuth();
+  
+  const handleLogin = async (credentials: { email: string; password: string }) => {
+    console.log('LoginFormWithNavigation: handleLogin called with credentials:', credentials);
+    const result = await login(credentials);
+    console.log('LoginFormWithNavigation: login result:', result);
+    if (result.success) {
+      // Navigation will be handled by the useAuth hook (page reload)
+      console.log('LoginFormWithNavigation: login successful, page will reload');
+    }
+    return result;
+  };
   
   return (
     <LoginForm 
-      onLogin={async (_credentials) => {
-        // This will be handled by the LoginForm component
-        return { success: true };
-      }}
+      onLogin={handleLogin}
       onSwitchToRegister={() => navigate('/register')}
-      isLoading={false}
+      isLoading={isLoading}
     />
   );
 };
@@ -63,15 +72,22 @@ const LoginFormWithNavigation: React.FC = () => {
 // Register Form with Navigation
 const RegisterFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
+  const { register, isLoading } = useAuth();
+  
+  const handleRegister = async (data: { username: string; email: string; password: string }) => {
+    const result = await register(data);
+    if (result.success) {
+      // Navigate to login page after successful registration
+      navigate('/auth');
+    }
+    return result;
+  };
   
   return (
     <RegisterForm 
-      onRegister={async (_data) => {
-        // This will be handled by the RegisterForm component
-        return { success: true };
-      }}
+      onRegister={handleRegister}
       onSwitchToLogin={() => navigate('/auth')}
-      isLoading={false}
+      isLoading={isLoading}
     />
   );
 };

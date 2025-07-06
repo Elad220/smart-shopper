@@ -2,9 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
-  Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
+  Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment, LinearProgress
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, Edit, GripVertical, Search, X, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, Edit, GripVertical, Search, X, Sparkles, ShoppingCart, Plus, Brain } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -16,6 +16,14 @@ interface ShoppingListViewProps {
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onAddItem: () => void;
+  currentListName: string;
+  totalItems: number;
+  completedItems: number;
+  completionPercentage: number;
+  onClearCompleted: () => void;
+  onToggleShoppingMode: () => void;
+  isShoppingMode: boolean;
+  onOpenSmartAssistant: () => void;
 }
 
 // Floating particles component
@@ -68,6 +76,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   onDeleteItem,
   onEditItem,
   onAddItem,
+  currentListName,
+  totalItems,
+  completedItems,
+  completionPercentage,
+  onClearCompleted,
+  onToggleShoppingMode,
+  isShoppingMode,
+  onOpenSmartAssistant,
 }) => {
   const theme = useTheme();
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -584,6 +600,120 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   return (
     <>
       <FloatingParticles />
+      {/* Main Card: List name, progress, actions */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <Card
+          sx={{
+            mb: 3,
+            borderRadius: '16px',
+            background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
+            border: `1px solid ${theme.palette.divider}`,
+          }}
+        >
+          <CardContent sx={{ p: 2.5 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
+                    {currentListName}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {totalItems} items • {completedItems} completed
+                  </Typography>
+                </Box>
+              </Box>
+              <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                {completedItems > 0 && (
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={onClearCompleted}
+                    sx={{
+                      borderRadius: '8px',
+                      textTransform: 'none',
+                      color: theme.palette.error.main,
+                      minWidth: 'auto',
+                      px: 1.5,
+                      fontSize: '0.75rem',
+                      '&:hover': {
+                        background: alpha(theme.palette.error.main, 0.1),
+                      },
+                    }}
+                  >
+                    Clear
+                  </Button>
+                )}
+                <IconButton
+                  onClick={onToggleShoppingMode}
+                  sx={{
+                    borderRadius: '8px',
+                    background: isShoppingMode
+                      ? `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`
+                      : `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
+                    color: 'white',
+                    '&:hover': {
+                      background: isShoppingMode
+                        ? `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`
+                        : `linear-gradient(135deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})`,
+                    },
+                  }}
+                >
+                  <ShoppingCart size={18} />
+                </IconButton>
+                <IconButton
+                  onClick={onAddItem}
+                  sx={{
+                    borderRadius: '8px',
+                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+                    color: 'white',
+                    '&:hover': {
+                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
+                    },
+                  }}
+                >
+                  <Plus size={18} />
+                </IconButton>
+                <IconButton
+                  onClick={onOpenSmartAssistant}
+                  sx={{
+                    borderRadius: '8px',
+                    border: `1px solid ${theme.palette.divider}`,
+                    '&:hover': {
+                      background: alpha(theme.palette.primary.main, 0.1),
+                    },
+                  }}
+                >
+                  <Brain size={18} />
+                </IconButton>
+              </Stack>
+            </Stack>
+            {totalItems > 0 && (
+              <Box sx={{ mt: 3 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={completionPercentage}
+                  sx={{
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: `${theme.palette.primary.main}20`,
+                    '& .MuiLinearProgress-bar': {
+                      borderRadius: 4,
+                      background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                    },
+                  }}
+                />
+                <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                  {completionPercentage}% complete
+                </Typography>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
       <Box sx={{ 
         overflow: 'visible', 
         position: 'relative',

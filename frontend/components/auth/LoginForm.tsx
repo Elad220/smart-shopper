@@ -21,6 +21,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('LoginForm: handleSubmit called with email:', email, 'password length:', password.length);
     setError('');
     
     if (!email || !password) {
@@ -28,9 +29,16 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
       return;
     }
 
-    const result = await onLogin({ email, password });
-    if (!result.success && result.error) {
-      setError(result.error);
+    try {
+      console.log('LoginForm: calling onLogin with credentials');
+      const result = await onLogin({ email, password });
+      console.log('LoginForm: onLogin result:', result);
+      if (!result.success && result.error) {
+        setError(result.error);
+      }
+    } catch (error) {
+      console.error('LoginForm: error in handleSubmit:', error);
+      setError('An unexpected error occurred');
     }
   };
 
@@ -99,7 +107,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
             )}
 
             {/* Login Form */}
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={handleSubmit} onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                console.log('LoginForm: Enter key pressed');
+              }
+            }}>
               <Stack spacing={3}>
                 <TextField
                   fullWidth
@@ -152,6 +164,8 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
                   size="large"
                   disabled={isLoading}
                   endIcon={<ArrowRight size={20} />}
+                  onClick={() => console.log('LoginForm: Sign In button clicked')}
+                  onMouseDown={() => console.log('LoginForm: Sign In button mouse down')}
                   sx={{
                     borderRadius: '12px',
                     textTransform: 'none',

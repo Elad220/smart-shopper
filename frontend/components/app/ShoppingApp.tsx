@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
-import { 
-  Box, Container, Typography, Button, Stack, Card, 
-  CardContent, Fab, useTheme, LinearProgress,
-  IconButton, useMediaQuery, alpha
-} from '@mui/material';
-import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
+import {
+  Box, Container, Card, Typography, useTheme, useMediaQuery,
+  Fab, Button
+} from '@mui/material';
+import { Plus, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
 import { useShoppingList } from '../../hooks/useShoppingList';
+import Header from '../layout/Header';
+import SideMenu from '../layout/SideMenu';
 import ShoppingListView from '../shopping/ShoppingListView';
 import ShoppingModeView from '../shopping/ShoppingModeView';
 import AddItemModal from '../shopping/AddItemModal';
 import EditItemModal from '../EditItemModal';
 import SmartAssistant from '../SmartAssistant';
-import Header from '../layout/Header';
-import SideMenu from '../layout/SideMenu';
 import SettingsPage from '../settings/SettingsPage';
 import MyListsPage from '../lists/MyListsPage';
+import * as api from '../../src/services/api';
 
 interface ShoppingAppProps {
   user: User;
@@ -35,9 +35,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
-  const [selectedListId, setSelectedListId] = useState<string | null>(
-    localStorage.getItem('selectedListId')
-  );
   const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [currentView, setCurrentView] = useState<'lists' | 'mylists' | 'settings'>('lists');
   
@@ -50,8 +47,19 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     updateItem,
     deleteItem,
     toggleComplete,
-    clearCompleted
-  } = useShoppingList(user.token, selectedListId);
+    clearCompleted,
+    selectedListId,
+    setSelectedListId
+  } = useShoppingList(user.token);
+
+  // Debug logging for items
+  console.log('🛒 ShoppingApp - Items state:', {
+    itemsCount: items.length,
+    items: items.map(item => ({ id: item.id, name: item.name, completed: item.completed })),
+    currentListName,
+    selectedListId,
+    isLoading
+  });
 
   const completedItems = items.filter(item => item.completed).length;
   const totalItems = items.length;
@@ -62,11 +70,11 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
       setIsAddingItem(true);
       
       // Debug: Track image through the flow
-      console.log('� ShoppingApp:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
+      console.log('🛒 ShoppingApp:', itemData.imageUrl ? '✅ Has image' : '❌ No image');
       
       const newItem = await addItem(itemData);
       
-      console.log('� ShoppingApp result:', newItem.imageUrl ? '✅ Image saved' : '❌ Image lost');
+      console.log('🛒 ShoppingApp result:', newItem.imageUrl ? '✅ Image saved' : '❌ Image lost');
       
       setIsAddModalOpen(false);
       toast.success(`Added "${itemData.name}" to your list! ✅`);
@@ -123,19 +131,32 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     }
   };
 
-  const handleListSelect = (listId: string) => {
+  const handleListSelect = async (listId: string) => {
     setSelectedListId(listId);
     localStorage.setItem('selectedListId', listId);
+    
+    // Update the last used list in the backend
+    try {
+      await api.updateLastUsedList(user.token, listId);
+      console.log('💾 Updated last used list in backend');
+    } catch (error) {
+      console.log('⚠️ Could not update last used list in backend');
+    }
+    
     if (isMobile) {
       setIsDrawerOpen(false);
     }
+    // Ensure we're on the lists view when a list is selected
+    setCurrentView('lists');
   };
 
   const handleDataChange = () => {
     // Handle data changes (functionality moved to MyListsPage)
   };
 
-
+  const handleNavigateToList = () => {
+    setCurrentView('lists');
+  };
 
   const handleSmartAssistantAddItems = async (aiItems: { name: string; category: string }[]) => {
     try {
@@ -221,8 +242,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           />
         )}
 
-
-
         {/* Main Content */}
         <Box sx={{
           flexGrow: 1,
@@ -245,13 +264,13 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             </Container>
           ) : currentView === 'settings' ? (
             <SettingsPage user={user} />
-                    ) : currentView === 'mylists' ? (
+          ) : currentView === 'mylists' ? (
             <MyListsPage
               user={user}
               selectedListId={selectedListId}
               onListSelect={handleListSelect}
               onDataChange={handleDataChange}
-              onNavigateToList={() => setCurrentView('lists')}
+              onNavigateToList={handleNavigateToList}
             />
           ) : currentView === 'lists' ? (
             <Container
@@ -275,125 +294,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                 </Box>
               ) : (
                 <>
-                  {/* Header - Hidden in Shopping Mode */}
-                  {!isShoppingMode && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <Card
-                        sx={{
-                          mb: 3,
-                          borderRadius: '16px',
-                          background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-                          border: `1px solid ${theme.palette.divider}`,
-                        }}
-                      >
-                        <CardContent sx={{ p: 2.5 }}>
-                          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography variant="h6" sx={{ fontWeight: 600, mb: 0.5 }}>
-                                  {currentListName}
-                                </Typography>
-                                <Typography variant="caption" color="text.secondary">
-                                  {totalItems} items • {completedItems} completed
-                                </Typography>
-                              </Box>
-                            </Box>
-                            
-                            <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
-                              {completedItems > 0 && (
-                                <Button
-                                  variant="text"
-                                  size="small"
-                                  onClick={handleClearCompleted}
-                                  sx={{ 
-                                    borderRadius: '8px', 
-                                    textTransform: 'none',
-                                    color: theme.palette.error.main,
-                                    minWidth: 'auto',
-                                    px: 1.5,
-                                    fontSize: '0.75rem',
-                                    '&:hover': {
-                                      background: alpha(theme.palette.error.main, 0.1),
-                                    },
-                                  }}
-                                >
-                                  Clear
-                                </Button>
-                              )}
-                              <IconButton
-                                onClick={handleToggleShoppingMode}
-                                sx={{
-                                  borderRadius: '8px',
-                                  background: isShoppingMode 
-                                    ? `linear-gradient(135deg, ${theme.palette.success.main}, ${theme.palette.success.dark})`
-                                    : `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.secondary.dark})`,
-                                  color: 'white',
-                                  '&:hover': {
-                                    background: isShoppingMode 
-                                      ? `linear-gradient(135deg, ${theme.palette.success.dark}, ${theme.palette.success.main})`
-                                      : `linear-gradient(135deg, ${theme.palette.secondary.dark}, ${theme.palette.secondary.main})`,
-                                  },
-                                }}
-                              >
-                                <ShoppingCart size={18} />
-                              </IconButton>
-                              <IconButton
-                                onClick={() => setIsAddModalOpen(true)}
-                                sx={{
-                                  borderRadius: '8px',
-                                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                                  color: 'white',
-                                  '&:hover': {
-                                    background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                                  },
-                                }}
-                              >
-                                <Plus size={18} />
-                              </IconButton>
-                              <IconButton
-                                onClick={() => setIsSmartAssistantOpen(true)}
-                                sx={{ 
-                                  borderRadius: '8px',
-                                  border: `1px solid ${theme.palette.divider}`,
-                                  '&:hover': {
-                                    background: alpha(theme.palette.primary.main, 0.1),
-                                  },
-                                }}
-                              >
-                                <Brain size={18} />
-                              </IconButton>
-                            </Stack>
-                          </Stack>
-                        
-                        {totalItems > 0 && (
-                          <Box sx={{ mt: 3 }}>
-                            <LinearProgress
-                              variant="determinate"
-                              value={completionPercentage}
-                              sx={{
-                                height: 8,
-                                borderRadius: 4,
-                                backgroundColor: `${theme.palette.primary.main}20`,
-                                '& .MuiLinearProgress-bar': {
-                                  borderRadius: 4,
-                                  background: `linear-gradient(90deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                                },
-                              }}
-                            />
-                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                              {completionPercentage}% complete
-                            </Typography>
-                          </Box>
-                        )}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  )}
-
                   {/* Shopping List */}
                   {selectedListId ? (
                     <ShoppingListView
@@ -404,9 +304,17 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                       onDeleteItem={handleDeleteItem}
                       onEditItem={handleEditItem}
                       onAddItem={() => setIsAddModalOpen(true)}
+                      currentListName={currentListName}
+                      totalItems={totalItems}
+                      completedItems={completedItems}
+                      completionPercentage={completionPercentage}
+                      onClearCompleted={handleClearCompleted}
+                      onToggleShoppingMode={handleToggleShoppingMode}
+                      isShoppingMode={isShoppingMode}
+                      onOpenSmartAssistant={() => setIsSmartAssistantOpen(true)}
                     />
                   ) : (
-                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
                        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
                          No shopping list selected
                        </Typography>
@@ -429,7 +337,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                 </>
               )}
             </Container>
-                                  ) : null}
+          ) : null}
         </Box>
         
         {/* Floating Action Button - Hidden in Shopping Mode */}
@@ -474,7 +382,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           onAddItems={handleSmartAssistantAddItems}
           token={user.token}
         />
-
 
       </Box>
     </Box>

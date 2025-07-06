@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  lastUsedList: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ShoppingList',
+    default: null
+  },
   customCategories: {
     type: [String],
     default: []

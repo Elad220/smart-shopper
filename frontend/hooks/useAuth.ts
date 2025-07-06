@@ -27,16 +27,20 @@ export const useAuth = () => {
   }, [user, token]);
 
   const login = useCallback(async (credentials: { email?: string; username?: string; password: string }) => {
+    console.log('useAuth: login called with credentials:', credentials);
     setIsLoading(true);
     try {
+      console.log('useAuth: calling api.loginUserFlexible');
       const data = await api.loginUserFlexible(credentials);
+      console.log('useAuth: api.loginUserFlexible response:', data);
       const userData: User = {
-        id: data.userId,
+        id: data.user?.id || data.userId || '',
         email: data.user?.email || credentials.email || '',
         username: data.user?.username || credentials.username || '',
         token: data.token,
       };
       
+      console.log('useAuth: setting user data:', userData);
       setUser(userData);
       setToken(data.token);
       localStorage.setItem('authToken', data.token);
@@ -48,11 +52,13 @@ export const useAuth = () => {
       
       // Allow time for the toast to be seen before reloading
       setTimeout(() => {
+        console.log('useAuth: reloading page');
         window.location.reload();
       }, 2000);
       
       return { success: true };
     } catch (error: any) {
+      console.log('useAuth: login error:', error);
       const message = error.message || 'Login failed';
       toast.error(message);
       return { success: false, error: message };

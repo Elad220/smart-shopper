@@ -55,6 +55,7 @@ interface ShoppingListManagerProps {
   selectedListId: string | null;
   onDataChange: () => void;
   onOpenCreateDialog: () => void;
+  autoSelectFirst?: boolean;
 }
 
 const SORT_MODES = [
@@ -69,6 +70,7 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
   selectedListId,
   onDataChange,
   onOpenCreateDialog,
+  autoSelectFirst = true,
 }) => {
   const theme = useTheme();
   const [listsRaw, setListsRaw] = useState<ShoppingList[]>([]);
@@ -115,8 +117,8 @@ export const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     try {
       const fetchedLists = await fetchShoppingLists(token);
       setListsRaw(fetchedLists);
-      // If no list is selected and we have lists, select the first one
-      if (!selectedListId && fetchedLists.length > 0) {
+      // If no list is selected and we have lists, and autoSelectFirst is enabled, select the first one
+      if (!selectedListId && fetchedLists.length > 0 && autoSelectFirst) {
         onListSelect(fetchedLists[0]._id);
       }
     } catch (error: any) {

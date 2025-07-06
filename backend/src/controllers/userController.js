@@ -65,3 +65,44 @@ exports.getApiKeyStatus = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// Update user's last used shopping list
+exports.updateLastUsedList = async (req, res) => {
+  try {
+    const { listId } = req.body;
+    const userId = req.user.userId;
+
+    if (!listId) {
+      return res.status(400).json({ message: 'List ID is required.' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    // Update the last used list
+    user.lastUsedList = listId;
+    await user.save();
+
+    res.json({ message: 'Last used list updated successfully.' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Get user's last used shopping list
+exports.getLastUsedList = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await User.findById(userId).populate('lastUsedList');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    res.json({ lastUsedList: user.lastUsedList });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
