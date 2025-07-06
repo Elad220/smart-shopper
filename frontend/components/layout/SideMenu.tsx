@@ -183,8 +183,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
         {/* Logout Button */}
         <Box sx={{ 
-          p: 2, 
-          pb: isMobile ? 3 : 2, // Reduced padding for mobile
+          p: 1, 
+          pb: isMobile ? 2 : 1, // Reduced padding for mobile
           borderTop: `1px solid ${theme.palette.divider}`, 
           flexShrink: 0,
           background: theme.palette.background.paper,
