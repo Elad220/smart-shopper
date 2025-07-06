@@ -177,13 +177,30 @@ export const setupOfflineFetch = () => {
 
     // Try to craft a best-effort optimistic result for certain endpoints
     try {
-      if (url.includes('/items') && method === 'POST' && init.body) {
-        // Attempt to extract a plain object from the request body so we can
-        // merge it into the optimistic response. The Fetch API allows many
-        // non-object body types (FormData, Blob, ReadableStream…). We only
-        // spread the body when it is either a JSON string or a plain object
-        // (i.e. its prototype is Object.prototype).
+      // Narrow the matching condition: only create optimistic responses for legitimate
+      // item-creation endpoints (i.e. POST requests that target either `/api/items` or
+      // `/api/shopping-lists/<id>/items`). This avoids accidentally matching unrelated
+      // URLs such as `/categories/items` or `/items-backup`.
 
+      const pathname = (() => {
+        try {
+          // Handle both absolute and relative request URLs gracefully.
+          return new URL(url, typeof location !== 'undefined' ? location.origin : 'http://dummy').pathname;
+        } catch {
+          // In case URL parsing fails (should be rare), fall back to using the raw string.
+          return url;
+        }
+      })();
+
+      const isItemCreationEndpoint =
+        method === 'POST' &&
+        init.body &&
+        (
+          /\/shopping-lists\/[^/]+\/items$/.test(pathname) || // e.g. /api/shopping-lists/123/items
+          /\/api\/items$/.test(pathname)                       // e.g. /api/items
+        );
+
+      if (isItemCreationEndpoint) {
         let bodyJson: Record<string, unknown> = {};
 
         if (typeof init.body === 'string') {
