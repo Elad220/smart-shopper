@@ -10,23 +10,12 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import MainApp from './components/app/MainApp';
 
-// Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user } = useAuth();
-  
-  if (!isAuthenticated || !user) {
-    return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
 // Public Route Component (redirects to main app if authenticated)
 const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
-    return <Navigate to="/app" replace />;
+    return <Navigate to="/" replace />;
   }
   
   return <>{children}</>;
@@ -52,7 +41,7 @@ const LoginFormWithNavigation: React.FC = () => {
   const handleLogin = async (credentials: { email: string; password: string }) => {
     const result = await login(credentials);
     if (result.success) {
-      navigate('/app');
+      navigate('/');
     }
     return result;
   };
@@ -78,6 +67,17 @@ const RegisterFormWithNavigation: React.FC = () => {
       isLoading={isLoading}
     />
   );
+};
+
+// Root Route Component - handles both authenticated and unauthenticated states
+const RootRoute: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
+  
+  if (isAuthenticated && user) {
+    return <MainApp />;
+  }
+  
+  return <LandingPageWithNavigation />;
 };
 
 const App: React.FC = () => {
@@ -113,13 +113,10 @@ const App: React.FC = () => {
       />
       <Router>
         <Routes>
-          {/* Public routes */}
-          <Route path="/" element={
-            <PublicRoute>
-              <LandingPageWithNavigation />
-            </PublicRoute>
-          } />
+          {/* Root route - shows landing page or main app based on auth state */}
+          <Route path="/" element={<RootRoute />} />
           
+          {/* Public routes */}
           <Route path="/auth" element={
             <PublicRoute>
               <LoginFormWithNavigation />
@@ -132,12 +129,8 @@ const App: React.FC = () => {
             </PublicRoute>
           } />
           
-          {/* Protected routes - all handled by MainApp */}
-          <Route path="/*" element={
-            <ProtectedRoute>
-              <MainApp />
-            </ProtectedRoute>
-          } />
+          {/* Catch-all route for any other paths - redirect to root */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
