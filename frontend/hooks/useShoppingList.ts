@@ -142,19 +142,22 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
   const updateItem = useCallback(async (id: string, updates: Partial<ShoppingItem>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
 
-    // Optimistically update UI immediately
-    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
+    // Optimistically update UI immediately (shallow merge preserves all fields)
+    setItems(prev => prev.map(item => 
+      item.id === id ? { ...item, ...updates } : item
+    ));
 
     try {
       await api.updateShoppingItem(token, selectedListId, id, updates);
-      // Success – nothing else to do; server state will sync on next online fetch.
+      // On success, server will eventually send fresh data; no extra state change needed.
     } catch (error) {
-      // Still offline / queued – ignore, optimistic state already applied.
+      // Offline – request is queued; optimistic state already applied.
       console.warn('Queued updateItem while offline:', error);
     }
 
-    // Return void because local state already updated
-    return Promise.resolve({ ...items.find(i => i.id === id), ...updates } as ShoppingItem);
+    // Return the merged item for API consistency (no await needed)
+    const existing = items.find(i => i.id === id);
+    return { ...(existing ?? {} as ShoppingItem), ...updates } as ShoppingItem;
   }, [token, selectedListId, items]);
 
   const deleteItem = useCallback(async (id: string) => {

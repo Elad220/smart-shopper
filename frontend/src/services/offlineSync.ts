@@ -438,8 +438,12 @@ export const setupOfflineFetch = () => {
   // Attempt to flush queue immediately if online
   if (navigator.onLine) flushQueue();
 
-  // Listen for connectivity changes
-  window.addEventListener('online', flushQueue);
+  // Listen for connectivity changes and refresh cache after successful flush
+  window.addEventListener('online', () => {
+    flushQueue().then(() => {
+      window.dispatchEvent(new Event('offlineSyncFlushed'));
+    });
+  });
 };
 
 /* -------------------------------------------------------------------------- */
