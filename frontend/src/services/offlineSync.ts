@@ -190,7 +190,14 @@ export const setupOfflineFetch = () => {
 
         if (typeof init.body === 'string') {
           try {
-            bodyJson = JSON.parse(init.body);
+            const parsed = JSON.parse(init.body);
+            if (
+              parsed !== null &&
+              typeof parsed === 'object' &&
+              Object.getPrototypeOf(parsed) === Object.prototype
+            ) {
+              bodyJson = parsed as Record<string, unknown>;
+            }
           } catch {
             /* Swallow JSON parse errors – fall back to empty object */
           }
