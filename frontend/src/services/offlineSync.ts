@@ -87,11 +87,6 @@ const flushQueue = async () => {
       try {
         const res = await originalFetch(req.url, req.options);
         if (!res.ok) throw new Error(`Server responded ${res.status}`);
-        // If the request was a GET we cache the response again
-        if ((req.options.method || 'GET').toUpperCase() === 'GET') {
-          const json = await res.clone().json().catch(() => null);
-          if (json !== null) await setCachedData(req.url, json);
-        }
       } catch (err) {
         // Keep in queue if still failing
         stillPending.push(req);
