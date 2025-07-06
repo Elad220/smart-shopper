@@ -118,7 +118,16 @@ export const setupOfflineFetch = () => {
     init: RequestInit = {}
   ): Promise<Response> => {
     const method = (init.method || 'GET').toUpperCase();
-    const url = typeof input === 'string' ? input : input.toString();
+    // Ensure we correctly derive the request URL regardless of the input type.
+    // - When `input` is a string we can use it directly.
+    // - When `input` is a Request object we need to read the `url` property – calling
+    //   toString() would just yield "[object Request]".
+    // - When `input` is a URL object, toString() is fine.
+    const url = typeof input === 'string'
+      ? input
+      : input instanceof Request
+        ? input.url
+        : input.toString();
     const isWrite = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
 
     /* ONLINE -------------------------------------------------------------- */
