@@ -63,19 +63,27 @@ const SideMenu: React.FC<SideMenuProps> = ({
       open={open}
       onClose={onClose}
       sx={{
-        width: 280,
+        width: isMobile ? '100%' : 280,
         flexShrink: 0,
         '& .MuiDrawer-paper': {
-          width: 280,
+          width: isMobile ? '100%' : 280,
+          maxWidth: isMobile ? '320px' : 280,
           boxSizing: 'border-box',
-          top: 64, // Account for header height
-          height: 'calc(100vh - 64px)',
+          top: isMobile ? 0 : 64, // Full height on mobile, account for header on desktop
+          height: isMobile ? '100dvh' : 'calc(100vh - 64px)', // Use dynamic viewport height for mobile
           borderRight: `1px solid ${theme.palette.divider}`,
           background: theme.palette.background.default,
+          // iOS Safari safe area support
+          paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
         },
       }}
     >
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100%',
+        overflow: 'hidden',
+      }}>
         {/* Header */}
         <Box sx={{ 
           display: 'flex', 
@@ -126,7 +134,14 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Navigation Items */}
-        <Box sx={{ flexGrow: 1, py: 1 }}>
+        <Box sx={{ 
+          flexGrow: 1, 
+          py: 1, 
+          overflow: 'auto', 
+          minHeight: 0,
+          // Ensure there's always space for the logout button
+          maxHeight: isMobile ? 'calc(100dvh - 250px)' : 'calc(100vh - 280px)',
+        }}>
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.key} disablePadding>
@@ -169,7 +184,19 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Logout Button */}
-        <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
+        <Box sx={{ 
+          p: 2, 
+          pb: isMobile ? 6 : 3, // Much more padding on mobile for Safari UI
+          borderTop: `1px solid ${theme.palette.divider}`, 
+          flexShrink: 0,
+          background: theme.palette.background.paper,
+          // Ensure logout button is always above Safari's UI
+          position: 'sticky',
+          bottom: 0,
+          zIndex: 10,
+          // Add extra margin for mobile browsers
+          mb: isMobile ? 'env(safe-area-inset-bottom)' : 0,
+        }}>
           <ListItemButton
             onClick={onLogout}
             sx={{
