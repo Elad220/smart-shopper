@@ -235,6 +235,35 @@ export const setupOfflineFetch = () => {
           headers: { 'Content-Type': 'application/json' },
         });
       }
+
+      // Optimistic update for item modifications (PUT/PATCH)
+      const isItemUpdateEndpoint =
+        ['PUT', 'PATCH'].includes(method) &&
+        /\/shopping-lists\/[^/]+\/items\/[A-Za-z0-9-]+$/.test(pathname);
+
+      if (isItemUpdateEndpoint && init.body) {
+        let bodyJson: Record<string, unknown> = {};
+        if (typeof init.body === 'string') {
+          try { bodyJson = JSON.parse(init.body); } catch {/* ignore */}
+        } else if (typeof init.body === 'object' && init.body !== null) {
+          bodyJson = init.body as any;
+        }
+
+        const idMatch = pathname.match(/\/items\/([^/]+)$/);
+        const itemId = idMatch ? idMatch[1] : `offline-${Date.now()}`;
+
+        const optimisticItem = { id: itemId, ...bodyJson };
+
+        return new Response(JSON.stringify(optimisticItem), {
+          status: 202,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // For DELETE requests, simply acknowledge
+      if (method === 'DELETE') {
+        return new Response(null, { status: 202 });
+      }
     } catch {/* Fallback to generic response */}
 
     return new Response(JSON.stringify({ queued: true }), {

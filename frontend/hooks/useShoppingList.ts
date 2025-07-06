@@ -132,10 +132,20 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
 
   const updateItem = useCallback(async (id: string, updates: Partial<ShoppingItem>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
-    
-    const updatedItem = await api.updateShoppingItem(token, selectedListId, id, updates);
-    setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
-    return updatedItem;
+
+    // Optimistically update UI immediately
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } as ShoppingItem : item));
+
+    try {
+      const updatedItem = await api.updateShoppingItem(token, selectedListId, id, updates);
+      // Replace with authoritative server response when available
+      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+      return updatedItem;
+    } catch (error) {
+      // If server call fails (e.g., still offline when flushing), keep optimistic state
+      console.error('Failed to update item on server, kept optimistic state', error);
+      throw error;
+    }
   }, [token, selectedListId]);
 
   const deleteItem = useCallback(async (id: string) => {
