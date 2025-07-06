@@ -110,9 +110,14 @@ const flushQueue = async () => {
                   });
                 } else if (['PUT', 'PATCH'].includes(methodUpper)) {
                   await updateListCache(parsed.origin, listId, (list) => {
-                    list.items = (list.items || []).map((it: any) =>
-                      it.id === itemId || it._id === itemId ? { ...it, ...body } : it
-                    );
+                    list.items = (list.items || []).map((it: any) => {
+                      if (it.id === itemId || it._id === itemId) {
+                        const merged = { ...it, ...body };
+                        if ('completed' in body) merged.isCompleted = body.completed;
+                        return merged;
+                      }
+                      return it;
+                    });
                     return list;
                   });
                 } else if (methodUpper === 'POST') {
@@ -402,9 +407,14 @@ export const setupOfflineFetch = () => {
         const { listId } = extractIds(pathname);
         if (listId) {
           await updateListCache(parsedUrl.origin, listId, (list) => {
-            list.items = (list.items || []).map((it: any) =>
-              it.id === itemId || it._id === itemId ? { ...it, ...bodyJson } : it
-            );
+            list.items = (list.items || []).map((it: any) => {
+              if (it.id === itemId || it._id === itemId) {
+                const merged = { ...it, ...bodyJson };
+                if ('completed' in bodyJson) merged.isCompleted = bodyJson.completed;
+                return merged;
+              }
+              return it;
+            });
             return list;
           });
         }
