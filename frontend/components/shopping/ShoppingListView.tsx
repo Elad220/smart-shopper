@@ -149,17 +149,26 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const sortedCategories = (() => {
     const categoryNames = Object.keys(groupedItems);
     
-    // Check if we have a valid custom order that includes all current categories
-    const hasValidCustomOrder = categoryOrder.length > 0 && 
-      categoryNames.every(cat => categoryOrder.includes(cat)) &&
-      categoryOrder.every(cat => categoryNames.includes(cat));
-    
-    // If we have a valid custom order, use it
-    if (hasValidCustomOrder) {
+    // If we have a custom order, use it to sort the visible categories
+    // Categories not in the custom order will be sorted alphabetically at the end
+    if (categoryOrder.length > 0) {
       return categoryNames.sort((a, b) => {
         const indexA = categoryOrder.indexOf(a);
         const indexB = categoryOrder.indexOf(b);
-        return indexA - indexB;
+        
+        // If both categories are in the custom order, sort by their position
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+        
+        // If only one is in the custom order, prioritize the one in the order
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+        
+        // If neither is in the custom order, sort alphabetically
+        if (a === 'Other') return 1;
+        if (b === 'Other') return -1;
+        return a.localeCompare(b);
       });
     }
     
@@ -190,10 +199,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
 
   // Reset custom order if categories have changed significantly
   useEffect(() => {
-    const categoryNames = Object.keys(groupedItems);
-    if (categoryOrder.length > 0 && categoryNames.length > 0) {
-      const hasValidCustomOrder = categoryNames.every(cat => categoryOrder.includes(cat)) &&
-        categoryOrder.every(cat => categoryNames.includes(cat));
+    // Get all categories from the original unfiltered items to avoid resetting order during filtering
+    const allCategoryNames = [...new Set(items.map(item => 
+      typeof item.category === 'string' ? item.category : 'Other'
+    ))];
+    
+    if (categoryOrder.length > 0 && allCategoryNames.length > 0) {
+      const hasValidCustomOrder = allCategoryNames.every(cat => categoryOrder.includes(cat)) &&
+        categoryOrder.every(cat => allCategoryNames.includes(cat));
       
       if (!hasValidCustomOrder) {
         // Reset to empty array to fall back to alphabetical sorting
@@ -201,7 +214,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         localStorage.removeItem(`categoryOrder_${userId}_${listId}`);
       }
     }
-  }, [groupedItems, categoryOrder, userId, listId]);
+  }, [items, categoryOrder, userId, listId]);
 
   const toggleCategoryCollapse = useCallback((category: string) => {
     setCollapsedCategories(prev => {
