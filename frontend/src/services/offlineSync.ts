@@ -40,7 +40,6 @@ const setCachedData = async (url: string, data: unknown) => {
   try {
     await localforage.setItem(getCacheKey(url), data);
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed to set cache', err);
   }
 };
@@ -49,7 +48,6 @@ const getCachedData = async (url: string) => {
   try {
     return await localforage.getItem(getCacheKey(url));
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed to get cache', err);
     return null;
   }
@@ -69,7 +67,6 @@ const enqueueRequest = async (req: QueuedRequest) => {
     await localforage.setItem(QUEUE_KEY, existing);
     await dispatchQueueChange();
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed to enqueue request', err);
   }
 };
@@ -82,7 +79,6 @@ const flushQueue = async () => {
     let queue = (await localforage.getItem<QueuedRequest[]>(QUEUE_KEY)) || [];
     if (queue.length === 0) return;
 
-    // eslint-disable-next-line no-console
     console.log(`[OfflineSync] Flushing ${queue.length} queued request(s)`);
 
     const stillPending: QueuedRequest[] = [];
@@ -105,7 +101,6 @@ const flushQueue = async () => {
     await localforage.setItem(QUEUE_KEY, stillPending);
     await dispatchQueueChange();
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed flushing queue', err);
   }
 };
@@ -147,7 +142,6 @@ export const setupOfflineFetch = () => {
         return response;
       } catch (err) {
         // Network error while we thought we were online – fallback to offline path
-        // eslint-disable-next-line no-console
         console.warn('[OfflineSync] Network error, treating as offline', err);
       }
     }
