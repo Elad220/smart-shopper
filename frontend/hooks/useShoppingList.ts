@@ -137,16 +137,16 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
     setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
 
     try {
-      const updatedItem = await api.updateShoppingItem(token, selectedListId, id, updates);
-      // Replace with authoritative server response when available
-      setItems(prev => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item));
-      return updatedItem;
+      await api.updateShoppingItem(token, selectedListId, id, updates);
+      // Success – nothing else to do; server state will sync on next online fetch.
     } catch (error) {
-      // If server call fails (e.g., still offline when flushing), keep optimistic state
-      console.error('Failed to update item on server, kept optimistic state', error);
-      throw error;
+      // Still offline / queued – ignore, optimistic state already applied.
+      console.warn('Queued updateItem while offline:', error);
     }
-  }, [token, selectedListId]);
+
+    // Return void because local state already updated
+    return Promise.resolve({ ...items.find(i => i.id === id), ...updates } as ShoppingItem);
+  }, [token, selectedListId, items]);
 
   const deleteItem = useCallback(async (id: string) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
