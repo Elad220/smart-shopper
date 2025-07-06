@@ -18,8 +18,6 @@ const sampleList = {
   updatedAt: ''
 };
 
-const jsonRes = (data: any) => new Response(JSON.stringify(data), { status: 200, headers: { 'Content-Type': 'application/json' } });
-
 describe('offline toggle flow', () => {
   beforeEach(async () => {
     await localforage.clear();

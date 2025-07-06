@@ -135,6 +135,11 @@ const flushQueue = async () => {
 
     await localforage.setItem(QUEUE_KEY, stillPending);
     await dispatchQueueChange();
+
+    // If everything successfully synced, notify listeners so UI can refresh
+    if (stillPending.length === 0) {
+      window.dispatchEvent(new Event('offlineSyncFlushed'));
+    }
   } catch (err) {
     console.error('[OfflineSync] Failed flushing queue', err);
   }

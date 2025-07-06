@@ -114,6 +114,15 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
       } else {
         initializeList();
       }
+
+      const handleFlushed = () => {
+        fetchShoppingList();
+      };
+      window.addEventListener('offlineSyncFlushed', handleFlushed);
+
+      return () => {
+        window.removeEventListener('offlineSyncFlushed', handleFlushed);
+      };
     }
   }, [token, selectedListId, fetchShoppingList, initializeList]);
 
