@@ -49,9 +49,17 @@ const LoginFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
   
+  const handleLogin = async (credentials: { email: string; password: string }) => {
+    const result = await login(credentials);
+    if (result.success) {
+      navigate('/app');
+    }
+    return result;
+  };
+  
   return (
     <LoginForm 
-      onLogin={login}
+      onLogin={handleLogin}
       onSwitchToRegister={() => navigate('/register')}
       isLoading={isLoading}
     />
