@@ -62,21 +62,19 @@ const SideMenu: React.FC<SideMenuProps> = ({
       anchor="left"
       open={open}
       onClose={onClose}
-      sx={{
-        width: isMobile ? '100%' : 280,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
+              sx={{
           width: isMobile ? '100%' : 280,
-          maxWidth: isMobile ? '320px' : 280,
-          boxSizing: 'border-box',
-          top: isMobile ? 0 : 64, // Full height on mobile, account for header on desktop
-          height: isMobile ? '100dvh' : 'calc(100vh - 64px)', // Use dynamic viewport height for mobile
-          borderRight: `1px solid ${theme.palette.divider}`,
-          background: theme.palette.background.default,
-          // iOS Safari safe area support
-          paddingBottom: isMobile ? 'env(safe-area-inset-bottom)' : 0,
-        },
-      }}
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: isMobile ? '100%' : 280,
+            maxWidth: isMobile ? '320px' : 280,
+            boxSizing: 'border-box',
+            top: isMobile ? 0 : 64, // Full height on mobile, account for header on desktop
+            height: isMobile ? '100dvh' : 'calc(100vh - 64px)', // Use dynamic viewport height for mobile
+            borderRight: `1px solid ${theme.palette.divider}`,
+            background: theme.palette.background.default,
+          },
+        }}
     >
       <Box sx={{ 
         display: 'flex', 
@@ -186,7 +184,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
         {/* Logout Button */}
         <Box sx={{ 
           p: 2, 
-          pb: isMobile ? 6 : 3, // Much more padding on mobile for Safari UI
+          pb: isMobile ? 3 : 2, // Reduced padding for mobile
           borderTop: `1px solid ${theme.palette.divider}`, 
           flexShrink: 0,
           background: theme.palette.background.paper,
@@ -194,8 +192,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
           position: 'sticky',
           bottom: 0,
           zIndex: 10,
-          // Add extra margin for mobile browsers
-          mb: isMobile ? 'env(safe-area-inset-bottom)' : 0,
         }}>
           <ListItemButton
             onClick={onLogout}
