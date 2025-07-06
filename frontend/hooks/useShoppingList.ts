@@ -1,8 +1,22 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Dispatch, SetStateAction } from 'react';
 import * as api from '../src/services/api';
 import { ShoppingItem } from '../types';
 
-export const useShoppingList = (token: string, listId?: string | null) => {
+export interface UseShoppingListReturn {
+  selectedListId: string | null;
+  setSelectedListId: Dispatch<SetStateAction<string | null>>;
+  items: ShoppingItem[];
+  currentListName: string;
+  isLoading: boolean;
+  error: string | null;
+  addItem: (itemData: Omit<ShoppingItem, 'id' | 'completed'>) => Promise<ShoppingItem>;
+  updateItem: (id: string, updates: Partial<ShoppingItem>) => Promise<ShoppingItem>;
+  deleteItem: (id: string) => Promise<void>;
+  toggleComplete: (id: string) => Promise<ShoppingItem | undefined>;
+  clearCompleted: () => Promise<void>;
+}
+
+export const useShoppingList = (token: string, listId?: string | null): UseShoppingListReturn => {
   const [items, setItems] = useState<ShoppingItem[]>([]);
   const [currentListName, setCurrentListName] = useState<string>('My Shopping List');
   const [isLoading, setIsLoading] = useState(false);

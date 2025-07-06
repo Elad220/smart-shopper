@@ -8,6 +8,7 @@ import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { User } from '../../hooks/useAuth';
+import { ShoppingItem } from '../../types';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
 import ShoppingModeView from '../shopping/ShoppingModeView';
@@ -31,7 +32,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<any>(null);
+  const [editingItem, setEditingItem] = useState<ShoppingItem | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
@@ -56,7 +57,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const totalItems = items.length;
   const completionPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
-  const handleAddItem = async (itemData: any) => {
+  const handleAddItem = async (itemData: Omit<ShoppingItem, 'id' | 'completed'>) => {
     try {
       setIsAddingItem(true);
       
@@ -95,12 +96,13 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     }
   };
 
-  const handleEditItem = (item: any) => {
+  const handleEditItem = (item: ShoppingItem) => {
     setEditingItem(item);
     setIsEditModalOpen(true);
   };
 
-  const handleUpdateItem = async (itemData: any) => {
+  const handleUpdateItem = async (itemData: Partial<Omit<ShoppingItem, 'id'>>) => {
+    if (!editingItem) return;
     try {
       await updateItem(editingItem.id, itemData);
       setIsEditModalOpen(false);
