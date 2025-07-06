@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { User as UserType } from '../../hooks/useAuth';
 
-interface SideMenuProps {
+export interface SideMenuProps {
   open: boolean;
   onClose: () => void;
   user: UserType;
