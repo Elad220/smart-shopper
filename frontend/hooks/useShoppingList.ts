@@ -114,6 +114,15 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
       } else {
         initializeList();
       }
+
+      const handleFlushed = () => {
+        fetchShoppingList();
+      };
+      window.addEventListener('offlineSyncFlushed', handleFlushed);
+
+      return () => {
+        window.removeEventListener('offlineSyncFlushed', handleFlushed);
+      };
     }
   }, [token, selectedListId, fetchShoppingList, initializeList]);
 
@@ -130,13 +139,40 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
     return newItem;
   }, [token, selectedListId]);
 
+  // Simple recursive merge to preserve nested objects
+  const deepMerge = (target: any, source: any): any => {
+    if (typeof target !== 'object' || typeof source !== 'object' || target === null || source === null) {
+      return source;
+    }
+    const output: any = { ...target };
+    Object.keys(source).forEach(key => {
+      if (source[key] !== undefined) {
+        output[key] = deepMerge(target[key], source[key]);
+      }
+    });
+    return output;
+  };
+
   const updateItem = useCallback(async (id: string, updates: Partial<ShoppingItem>) => {
     if (!token || !selectedListId) throw new Error('Authentication required');
-    
-    const updatedItem = await api.updateShoppingItem(token, selectedListId, id, updates);
-    setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
-    return updatedItem;
-  }, [token, selectedListId]);
+
+    // Optimistically update UI immediately (shallow merge preserves all fields)
+    setItems(prev => prev.map(item => 
+      item.id === id ? deepMerge(item, updates) : item
+    ));
+
+    try {
+      await api.updateShoppingItem(token, selectedListId, id, updates);
+      // On success, server will eventually send fresh data; no extra state change needed.
+    } catch (error) {
+      // Offline – request is queued; optimistic state already applied.
+      console.warn('Queued updateItem while offline:', error);
+    }
+
+    // Return the merged item for API consistency (no await needed)
+    const existing = items.find(i => i.id === id);
+    return deepMerge(existing ?? {}, updates) as ShoppingItem;
+  }, [token, selectedListId, items]);
 
   const deleteItem = useCallback(async (id: string) => {
     if (!token || !selectedListId) throw new Error('Authentication required');

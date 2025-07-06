@@ -13,9 +13,18 @@
     "ecmaVersion": "latest",
     "sourceType": "module"
   },
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "import"],
+  "settings": {
+    "import/resolver": {
+      "typescript": {
+        "project": ["./frontend/tsconfig.json"]
+      }
+    }
+  },
   "rules": {
     "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
-    "no-unused-vars": "off"
+    "no-unused-vars": "off",
+    "no-undef": "off",
+    "no-console": "off"
   }
 }
