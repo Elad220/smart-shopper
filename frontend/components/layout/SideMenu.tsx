@@ -81,6 +81,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
         flexDirection: 'column', 
         height: '100%',
         overflow: 'hidden',
+        minHeight: isMobile ? '100dvh' : undefined,
       }}>
         {/* Header */}
         <Box sx={{ 
@@ -184,33 +185,36 @@ const SideMenu: React.FC<SideMenuProps> = ({
         {/* Logout Button */}
         <Box sx={{ 
           p: 1, 
-          pb: isMobile ? 2 : 1, // Reduced padding for mobile
+          pb: 1, // No extra bottom padding on mobile
           borderTop: `1px solid ${theme.palette.divider}`, 
           flexShrink: 0,
           background: theme.palette.background.paper,
-          // Ensure logout button is always above Safari's UI
-          position: 'sticky',
-          bottom: 0,
-          zIndex: 10,
+          mt: 'auto', // Push to bottom
         }}>
           <ListItemButton
             onClick={onLogout}
             sx={{
               borderRadius: '8px',
               color: theme.palette.error.main,
+              minHeight: isMobile ? '48px' : '56px',
+              py: isMobile ? 1 : 1.5,
               '&:hover': {
                 backgroundColor: alpha(theme.palette.error.main, 0.1),
               },
             }}
           >
-            <ListItemIcon sx={{ minWidth: 40 }}>
-              <LogOut size={20} color={theme.palette.error.main} />
+            <ListItemIcon sx={{ 
+              minWidth: isMobile ? 32 : 40,
+              mr: isMobile ? 1 : 2,
+            }}>
+              <LogOut size={isMobile ? 18 : 20} color={theme.palette.error.main} />
             </ListItemIcon>
             <ListItemText 
               primary="Logout"
               sx={{
                 '& .MuiTypography-root': {
                   fontWeight: 500,
+                  fontSize: isMobile ? '0.875rem' : '1rem',
                 },
               }}
             />
