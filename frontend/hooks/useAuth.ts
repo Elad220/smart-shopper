@@ -79,8 +79,9 @@ export const useAuth = () => {
     localStorage.removeItem('selectedListId');
     toast.success('Logged out successfully! 👋');
     
-    // Remove reload - React Router will handle navigation
-    // The ProtectedRoute component will automatically redirect to the auth page
+    // Force navigation to the public landing page to ensure all hook instances
+    // pick up the cleared localStorage state in a fresh render cycle.
+    window.location.replace('/');
   }, []);
 
   return {

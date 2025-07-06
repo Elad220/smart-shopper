@@ -1,5 +1,5 @@
 // frontend/App.tsx
-import React from 'react';
+import type { FC, ReactNode } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
@@ -11,7 +11,11 @@ import RegisterForm from './components/auth/RegisterForm';
 import MainApp from './components/app/MainApp';
 
 // Protected Route Component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface RouteProps {
+  children: ReactNode;
+}
+
+const ProtectedRoute: FC<RouteProps> = ({ children }: RouteProps) => {
   const { isAuthenticated, user } = useAuth();
   
   if (!isAuthenticated || !user) {
@@ -22,7 +26,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 // Public Route Component (redirects to main app if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PublicRoute: FC<RouteProps> = ({ children }: RouteProps) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
@@ -33,7 +37,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 // Landing Page with Navigation
-const LandingPageWithNavigation: React.FC = () => {
+const LandingPageWithNavigation: FC = () => {
   const navigate = useNavigate();
   
   return (
@@ -45,7 +49,7 @@ const LandingPageWithNavigation: React.FC = () => {
 };
 
 // Login Form with Navigation
-const LoginFormWithNavigation: React.FC = () => {
+const LoginFormWithNavigation: FC = () => {
   const navigate = useNavigate();
   const { login, isLoading } = useAuth();
   
@@ -67,7 +71,7 @@ const LoginFormWithNavigation: React.FC = () => {
 };
 
 // Register Form with Navigation
-const RegisterFormWithNavigation: React.FC = () => {
+const RegisterFormWithNavigation: FC = () => {
   const navigate = useNavigate();
   const { register, isLoading } = useAuth();
   
@@ -80,7 +84,7 @@ const RegisterFormWithNavigation: React.FC = () => {
   );
 };
 
-const App: React.FC = () => {
+const App: FC = () => {
   const { theme } = useTheme();
 
   return (
@@ -133,11 +137,14 @@ const App: React.FC = () => {
           } />
           
           {/* Protected routes - all handled by MainApp */}
-          <Route path="/*" element={
+          <Route path="/app/*" element={
             <ProtectedRoute>
               <MainApp />
             </ProtectedRoute>
           } />
+          
+          {/* Catch-all route: redirect unknown paths to root */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>
