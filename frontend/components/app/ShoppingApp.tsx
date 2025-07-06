@@ -35,13 +35,12 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const [isDrawerOpen, setIsDrawerOpen] = useState(!isMobile);
   const [isSmartAssistantOpen, setIsSmartAssistantOpen] = useState(false);
   const [isAddingItem, setIsAddingItem] = useState(false);
-  const [selectedListId, setSelectedListId] = useState<string | null>(
-    localStorage.getItem('selectedListId')
-  );
   const [isShoppingMode, setIsShoppingMode] = useState(false);
   const [currentView, setCurrentView] = useState<'lists' | 'mylists' | 'settings'>('lists');
   
   const {
+    selectedListId,
+    setSelectedListId,
     items,
     currentListName,
     isLoading,
@@ -51,7 +50,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     deleteItem,
     toggleComplete,
     clearCompleted
-  } = useShoppingList(user.token, selectedListId);
+  } = useShoppingList(user.token);
 
   const completedItems = items.filter(item => item.completed).length;
   const totalItems = items.length;
@@ -134,8 +133,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
   const handleDataChange = () => {
     // Handle data changes (functionality moved to MyListsPage)
   };
-
-
 
   const handleSmartAssistantAddItems = async (aiItems: { name: string; category: string }[]) => {
     try {
@@ -221,8 +218,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           />
         )}
 
-
-
         {/* Main Content */}
         <Box sx={{
           flexGrow: 1,
@@ -245,7 +240,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             </Container>
           ) : currentView === 'settings' ? (
             <SettingsPage user={user} />
-                    ) : currentView === 'mylists' ? (
+          ) : currentView === 'mylists' ? (
             <MyListsPage
               user={user}
               selectedListId={selectedListId}
@@ -406,7 +401,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                       onAddItem={() => setIsAddModalOpen(true)}
                     />
                   ) : (
-                                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
+                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
                        <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
                          No shopping list selected
                        </Typography>
@@ -429,7 +424,7 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
                 </>
               )}
             </Container>
-                                  ) : null}
+          ) : null}
         </Box>
         
         {/* Floating Action Button - Hidden in Shopping Mode */}
@@ -474,8 +469,6 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
           onAddItems={handleSmartAssistantAddItems}
           token={user.token}
         />
-
-
       </Box>
     </Box>
   );

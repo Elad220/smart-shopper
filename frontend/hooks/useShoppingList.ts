@@ -118,6 +118,8 @@ export const useShoppingList = (token: string, listId?: string | null) => {
   }, [token, selectedListId]);
 
   return {
+    selectedListId,
+    setSelectedListId,
     items,
     currentListName,
     isLoading,
