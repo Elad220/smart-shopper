@@ -1,9 +1,10 @@
 import React from 'react';
 import { 
-  AppBar, Toolbar, Typography, IconButton, Box, useTheme 
+  AppBar, Toolbar, Typography, IconButton, Box, useTheme, Tooltip 
 } from '@mui/material';
-import { Moon, Sun, ShoppingCart, Menu } from 'lucide-react';
+import { Moon, Sun, ShoppingCart, Menu, WifiOff, RefreshCcw } from 'lucide-react';
 import { User } from '../../hooks/useAuth';
+import { useOfflineSyncStatus } from '../../hooks/useOfflineSyncStatus';
 
 interface HeaderProps {
   mode: 'light' | 'dark';
@@ -23,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({
   isMobile
 }) => {
   const theme = useTheme();
+  const { online, pending } = useOfflineSyncStatus();
 
   return (
     <AppBar 
@@ -100,6 +102,26 @@ const Header: React.FC<HeaderProps> = ({
             </Typography>
           </Box>
         )}
+
+        {/* Offline / Sync Indicator */}
+        <Box sx={{ display: 'flex', alignItems: 'center', mr: 1 }}>
+          {!online && (
+            <Tooltip title="Offline">
+              <WifiOff size={18} color={theme.palette.warning.main} />
+            </Tooltip>
+          )}
+          {online && pending > 0 && (
+            <Box sx={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Tooltip title={`${pending} changes syncing`}>
+                <RefreshCcw
+                  size={18}
+                  color={theme.palette.info.main}
+                  style={{ animation: 'spin 1s linear infinite' }}
+                />
+              </Tooltip>
+            </Box>
+          )}
+        </Box>
 
         {/* Theme Toggle */}
         <IconButton 

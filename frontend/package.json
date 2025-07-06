@@ -27,6 +27,7 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
+    "@testing-library/dom": "^9.3.1",
     "@types/react": "^18.2.48",
     "@types/react-beautiful-dnd": "^13.1.8",
     "@types/react-dom": "^18.2.18",
@@ -71,6 +72,6 @@
     "typescript": "^5.8.3",
     "vite": "^4.3.2",
     "vitest": "^0.32.0",
-    "@types/localforage": "^1.10.6"
+    "@types/localforage": "^0.0.34"
   }
 }

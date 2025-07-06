@@ -55,11 +55,19 @@ const getCachedData = async (url: string) => {
   }
 };
 
+const dispatchQueueChange = async () => {
+  try {
+    const q = (await localforage.getItem<QueuedRequest[]>(QUEUE_KEY)) || [];
+    window.dispatchEvent(new CustomEvent('offlineSyncQueueChange', { detail: q.length }));
+  } catch {/* ignore */}
+};
+
 const enqueueRequest = async (req: QueuedRequest) => {
   try {
     const existing = (await localforage.getItem<QueuedRequest[]>(QUEUE_KEY)) || [];
     existing.push(req);
     await localforage.setItem(QUEUE_KEY, existing);
+    await dispatchQueueChange();
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed to enqueue request', err);
@@ -95,6 +103,7 @@ const flushQueue = async () => {
     }
 
     await localforage.setItem(QUEUE_KEY, stillPending);
+    await dispatchQueueChange();
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[OfflineSync] Failed flushing queue', err);
