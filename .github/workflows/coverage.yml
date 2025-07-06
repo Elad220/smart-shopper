@@ -1,0 +1,87 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  coverage:
+    name: Generate Coverage Report
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+
+    - name: Install backend dependencies
+      working-directory: ./backend
+      run: npm ci
+
+    - name: Generate frontend coverage
+      working-directory: ./frontend
+      run: npm run test:coverage
+
+    - name: Generate backend coverage
+      working-directory: ./backend
+      run: |
+        echo "NODE_ENV=test" >> .env
+        echo "MONGODB_URI=mongodb://localhost:27017/smart-shopper-test" >> .env
+        echo "JWT_SECRET=test-jwt-secret" >> .env
+        echo "PORT=3001" >> .env
+        npm run test:coverage
+
+    - name: Upload frontend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./frontend/coverage
+        flags: frontend
+        name: frontend-coverage
+
+    - name: Upload backend coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: ./backend/coverage
+        flags: backend
+        name: backend-coverage
+
+    - name: Generate coverage badge
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Coverage reports uploaded. Badges will be available at:"
+        echo "Frontend: https://codecov.io/gh/${{ github.repository }}/branch/main/graph/badge.svg?flag=frontend"
+        echo "Backend: https://codecov.io/gh/${{ github.repository }}/branch/main/graph/badge.svg?flag=backend"
+
+    - name: Comment PR with coverage
+      if: github.event_name == 'pull_request'
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: false
