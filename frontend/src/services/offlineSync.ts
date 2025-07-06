@@ -87,6 +87,46 @@ const flushQueue = async () => {
       try {
         const res = await originalFetch(req.url, req.options);
         if (!res.ok) throw new Error(`Server responded ${res.status}`);
+
+        const methodUpper = (req.options.method || 'GET').toUpperCase();
+        const clonedRes = res.clone();
+
+        if (methodUpper === 'GET') {
+          const json = await clonedRes.json().catch(() => null);
+          if (json !== null) await setCachedData(req.url, json);
+        } else {
+          // For write operations, attempt to update cached list too
+          try {
+            const parsed = new URL(req.url, typeof location !== 'undefined' ? location.origin : 'http://dummy');
+            const pathname = parsed.pathname;
+            const { listId, itemId } = extractIds(pathname);
+            if (listId && itemId) {
+              const body = await clonedRes.json().catch(() => null);
+              if (body) {
+                if (methodUpper === 'DELETE') {
+                  await updateListCache(parsed.origin, listId, (list) => {
+                    list.items = (list.items || []).filter((it: any) => it.id !== itemId && it._id !== itemId);
+                    return list;
+                  });
+                } else if (['PUT', 'PATCH'].includes(methodUpper)) {
+                  await updateListCache(parsed.origin, listId, (list) => {
+                    list.items = (list.items || []).map((it: any) =>
+                      it.id === itemId || it._id === itemId ? { ...it, ...body } : it
+                    );
+                    return list;
+                  });
+                } else if (methodUpper === 'POST') {
+                  await updateListCache(parsed.origin, listId, (list) => {
+                    list.items = [...(list.items || []), body];
+                    return list;
+                  });
+                }
+              }
+            }
+          } catch (err) {
+            console.warn('[OfflineSync] Failed to patch cache after queue flush', err);
+          }
+        }
       } catch (err) {
         // Keep in queue if still failing
         stillPending.push(req);
