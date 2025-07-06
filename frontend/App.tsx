@@ -1,14 +1,82 @@
 // frontend/App.tsx
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
-import AuthFlow from './components/auth/AuthFlow';
+import LandingPage from './components/auth/LandingPage';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
 import MainApp from './components/app/MainApp';
 
+// Protected Route Component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
+  
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/auth" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Public Route Component (redirects to main app if authenticated)
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useAuth();
+  
+  if (isAuthenticated && user) {
+    return <Navigate to="/list" replace />;
+  }
+  
+  return <>{children}</>;
+};
+
+// Landing Page with Navigation
+const LandingPageWithNavigation: React.FC = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <LandingPage 
+      onGetStarted={() => navigate('/register')}
+      onSignIn={() => navigate('/auth')}
+    />
+  );
+};
+
+// Login Form with Navigation
+const LoginFormWithNavigation: React.FC = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <LoginForm 
+      onLogin={async (_credentials) => {
+        // This will be handled by the LoginForm component
+        return { success: true };
+      }}
+      onSwitchToRegister={() => navigate('/register')}
+      isLoading={false}
+    />
+  );
+};
+
+// Register Form with Navigation
+const RegisterFormWithNavigation: React.FC = () => {
+  const navigate = useNavigate();
+  
+  return (
+    <RegisterForm 
+      onRegister={async (_data) => {
+        // This will be handled by the RegisterForm component
+        return { success: true };
+      }}
+      onSwitchToLogin={() => navigate('/auth')}
+      isLoading={false}
+    />
+  );
+};
+
 const App: React.FC = () => {
-  const { user, isAuthenticated } = useAuth();
   const { theme } = useTheme();
 
   return (
@@ -39,11 +107,35 @@ const App: React.FC = () => {
           },
         }}
       />
-      {isAuthenticated && user ? (
-        <MainApp user={user} />
-      ) : (
-        <AuthFlow />
-      )}
+      <Router>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/" element={
+            <PublicRoute>
+              <LandingPageWithNavigation />
+            </PublicRoute>
+          } />
+          
+          <Route path="/auth" element={
+            <PublicRoute>
+              <LoginFormWithNavigation />
+            </PublicRoute>
+          } />
+          
+          <Route path="/register" element={
+            <PublicRoute>
+              <RegisterFormWithNavigation />
+            </PublicRoute>
+          } />
+          
+          {/* Protected routes - all handled by MainApp */}
+          <Route path="/*" element={
+            <ProtectedRoute>
+              <MainApp />
+            </ProtectedRoute>
+          } />
+        </Routes>
+      </Router>
     </ThemeProvider>
   );
 };

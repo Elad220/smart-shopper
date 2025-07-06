@@ -1,17 +1,14 @@
 import React from 'react';
 import { Box } from '@mui/material';
-import { User } from '../../hooks/useAuth';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 import ShoppingApp from './ShoppingApp';
 
-interface MainAppProps {
-  user: User;
-}
-
-const MainApp: React.FC<MainAppProps> = ({ user }) => {
-  const { logout } = useAuth();
+const MainApp: React.FC = () => {
+  const { user, logout } = useAuth();
   const { mode, toggleMode } = useTheme();
+
+  if (!user) return null;
 
   return (
     <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

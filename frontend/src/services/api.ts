@@ -7,22 +7,6 @@ const getBaseUrl = () => {
 
 export const BASE_URL = getBaseUrl();
 
-// ... (keep all existing functions from the previous steps)
-
-// Add the new removeApiKey function
-export const removeApiKey = async (token: string): Promise<{ message: string }> => {
-    const response = await fetch(`${BASE_URL}/api/user/api-key`, {
-        method: 'DELETE',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-        },
-    });
-    return handleResponse<{ message: string }>(response);
-};
-
-// --- REST OF THE FILE ---
-// (The rest of the file remains the same)
-
 // Health check function to test backend connection
 export const checkBackendHealth = async (): Promise<{ status: string, version?: string }> => {
   try {
@@ -144,6 +128,25 @@ export const saveApiKey = async (token: string, apiKey: string): Promise<{ messa
     return handleResponse<{ message: string }>(response);
 };
 
+export const removeApiKey = async (token: string): Promise<{ message: string }> => {
+    const response = await fetch(`${BASE_URL}/api/user/api-key`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse<{ message: string }>(response);
+};
+
+export const checkApiKeyStatus = async (token: string): Promise<{ hasApiKey: boolean }> => {
+    const response = await fetch(`${BASE_URL}/api/user/api-key/status`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse<{ hasApiKey: boolean }>(response);
+};
+
 export const generateItemsFromApi = async (token: string, prompt: string): Promise<{ name: string, category: string }[]> => {
     const response = await fetch(`${BASE_URL}/api/smart-assistant/generate`, {
         method: 'POST',
@@ -210,16 +213,6 @@ export const addShoppingItem = async (
   listId: string,
   itemData: Omit<ShoppingItem, 'id' | 'completed'>
 ): Promise<ShoppingItem> => {
-  
-  // Debug: Log what we're sending to backend
-  console.log('🖼️ API Debug - Sending to backend:', {
-    hasImage: !!itemData.imageUrl,
-    imageLength: itemData.imageUrl ? itemData.imageUrl.length : 0,
-    imagePrefix: itemData.imageUrl ? itemData.imageUrl.substring(0, 50) : 'N/A',
-    endpoint: `${BASE_URL}/api/shopping-lists/${listId}/items`,
-    payload: { ...itemData, imageUrl: itemData.imageUrl ? '[IMAGE_DATA]' : undefined }
-  });
-  
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items`, {
     method: 'POST',
     headers: {
@@ -228,19 +221,7 @@ export const addShoppingItem = async (
     },
     body: JSON.stringify(itemData),
   });
-  
-  const result = await handleResponse<ShoppingItem>(response);
-  
-  // Debug: Check what backend returned
-  console.log('🖼️ API Debug - Backend response:', {
-    hasImageUrl: !!result.imageUrl,
-    hasImage: !!(result as any).image,
-    imageUrlLength: result.imageUrl ? result.imageUrl.length : 0,
-    imageLength: (result as any).image ? (result as any).image.length : 0,
-    fullResult: { ...result, imageUrl: result.imageUrl ? '[IMAGE_DATA]' : undefined, image: (result as any).image ? '[IMAGE_DATA]' : undefined }
-  });
-  
-  return result;
+  return handleResponse<ShoppingItem>(response);
 };
 
 export const updateShoppingItem = async (
@@ -277,7 +258,6 @@ export const deleteCheckedItems = async (token: string, listId: string): Promise
 };
 
 export const deleteCategoryItems = async (token: string, listId: string, categoryName: Category): Promise<void> => {
-  console.log('Sending delete category request:', { listId, categoryName });
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/items/delete-category`, {
     method: 'POST',
     headers: {
@@ -286,22 +266,10 @@ export const deleteCategoryItems = async (token: string, listId: string, categor
     },
     body: JSON.stringify({ categoryName }),
   });
-  
-  console.log('Delete category response status:', response.status);
-  const responseData = await response.json().catch(() => null);
-  console.log('Delete category response data:', responseData);
-  
-  if (!response.ok) {
-    const errorMessage = responseData?.message || 'Failed to delete category items';
-    console.error('Delete category error:', { status: response.status, message: errorMessage });
-    throw new Error(errorMessage);
-  }
-  
-  if (responseData && responseData.message) {
-    console.log('Delete category success:', responseData.message);
-  }
+  await handleResponse<void>(response);
 };
 
+// Categories
 export const fetchUserCategories = async (token: string): Promise<string[]> => {
   const response = await fetch(`${BASE_URL}/api/items/categories`, {
     headers: { 'Authorization': `Bearer ${token}` },
@@ -312,28 +280,17 @@ export const fetchUserCategories = async (token: string): Promise<string[]> => {
 export const deleteUserCategory = async (token: string, categoryName: string): Promise<void> => {
   const response = await fetch(`${BASE_URL}/api/items/categories/${encodeURIComponent(categoryName)}`, {
     method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+    headers: { 'Authorization': `Bearer ${token}` },
   });
   await handleResponse<void>(response);
 };
 
+// Export/Import
 export const exportShoppingList = async (token: string, listId: string): Promise<ShoppingItem[]> => {
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/export`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
   return handleResponse<ShoppingItem[]>(response);
-};
-// New function to check API key status
-export const checkApiKeyStatus = async (token: string): Promise<{ hasApiKey: boolean }> => {
-  const response = await fetch(`${BASE_URL}/api/user/api-key/status`, {
-      method: 'GET',
-      headers: {
-          'Authorization': `Bearer ${token}`,
-      },
-  });
-  return handleResponse<{ hasApiKey: boolean }>(response);
 };
 
 export const importShoppingList = async (token: string, listId: string, items: Omit<ShoppingItem, 'id'>[]): Promise<ShoppingItem[]> => {
@@ -348,7 +305,7 @@ export const importShoppingList = async (token: string, listId: string, items: O
   return handleResponse<ShoppingItem[]>(response);
 };
 
-// Sharing functionality
+// Sharing
 export const shareShoppingList = async (token: string, listId: string, email: string, permission: 'read' | 'write' = 'read'): Promise<{ message: string; sharedWith: any[] }> => {
   const response = await fetch(`${BASE_URL}/api/shopping-lists/${listId}/share`, {
     method: 'POST',
@@ -392,7 +349,7 @@ export const updateSharePermission = async (token: string, listId: string, userI
   return handleResponse<{ message: string }>(response);
 };
 
-// Smart Assistant Chat Functions
+// Chat and Smart Assistant
 export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
@@ -426,14 +383,14 @@ export const sendChatMessage = async (token: string, message: string): Promise<{
 };
 
 export const getChatHistory = async (token: string): Promise<ChatHistoryResponse> => {
-    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat`, {
         headers: { 'Authorization': `Bearer ${token}` },
     });
     return handleResponse<ChatHistoryResponse>(response);
 };
 
 export const clearChatHistory = async (token: string): Promise<{ message: string }> => {
-    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/chat`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -441,13 +398,13 @@ export const clearChatHistory = async (token: string): Promise<{ message: string
 };
 
 export const updateUserPreferences = async (token: string, preferences: Partial<UserPreferences>): Promise<{ message: string; preferences: UserPreferences }> => {
-    const response = await fetch(`${BASE_URL}/api/smart-assistant/preferences`, {
+    const response = await fetch(`${BASE_URL}/api/user/preferences`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ preferences }),
+        body: JSON.stringify(preferences),
     });
     return handleResponse<{ message: string; preferences: UserPreferences }>(response);
 };
