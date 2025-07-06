@@ -134,12 +134,12 @@ export const useShoppingList = (token: string, listId?: string | null): UseShopp
     if (!token || !selectedListId) throw new Error('Authentication required');
 
     // Optimistically update UI immediately
-    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } as ShoppingItem : item));
+    setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
 
     try {
       const updatedItem = await api.updateShoppingItem(token, selectedListId, id, updates);
       // Replace with authoritative server response when available
-      setItems(prev => prev.map(item => item.id === id ? updatedItem : item));
+      setItems(prev => prev.map(item => item.id === id ? { ...item, ...updatedItem } : item));
       return updatedItem;
     } catch (error) {
       // If server call fails (e.g., still offline when flushing), keep optimistic state
