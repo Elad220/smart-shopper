@@ -28,7 +28,7 @@ interface SideMenuProps {
   user: UserType;
   onLogout: () => void;
   onNavigate: (view: 'lists' | 'mylists' | 'settings') => void;
-  currentView: string;
+  currentView: 'lists' | 'mylists' | 'settings';
   isMobile?: boolean;
 }
 
@@ -126,7 +126,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
 
         {/* Navigation Items */}
-        <Box sx={{ flexGrow: 1, py: 1 }}>
+        <Box sx={{ flexGrow: 1, py: 1, overflowY: 'auto' }}>
           <List>
             {menuItems.map((item) => (
               <ListItem key={item.key} disablePadding>
