@@ -49,7 +49,8 @@
     "react-intersection-observer": "^9.16.0",
     "react-router-dom": "^6.21.3",
     "vite": "^5.0.12",
-    "vitest": "^1.2.2"
+    "vitest": "^1.2.2",
+    "localforage": "^1.10.0"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^5.16.5",
@@ -69,6 +70,7 @@
     "jsdom": "^22.1.0",
     "typescript": "^5.8.3",
     "vite": "^4.3.2",
-    "vitest": "^0.32.0"
+    "vitest": "^0.32.0",
+    "@types/localforage": "^1.10.6"
   }
 }
