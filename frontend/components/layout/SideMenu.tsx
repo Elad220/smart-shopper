@@ -28,7 +28,7 @@ interface SideMenuProps {
   user: UserType;
   onLogout: () => void;
   onNavigate: (view: 'lists' | 'mylists' | 'settings') => void;
-  currentView: string;
+  currentView: 'lists' | 'mylists' | 'settings';
   isMobile?: boolean;
 }
 
@@ -70,9 +70,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
           boxSizing: 'border-box',
           top: 64, // Account for header height
           height: 'calc(100vh - 64px)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
           borderRight: `1px solid ${theme.palette.divider}`,
           background: theme.palette.background.default,
         },
