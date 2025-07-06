@@ -13,7 +13,7 @@ type AuthView = 'landing' | 'login' | 'register';
 const AuthFlow: React.FC = () => {
   const [view, setView] = useState<AuthView>('landing');
   const { login, register, isLoading } = useAuth();
-  const { mode, toggleMode } = useTheme();
+  const { mode, toggleMode, themeKey } = useTheme();
 
   const handleLogin = async (credentials: { email: string; password: string }) => {
     const result = await login(credentials);
@@ -40,7 +40,7 @@ const AuthFlow: React.FC = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh' }}>
+    <Box key={themeKey} sx={{ minHeight: '100vh' }}>
       {view !== 'landing' && (
         <Header 
           mode={mode} 

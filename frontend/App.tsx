@@ -81,10 +81,10 @@ const RootRoute: React.FC = () => {
 };
 
 const App: React.FC = () => {
-  const { theme } = useTheme();
+  const { theme, themeKey } = useTheme();
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={theme} key={themeKey}>
       <CssBaseline enableColorScheme />
       <Toaster 
         position="top-right"

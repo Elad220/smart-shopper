@@ -8,7 +8,9 @@ import {
   Tooltip,
   SvgIcon,
   Popover,
+  useTheme,
 } from '@mui/material';
+import { useThemeChange } from '../hooks/useThemeChange';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
@@ -51,6 +53,8 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
   isMobile,
   onDrawerOpen,
 }) => {
+  const theme = useTheme();
+  const themeChangeKey = useThemeChange();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -65,7 +69,21 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
   const id = open ? 'simple-popover' : undefined;
 
   return (
-    <AppBar position="fixed" elevation={1} sx={{ zIndex: (theme) => (isLoggedIn ? theme.zIndex.drawer + 1 : 'auto') }}>
+    <AppBar 
+      key={themeChangeKey}
+      position="fixed" 
+      elevation={1} 
+      sx={{ 
+        zIndex: (theme) => (isLoggedIn ? theme.zIndex.drawer + 1 : 'auto'),
+        background: theme.palette.mode === 'dark' 
+          ? 'rgba(0, 0, 0, 0.95)' 
+          : 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        color: theme.palette.text.primary,
+        transition: 'all 0.2s ease-in-out',
+      }}
+    >
       <Toolbar
         sx={{
           minHeight: 56,

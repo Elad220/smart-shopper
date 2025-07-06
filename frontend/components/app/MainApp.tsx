@@ -6,12 +6,12 @@ import ShoppingApp from './ShoppingApp';
 
 const MainApp: React.FC = () => {
   const { user, logout } = useAuth();
-  const { mode, toggleMode } = useTheme();
+  const { mode, toggleMode, themeKey } = useTheme();
 
   if (!user) return null;
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <Box key={themeKey} sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <ShoppingApp user={user} mode={mode} onToggleMode={toggleMode} onLogout={logout} />
     </Box>
   );
