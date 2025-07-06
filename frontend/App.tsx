@@ -26,7 +26,7 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/app" replace />;
   }
   
   return <>{children}</>;
