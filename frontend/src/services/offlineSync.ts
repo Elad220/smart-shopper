@@ -180,12 +180,34 @@ export const setupOfflineFetch = () => {
     // Try to craft a best-effort optimistic result for certain endpoints
     try {
       if (url.includes('/items') && method === 'POST' && init.body) {
-        const bodyJson = typeof init.body === 'string' ? JSON.parse(init.body) : init.body;
+        // Attempt to extract a plain object from the request body so we can
+        // merge it into the optimistic response. The Fetch API allows many
+        // non-object body types (FormData, Blob, ReadableStream…). We only
+        // spread the body when it is either a JSON string or a plain object
+        // (i.e. its prototype is Object.prototype).
+
+        let bodyJson: Record<string, unknown> = {};
+
+        if (typeof init.body === 'string') {
+          try {
+            bodyJson = JSON.parse(init.body);
+          } catch {
+            /* Swallow JSON parse errors – fall back to empty object */
+          }
+        } else if (
+          typeof init.body === 'object' &&
+          init.body !== null &&
+          Object.getPrototypeOf(init.body) === Object.prototype
+        ) {
+          bodyJson = init.body as unknown as Record<string, unknown>;
+        }
+
         const optimisticItem = {
           id: `offline-${Date.now()}`,
           completed: false,
           ...bodyJson,
         };
+
         return new Response(JSON.stringify(optimisticItem), {
           status: 202,
           headers: { 'Content-Type': 'application/json' },
