@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Box,
   Typography,
@@ -17,8 +17,8 @@ import {
   useTheme,
 } from '@mui/material';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Check, ArrowLeft } from 'lucide-react';
-import { ShoppingItem, Category } from '../../types';
+import { ShoppingCart, Check, ArrowLeft, Circle } from 'lucide-react';
+import { ShoppingItem } from '../../types';
 import toast from 'react-hot-toast';
 
 interface ShoppingModeViewProps {
@@ -35,6 +35,14 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   currentListName,
 }) => {
   const theme = useTheme();
+  
+  // State to control whether only unchecked items are displayed
+  const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
+
+  // Filter items based on the unchecked-only flag
+  const filteredItems = useMemo(() => {
+    return showUncheckedOnly ? items.filter((item: ShoppingItem) => !item.completed) : items;
+  }, [items, showUncheckedOnly]);
   
   // Enhanced toggle function with toast notification
   const handleToggleComplete = (itemId: string) => {
@@ -83,15 +91,15 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
     }
   };
   
-  // Group items by category
-  const groupedItems = items.reduce((acc: Record<Category, ShoppingItem[]>, item: ShoppingItem) => {
+  // Group (optionally filtered) items by category
+  const groupedItems = filteredItems.reduce((acc: Record<string, ShoppingItem[]>, item: ShoppingItem) => {
     const categoryKey = typeof item.category === 'string' ? item.category : 'Unknown';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
     }
     acc[categoryKey].push(item);
     return acc;
-  }, {} as Record<Category, ShoppingItem[]>);
+  }, {} as Record<string, ShoppingItem[]>);
 
   // Sort categories alphabetically with "Other" at the end
   const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
@@ -116,11 +124,13 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
     });
   });
 
+  // Progress stats are still calculated on the full list so that the user can
+  // always see overall progress even when the list is filtered.
   const totalItems = items.length;
   const completedItems = items.filter((item: ShoppingItem) => item.completed).length;
   const remainingItems = totalItems - completedItems;
 
-  if (items.length === 0) {
+  if (filteredItems.length === 0) {
     return (
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Paper
@@ -138,7 +148,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
             Shopping Mode
           </Typography>
           <Typography variant="h6" color="text.secondary" sx={{ mb: 3 }}>
-            Your list is empty
+            {items.length === 0 ? 'Your list is empty' : 'All items are completed!'}
           </Typography>
                      <Button
              variant="contained"
@@ -195,31 +205,57 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
                   {remainingItems} items remaining
                 </Typography>
               </Box>
-                             <Button
-                 variant="outlined"
-                 startIcon={<ArrowLeft />}
-                 onClick={() => {
-                   try {
-                     onExitShoppingMode();
-                   } catch (error) {
-                     console.error('Error exiting shopping mode:', error);
-                     toast.error('Error exiting shopping mode');
-                   }
-                 }}
-                 sx={{
-                   borderRadius: '12px',
-                   textTransform: 'none',
-                   fontSize: '1rem',
-                   px: 3,
-                   py: 1.5,
-                   borderWidth: 2,
-                   '&:hover': {
-                     borderWidth: 2,
-                   },
-                 }}
-               >
-                 Exit
-               </Button>
+              {/* Unchecked-only toggle */}
+              <Button
+                variant={showUncheckedOnly ? 'contained' : 'outlined'}
+                startIcon={<Circle size={16} />}
+                onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '12px',
+                  borderColor: alpha(theme.palette.warning.main, 0.3),
+                  color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
+                  background: showUncheckedOnly
+                    ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
+                    : alpha(theme.palette.warning.main, 0.05),
+                  backdropFilter: 'blur(10px)',
+                  '&:hover': {
+                    background: showUncheckedOnly
+                      ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
+                      : alpha(theme.palette.warning.main, 0.1),
+                    borderColor: theme.palette.warning.main,
+                    boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
+                  },
+                  mr: 1.5,
+                }}
+              >
+                Unchecked Only
+              </Button>
+              <Button
+                variant="outlined"
+                startIcon={<ArrowLeft />}
+                onClick={() => {
+                  try {
+                    onExitShoppingMode();
+                  } catch (error) {
+                    console.error('Error exiting shopping mode:', error);
+                    toast.error('Error exiting shopping mode');
+                  }
+                }}
+                sx={{
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  px: 3,
+                  py: 1.5,
+                  borderWidth: 2,
+                  '&:hover': {
+                    borderWidth: 2,
+                  },
+                }}
+              >
+                Exit
+              </Button>
             </Stack>
           </CardContent>
         </Card>
