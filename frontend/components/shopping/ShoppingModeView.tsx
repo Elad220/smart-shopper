@@ -40,23 +40,21 @@ import type {
   PaperProps,
 } from '@mui/material';
 
-// Export a mapping type referencing all imported props types to satisfy
-// TypeScript's noUnusedLocals rule.
-export type ShoppingModeMuiProps = {
-  box: BoxProps;
-  typography: TypographyProps;
-  list: ListProps;
-  listItem: ListItemProps;
-  listItemIcon: ListItemIconProps;
-  listItemText: ListItemTextProps;
-  checkbox: CheckboxProps;
-  card: CardProps;
-  cardContent: CardContentProps;
-  container: ContainerProps;
-  button: ButtonProps;
-  stack: StackProps;
-  paper: PaperProps;
-};
+// Union type referencing all imported prop types to keep type-only imports intact.
+export type _ShoppingModeMuiPropUsage =
+  | BoxProps
+  | TypographyProps
+  | ListProps
+  | ListItemProps
+  | ListItemIconProps
+  | ListItemTextProps
+  | CheckboxProps
+  | CardProps
+  | CardContentProps
+  | ContainerProps
+  | ButtonProps
+  | StackProps
+  | PaperProps;
 
 interface ShoppingModeViewProps {
   items: ShoppingItem[];

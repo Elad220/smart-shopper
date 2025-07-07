@@ -493,19 +493,17 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
   );
 };
 
-// Export a mapping type that references every imported props type to ensure
-// they are treated as used by the TypeScript compiler.
-export type ShoppingAppMuiProps = {
-  box: BoxProps;
-  container: ContainerProps;
-  typography: TypographyProps;
-  button: ButtonProps;
-  stack: StackProps;
-  card: CardProps;
-  cardContent: CardContentProps;
-  fab: FabProps;
-  iconButton: IconButtonProps;
-  linearProgress: LinearProgressProps;
-};
+// Referencing all imported prop types once so the type-only import is retained.
+export type _ShoppingAppMuiPropUsage =
+  | BoxProps
+  | ContainerProps
+  | TypographyProps
+  | ButtonProps
+  | StackProps
+  | CardProps
+  | CardContentProps
+  | FabProps
+  | IconButtonProps
+  | LinearProgressProps;
 
 export default ShoppingApp;
