@@ -1,4 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import type { FC } from 'react';
+import type { Theme } from '@mui/material/styles';
 import {
   Box,
   Typography,
@@ -18,26 +20,81 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Check, ArrowLeft, Circle } from 'lucide-react';
-import { ShoppingItem } from '../../types';
+import type { ShoppingItem } from '../../types';
 import toast from 'react-hot-toast';
+
+// Type-only prop imports for MUI components used in this file
+import type {
+  BoxProps,
+  TypographyProps,
+  ListProps,
+  ListItemProps,
+  ListItemIconProps,
+  ListItemTextProps,
+  CheckboxProps,
+  CardProps,
+  CardContentProps,
+  ContainerProps,
+  ButtonProps,
+  StackProps,
+  PaperProps,
+} from '@mui/material';
+
+// Union type referencing all imported prop types to keep type-only imports intact.
+export type _ShoppingModeMuiPropUsage =
+  | BoxProps
+  | TypographyProps
+  | ListProps
+  | ListItemProps
+  | ListItemIconProps
+  | ListItemTextProps
+  | CheckboxProps
+  | CardProps
+  | CardContentProps
+  | ContainerProps
+  | ButtonProps
+  | StackProps
+  | PaperProps;
 
 interface ShoppingModeViewProps {
   items: ShoppingItem[];
+  listId: string;
+  userId: string;
   onToggleComplete: (id: string) => void;
   onExitShoppingMode: () => void;
   currentListName: string;
 }
 
-const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
+const ShoppingModeView: FC<ShoppingModeViewProps> = ({
   items,
+  listId,
+  userId,
   onToggleComplete,
   onExitShoppingMode,
   currentListName,
 }) => {
-  const theme = useTheme();
+  const theme = useTheme<Theme>();
   
   // State to control whether only unchecked items are displayed
   const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
+
+  // Load custom category order from localStorage (shared with main list view)
+  const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
+
+  useEffect(() => {
+    const storageKey = `categoryOrder_${userId}_${listId}`;
+    const savedOrder = localStorage.getItem(storageKey);
+    if (savedOrder) {
+      try {
+        const parsed = JSON.parse(savedOrder);
+        if (Array.isArray(parsed)) {
+          setCategoryOrder(parsed);
+        }
+      } catch (err) {
+        console.warn('Failed to parse stored category order:', err);
+      }
+    }
+  }, [userId, listId]);
 
   // Filter items based on the unchecked-only flag
   const filteredItems = useMemo(() => {
@@ -101,12 +158,39 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
     return acc;
   }, {} as Record<string, ShoppingItem[]>);
 
-  // Sort categories alphabetically with "Other" at the end
-  const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
-    if (a === 'Other') return 1;
-    if (b === 'Other') return -1;
-    return a.localeCompare(b);
-  });
+  // Determine sorted category names respecting any custom order saved outside of shopping mode
+  const sortedCategories = useMemo(() => {
+    const categoryNames = Object.keys(groupedItems);
+
+    // If we have a custom order, apply it first
+    if (categoryOrder.length > 0) {
+      return categoryNames.sort((a, b) => {
+        const indexA = categoryOrder.indexOf(a);
+        const indexB = categoryOrder.indexOf(b);
+
+        // If both categories are in the custom order, sort by their position
+        if (indexA !== -1 && indexB !== -1) {
+          return indexA - indexB;
+        }
+
+        // If only one is in the custom order, prioritise the one that is
+        if (indexA !== -1) return -1;
+        if (indexB !== -1) return 1;
+
+        // If neither is in custom order, fall back to alphabetical with "Other" last
+        if (a === 'Other') return 1;
+        if (b === 'Other') return -1;
+        return a.localeCompare(b);
+      });
+    }
+
+    // Default alphabetical order with "Other" at the end
+    return categoryNames.sort((a, b) => {
+      if (a === 'Other') return 1;
+      if (b === 'Other') return -1;
+      return a.localeCompare(b);
+    });
+  }, [groupedItems, categoryOrder]);
 
   // Sort items within each category - incomplete items first, then by priority
   const priorityOrder = { 'High': 1, 'Medium': 2, 'Low': 3 };
@@ -263,7 +347,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
 
       {/* Shopping List */}
       <Box sx={{ pb: 4 }}>
-        {sortedCategories.map((categoryName, categoryIndex) => (
+        {sortedCategories.map((categoryName: string, categoryIndex: number) => (
           <motion.div
             key={categoryName}
             initial={{ opacity: 0, y: 20 }}
@@ -293,7 +377,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
               </Box>
               
               <List disablePadding>
-                {groupedItems[categoryName].map((item, itemIndex) => (
+                {groupedItems[categoryName].map((item: ShoppingItem, itemIndex: number) => (
                   <motion.div
                     key={item.id}
                     initial={{ opacity: 0, x: -20 }}

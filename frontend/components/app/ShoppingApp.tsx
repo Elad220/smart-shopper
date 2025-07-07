@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { FC } from 'react';
+import type { Theme } from '@mui/material/styles';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
-  CardContent, Fab, useTheme, LinearProgress,
-  IconButton, useMediaQuery, alpha
+  CardContent, Fab, IconButton, LinearProgress,
+  useTheme, useMediaQuery, alpha
 } from '@mui/material';
 import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { User } from '../../hooks/useAuth';
-import { ShoppingItem } from '../../types';
+import type { User } from '../../hooks/useAuth';
+import type { ShoppingItem } from '../../types';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
 import ShoppingModeView from '../shopping/ShoppingModeView';
@@ -19,6 +21,19 @@ import Header from '../layout/Header';
 import SideMenu from '../layout/SideMenu';
 import SettingsPage from '../settings/SettingsPage';
 import MyListsPage from '../lists/MyListsPage';
+// Type-only prop imports for MUI components used in this file
+import type {
+  BoxProps,
+  ContainerProps,
+  TypographyProps,
+  ButtonProps,
+  StackProps,
+  CardProps,
+  CardContentProps,
+  FabProps,
+  IconButtonProps,
+  LinearProgressProps,
+} from '@mui/material';
 
 interface ShoppingAppProps {
   user: User;
@@ -27,8 +42,8 @@ interface ShoppingAppProps {
   onLogout: () => void;
 }
 
-const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
-  const theme = useTheme();
+const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
+  const theme = useTheme<Theme>();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -235,6 +250,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             <Container maxWidth="md" sx={{ mx: 'auto', px: { xs: 2, sm: 3 }, py: 3 }}>
               <ShoppingModeView
                 items={items}
+                listId={selectedListId || ''}
+                userId={user.id}
                 onToggleComplete={handleToggleComplete}
                 onExitShoppingMode={handleExitShoppingMode}
                 currentListName={currentListName}
@@ -475,5 +492,18 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
     </Box>
   );
 };
+
+// Referencing all imported prop types once so the type-only import is retained.
+export type _ShoppingAppMuiPropUsage =
+  | BoxProps
+  | ContainerProps
+  | TypographyProps
+  | ButtonProps
+  | StackProps
+  | CardProps
+  | CardContentProps
+  | FabProps
+  | IconButtonProps
+  | LinearProgressProps;
 
 export default ShoppingApp;
