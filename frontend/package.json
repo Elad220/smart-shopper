@@ -17,12 +17,12 @@
     "test:debug": "vitest --inspect-brk --no-coverage"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
     "@google/generative-ai": "^0.24.1",
     "@hello-pangea/dnd": "^16.5.0",
     "@mui/icons-material": "^5.15.0",
-    "@mui/material": "^5.15.0",
+    "@mui/material": "^5.17.1",
     "@mui/x-data-grid": "^5.17.24",
     "@testing-library/dom": "^9.3.1",
     "@testing-library/jest-dom": "^5.17.0",
