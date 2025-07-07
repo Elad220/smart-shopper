@@ -2,9 +2,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, IconButton } from '@mui/material';
-import { Toaster, toast } from 'react-hot-toast';
-// @ts-ignore - ToastBar is not typed in the current version's declarations but exists at runtime
-import { ToastBar } from 'react-hot-toast';
+import { Toaster, toast, ToastBar, type Toast } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import LandingPage from './components/auth/LandingPage';
@@ -116,9 +114,9 @@ const App: React.FC = () => {
           },
         }}
       >
-        {(t: any) => (
+        {(t: Toast) => (
           <ToastBar toast={t} style={{ ...t.style }}>
-            {({ icon, message }: any) => (
+            {({ icon, message }: { icon?: React.ReactNode; message?: React.ReactNode }) => (
               <>
                 {icon}
                 <span style={{ flex: 1, marginLeft: 8 }}>{message}</span>
