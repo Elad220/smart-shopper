@@ -12,7 +12,7 @@ import MainApp from './components/app/MainApp';
 import CloseIcon from '@mui/icons-material/Close';
 
 // Public Route Component (redirects to main app if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
