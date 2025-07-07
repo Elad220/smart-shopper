@@ -452,9 +452,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                   textDecoration: item.completed ? 'line-through' : 'none',
                                   opacity: item.completed ? 0.7 : 1,
                                   flexGrow: 1,
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                  whiteSpace: 'nowrap',
+                                  // Allow text to wrap instead of truncating
+                                  overflowWrap: 'break-word',
+                                  whiteSpace: 'normal',
                                 }}
                               >
                                 {item.name}
