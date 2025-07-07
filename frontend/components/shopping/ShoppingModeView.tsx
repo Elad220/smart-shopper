@@ -18,7 +18,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Check, ArrowLeft, Circle } from 'lucide-react';
-import { ShoppingItem, Category } from '../../types';
+import { ShoppingItem } from '../../types';
 import toast from 'react-hot-toast';
 
 interface ShoppingModeViewProps {
