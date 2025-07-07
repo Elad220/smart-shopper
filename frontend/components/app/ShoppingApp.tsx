@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import type { FC } from 'react';
+import type { Theme } from '@mui/material/styles';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
   CardContent, Fab, useTheme, LinearProgress,
@@ -7,8 +9,8 @@ import {
 import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { User } from '../../hooks/useAuth';
-import { ShoppingItem } from '../../types';
+import type { User } from '../../hooks/useAuth';
+import type { ShoppingItem } from '../../types';
 import { useShoppingList } from '../../hooks/useShoppingList';
 import ShoppingListView from '../shopping/ShoppingListView';
 import ShoppingModeView from '../shopping/ShoppingModeView';
@@ -27,8 +29,8 @@ interface ShoppingAppProps {
   onLogout: () => void;
 }
 
-const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
-  const theme = useTheme();
+const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout }) => {
+  const theme = useTheme<Theme>();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);

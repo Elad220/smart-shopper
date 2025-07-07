@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import type { FC } from 'react';
+import type { Theme } from '@mui/material/styles';
 import {
   Box,
   Typography,
@@ -18,7 +20,7 @@ import {
 } from '@mui/material';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Check, ArrowLeft, Circle } from 'lucide-react';
-import { ShoppingItem } from '../../types';
+import type { ShoppingItem } from '../../types';
 import toast from 'react-hot-toast';
 
 interface ShoppingModeViewProps {
@@ -30,7 +32,7 @@ interface ShoppingModeViewProps {
   currentListName: string;
 }
 
-const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
+const ShoppingModeView: FC<ShoppingModeViewProps> = ({
   items,
   listId,
   userId,
@@ -38,7 +40,7 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   onExitShoppingMode,
   currentListName,
 }) => {
-  const theme = useTheme();
+  const theme = useTheme<Theme>();
   
   // State to control whether only unchecked items are displayed
   const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
