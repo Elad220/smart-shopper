@@ -6,7 +6,7 @@ interface AuthLayoutProps {
   children: React.ReactNode;
 }
 
-const AuthLayout: React.FC<AuthLayoutProps> = ({ children }) => {
+const AuthLayout: React.FC<AuthLayoutProps> = ({ children }: { children: React.ReactNode }) => {
   const theme = useTheme();
 
   return (

@@ -1,17 +1,18 @@
 // frontend/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { Toaster } from 'react-hot-toast';
+import { ThemeProvider, CssBaseline, IconButton } from '@mui/material';
+import { Toaster, toast, ToastBar, type Toast } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import LandingPage from './components/auth/LandingPage';
 import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import MainApp from './components/app/MainApp';
+import CloseIcon from '@mui/icons-material/Close';
 
 // Public Route Component (redirects to main app if authenticated)
-const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (isAuthenticated && user) {
@@ -86,7 +87,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline enableColorScheme />
-      <Toaster 
+      <Toaster
         position="top-right"
         toastOptions={{
           duration: 6000,
@@ -96,6 +97,8 @@ const App: React.FC = () => {
             color: theme.palette.text.primary,
             border: `1px solid ${theme.palette.divider}`,
             fontSize: '14px',
+            display: 'flex',
+            alignItems: 'center',
           },
           success: {
             iconTheme: {
@@ -110,7 +113,26 @@ const App: React.FC = () => {
             },
           },
         }}
-      />
+      >
+        {(t: Toast) => (
+          <ToastBar toast={t} style={{ ...t.style }}>
+            {({ icon, message }: { icon?: React.ReactNode; message?: React.ReactNode }) => (
+              <>
+                {icon}
+                <span style={{ flex: 1, marginLeft: 8 }}>{message}</span>
+                <IconButton
+                  size="small"
+                  onClick={() => toast.dismiss(t.id)}
+                  sx={{ ml: 1, color: theme.palette.text.secondary }}
+                  aria-label="Dismiss"
+                >
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              </>
+            )}
+          </ToastBar>
+        )}
+      </Toaster>
       <Router>
         <Routes>
           {/* Root route - shows landing page or main app based on auth state */}
