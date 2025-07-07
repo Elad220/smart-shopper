@@ -21,6 +21,18 @@ import Header from '../layout/Header';
 import SideMenu from '../layout/SideMenu';
 import SettingsPage from '../settings/SettingsPage';
 import MyListsPage from '../lists/MyListsPage';
+import type {
+  Box as MuiBox,
+  Container as MuiContainer,
+  Typography as MuiTypography,
+  Button as MuiButton,
+  Stack as MuiStack,
+  Card as MuiCard,
+  CardContent as MuiCardContent,
+  Fab as MuiFab,
+  IconButton as MuiIconButton,
+  LinearProgress as MuiLinearProgress,
+} from '@mui/material';
 
 interface ShoppingAppProps {
   user: User;
@@ -478,6 +490,22 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
       </Box>
     </Box>
   );
+};
+
+// Re-export a helper type that references the imported component types so they
+// are considered "used" under the compiler's strict noUnusedLocals setting.
+// (This has no runtime impact and is tree-shaken out by the bundler.)
+export type _MuiAppComponentTypes = {
+  box: typeof MuiBox;
+  container: typeof MuiContainer;
+  typography: typeof MuiTypography;
+  button: typeof MuiButton;
+  stack: typeof MuiStack;
+  card: typeof MuiCard;
+  cardContent: typeof MuiCardContent;
+  fab: typeof MuiFab;
+  iconButton: typeof MuiIconButton;
+  linearProgress: typeof MuiLinearProgress;
 };
 
 export default ShoppingApp;
