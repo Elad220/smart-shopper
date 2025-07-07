@@ -21,17 +21,18 @@ import Header from '../layout/Header';
 import SideMenu from '../layout/SideMenu';
 import SettingsPage from '../settings/SettingsPage';
 import MyListsPage from '../lists/MyListsPage';
+// Type-only prop imports for MUI components used in this file
 import type {
-  Box as MuiBox,
-  Container as MuiContainer,
-  Typography as MuiTypography,
-  Button as MuiButton,
-  Stack as MuiStack,
-  Card as MuiCard,
-  CardContent as MuiCardContent,
-  Fab as MuiFab,
-  IconButton as MuiIconButton,
-  LinearProgress as MuiLinearProgress,
+  BoxProps,
+  ContainerProps,
+  TypographyProps,
+  ButtonProps,
+  StackProps,
+  CardProps,
+  CardContentProps,
+  FabProps,
+  IconButtonProps,
+  LinearProgressProps,
 } from '@mui/material';
 
 interface ShoppingAppProps {
@@ -492,20 +493,19 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
   );
 };
 
-// Re-export a helper type that references the imported component types so they
-// are considered "used" under the compiler's strict noUnusedLocals setting.
-// (This has no runtime impact and is tree-shaken out by the bundler.)
-export type _MuiAppComponentTypes = {
-  box: typeof MuiBox;
-  container: typeof MuiContainer;
-  typography: typeof MuiTypography;
-  button: typeof MuiButton;
-  stack: typeof MuiStack;
-  card: typeof MuiCard;
-  cardContent: typeof MuiCardContent;
-  fab: typeof MuiFab;
-  iconButton: typeof MuiIconButton;
-  linearProgress: typeof MuiLinearProgress;
+// Export a mapping type that references every imported props type to ensure
+// they are treated as used by the TypeScript compiler.
+export type ShoppingAppMuiProps = {
+  box: BoxProps;
+  container: ContainerProps;
+  typography: TypographyProps;
+  button: ButtonProps;
+  stack: StackProps;
+  card: CardProps;
+  cardContent: CardContentProps;
+  fab: FabProps;
+  iconButton: IconButtonProps;
+  linearProgress: LinearProgressProps;
 };
 
 export default ShoppingApp;

@@ -23,39 +23,39 @@ import { ShoppingCart, Check, ArrowLeft, Circle } from 'lucide-react';
 import type { ShoppingItem } from '../../types';
 import toast from 'react-hot-toast';
 
-// Type-only imports for MUI components used in this file
+// Type-only prop imports for MUI components used in this file
 import type {
-  Box as MuiBox,
-  Typography as MuiTypography,
-  List as MuiList,
-  ListItem as MuiListItem,
-  ListItemIcon as MuiListItemIcon,
-  ListItemText as MuiListItemText,
-  Checkbox as MuiCheckbox,
-  Card as MuiCard,
-  CardContent as MuiCardContent,
-  Container as MuiContainer,
-  Button as MuiButton,
-  Stack as MuiStack,
-  Paper as MuiPaper,
+  BoxProps,
+  TypographyProps,
+  ListProps,
+  ListItemProps,
+  ListItemIconProps,
+  ListItemTextProps,
+  CheckboxProps,
+  CardProps,
+  CardContentProps,
+  ContainerProps,
+  ButtonProps,
+  StackProps,
+  PaperProps,
 } from '@mui/material';
 
-// Re-export a helper type to mark the imported MUI component types as "used"
-// so that the compiler does not flag them with noUnusedLocals.
-export type _MuiShoppingModeComponentTypes = {
-  box: typeof MuiBox;
-  typography: typeof MuiTypography;
-  list: typeof MuiList;
-  listItem: typeof MuiListItem;
-  listItemIcon: typeof MuiListItemIcon;
-  listItemText: typeof MuiListItemText;
-  checkbox: typeof MuiCheckbox;
-  card: typeof MuiCard;
-  cardContent: typeof MuiCardContent;
-  container: typeof MuiContainer;
-  button: typeof MuiButton;
-  stack: typeof MuiStack;
-  paper: typeof MuiPaper;
+// Export a mapping type referencing all imported props types to satisfy
+// TypeScript's noUnusedLocals rule.
+export type ShoppingModeMuiProps = {
+  box: BoxProps;
+  typography: TypographyProps;
+  list: ListProps;
+  listItem: ListItemProps;
+  listItemIcon: ListItemIconProps;
+  listItemText: ListItemTextProps;
+  checkbox: CheckboxProps;
+  card: CardProps;
+  cardContent: CardContentProps;
+  container: ContainerProps;
+  button: ButtonProps;
+  stack: StackProps;
+  paper: PaperProps;
 };
 
 interface ShoppingModeViewProps {
