@@ -235,6 +235,8 @@ const ShoppingApp: React.FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onL
             <Container maxWidth="md" sx={{ mx: 'auto', px: { xs: 2, sm: 3 }, py: 3 }}>
               <ShoppingModeView
                 items={items}
+                listId={selectedListId || ''}
+                userId={user.id}
                 onToggleComplete={handleToggleComplete}
                 onExitShoppingMode={handleExitShoppingMode}
                 currentListName={currentListName}
