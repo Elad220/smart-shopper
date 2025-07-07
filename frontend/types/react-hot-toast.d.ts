@@ -16,6 +16,8 @@ declare module 'react-hot-toast' {
   export interface ToasterProps {
     position?: ToastOptions['position'];
     toastOptions?: ToastOptions;
+    /** Optional render function to customize each toast */
+    children?: (toast: Toast) => React.ReactNode;
   }
 
   export const Toaster: React.FC<ToasterProps>;
