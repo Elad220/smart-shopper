@@ -3,8 +3,8 @@ import type { FC } from 'react';
 import type { Theme } from '@mui/material/styles';
 import { 
   Box, Container, Typography, Button, Stack, Card, 
-  CardContent, Fab, useTheme, LinearProgress,
-  IconButton, useMediaQuery, alpha
+  CardContent, Fab, IconButton, LinearProgress,
+  useTheme, useMediaQuery, alpha
 } from '@mui/material';
 import { Plus, Package, Brain, ShoppingCart } from 'lucide-react';
 import { motion } from 'framer-motion';
