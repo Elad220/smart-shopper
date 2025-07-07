@@ -92,14 +92,14 @@ const ShoppingModeView: React.FC<ShoppingModeViewProps> = ({
   };
   
   // Group (optionally filtered) items by category
-  const groupedItems = filteredItems.reduce((acc: Record<Category, ShoppingItem[]>, item: ShoppingItem) => {
+  const groupedItems = filteredItems.reduce((acc: Record<string, ShoppingItem[]>, item: ShoppingItem) => {
     const categoryKey = typeof item.category === 'string' ? item.category : 'Unknown';
     if (!acc[categoryKey]) {
       acc[categoryKey] = [];
     }
     acc[categoryKey].push(item);
     return acc;
-  }, {} as Record<Category, ShoppingItem[]>);
+  }, {} as Record<string, ShoppingItem[]>);
 
   // Sort categories alphabetically with "Other" at the end
   const sortedCategories = Object.keys(groupedItems).sort((a, b) => {
