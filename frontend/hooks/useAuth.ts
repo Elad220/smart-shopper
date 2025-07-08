@@ -78,9 +78,8 @@ export const useAuth = () => {
     localStorage.removeItem('currentUser');
     localStorage.removeItem('selectedListId');
     toast.success('Logged out successfully! 👋');
-    
-    // Navigate to root to trigger landing page display
-    window.location.href = '/';
+    // Navigate to login page to trigger login display
+    window.location.href = '/login';
   }, []);
 
   return {
