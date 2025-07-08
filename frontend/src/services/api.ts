@@ -1,4 +1,5 @@
 import { ShoppingItem, Category } from '../../types';
+import toast from 'react-hot-toast';
 
 // Get the API URL from environment variable or fallback to localhost
 const getBaseUrl = () => {
@@ -78,6 +79,16 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
             else if (errorData.errors && errorData.errors.length > 0) errorMessage = errorData.errors[0].msg;
             else if (typeof data === 'object') errorMessage = JSON.stringify(data);
         }
+    }
+    // Global 401 handler
+    if (response.status === 401 && (errorMessage.includes('Token is not valid') || errorMessage.toLowerCase().includes('token'))) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('selectedListId');
+      toast.error('Session expired. Please log in again.');
+      window.location.href = '/login';
+      // Optionally, throw to stop further processing
+      throw new Error('Session expired. Please log in again.');
     }
     const error: any = new Error(errorMessage);
     error.status = response.status;
