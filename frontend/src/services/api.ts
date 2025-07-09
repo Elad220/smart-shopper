@@ -86,7 +86,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
       localStorage.removeItem('currentUser');
       localStorage.removeItem('selectedListId');
       toast.error('Session expired. Please log in again.');
-      window.location.href = '/login';
+      window.location.href = '/';
       // Optionally, throw to stop further processing
       throw new Error('Session expired. Please log in again.');
     }
