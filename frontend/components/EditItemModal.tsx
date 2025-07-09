@@ -5,6 +5,7 @@ import {
   FormControl, InputLabel, OutlinedInput,
   InputAdornment, IconButton, Typography
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Edit, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
@@ -172,9 +173,22 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
       }}
       BackdropProps={{
         sx: {
-          backgroundColor: 'rgba(0, 0, 0, 0.4)',
+          backgroundColor: alpha(theme.palette.common.black, 0.4),
           backdropFilter: 'blur(20px)',
         }
+      }}
+      sx={{
+        '& .MuiDialog-paper': {
+          backgroundColor: theme.palette.background.paper,
+          backgroundImage: 'none',
+          borderRadius: '16px',
+          boxShadow: `0 24px 48px ${alpha(theme.palette.common.black, 0.15)}`,
+          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          maxWidth: '90vw',
+          width: '100%',
+          maxHeight: '90vh',
+          m: 2,
+        },
       }}
     >
       <AnimatePresence>
@@ -250,14 +264,14 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                   width: '8px',
                 },
                 '&::-webkit-scrollbar-track': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: alpha(theme.palette.background.paper, 0.1),
                   borderRadius: '4px',
                 },
                 '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  backgroundColor: alpha(theme.palette.background.paper, 0.3),
                   borderRadius: '4px',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                    backgroundColor: alpha(theme.palette.background.paper, 0.5),
                   },
                 },
               }}>
@@ -278,15 +292,15 @@ const EditItemModal: React.FC<EditItemModalProps> = ({ open, onClose, onSave, it
                         sx={{ 
                           '& .MuiOutlinedInput-root': { 
                             borderRadius: '16px',
-                            background: 'rgba(255, 255, 255, 0.05)',
+                            background: alpha(theme.palette.background.paper, 0.05),
                             backdropFilter: 'blur(10px)',
                             transition: 'all 0.3s ease',
                             '&:hover': {
-                              background: 'rgba(255, 255, 255, 0.08)',
+                              background: alpha(theme.palette.background.paper, 0.08),
                               transform: 'translateY(-1px)',
                             },
                             '&.Mui-focused': {
-                              background: 'rgba(255, 255, 255, 0.1)',
+                              background: alpha(theme.palette.background.paper, 0.1),
                               boxShadow: `0 0 20px ${theme.palette.primary.main}30`,
                             }
                           },

@@ -26,6 +26,14 @@ const Header: React.FC<HeaderProps> = ({
   const theme = useTheme();
   const { online, pending } = useOfflineSyncStatus();
 
+  const handleThemeToggle = () => {
+    onToggleMode();
+    // Force immediate visual update
+    setTimeout(() => {
+      document.body.offsetHeight;
+    }, 0);
+  };
+
   return (
     <AppBar 
       position="sticky" 
@@ -125,7 +133,7 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* Theme Toggle */}
         <IconButton 
-          onClick={onToggleMode}
+          onClick={handleThemeToggle}
           sx={{ 
             mr: 1,
             color: theme.palette.text.primary,
