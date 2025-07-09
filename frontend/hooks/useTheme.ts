@@ -1,18 +1,27 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createTheme } from '@mui/material/styles';
 
 export const useTheme = () => {
-  const [mode, setMode] = useState<'light' | 'dark'>(() => 
-    (localStorage.getItem('themeMode') as 'light' | 'dark') || 'light'
-  );
+  const [mode, setMode] = useState<'light' | 'dark'>(() => {
+    // Get from localStorage with fallback
+    const savedMode = localStorage.getItem('themeMode') as 'light' | 'dark';
+    return savedMode || 'light';
+  });
 
+  // Immediate theme application
   useEffect(() => {
+    // Update localStorage
     localStorage.setItem('themeMode', mode);
     
     // Update data attributes for CSS-based styling
     const root = document.documentElement;
     const body = document.body;
     
+    // Remove any existing theme attributes
+    body.removeAttribute('data-theme');
+    root.removeAttribute('data-theme');
+    
+    // Set new theme attributes
     body.setAttribute('data-theme', mode);
     root.setAttribute('data-theme', mode);
     
@@ -22,12 +31,21 @@ export const useTheme = () => {
       root.style.setProperty('--text-color', '#ffffff');
       root.style.setProperty('--paper-color', '#2a2a2a');
       root.style.setProperty('--border-color', '#404040');
+      root.style.setProperty('--body-bg', '#0a0a0a');
     } else {
       root.style.setProperty('--bg-color', '#ffffff');
       root.style.setProperty('--text-color', '#111827');
       root.style.setProperty('--paper-color', '#f8fafc');
       root.style.setProperty('--border-color', '#e2e8f0');
+      root.style.setProperty('--body-bg', '#ffffff');
     }
+
+    // Force immediate body background update
+    document.body.style.backgroundColor = mode === 'dark' ? '#0a0a0a' : '#ffffff';
+    document.body.style.color = mode === 'dark' ? '#f8fafc' : '#111827';
+    
+    // Force a reflow to ensure immediate visual update
+    document.body.offsetHeight;
   }, [mode]);
 
   const theme = useMemo(() => createTheme({
@@ -182,5 +200,10 @@ export const useTheme = () => {
     setMode(prev => prev === 'light' ? 'dark' : 'light');
   }, []);
 
-  return { theme, mode, setMode, toggleMode };
+  return { 
+    theme, 
+    mode, 
+    setMode, 
+    toggleMode
+  };
 };

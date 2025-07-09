@@ -9,20 +9,20 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Inter", "system-ui", "-apple-system", sans-serif;
-  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
   background: radial-gradient(ellipse at top, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
               radial-gradient(ellipse at bottom, rgba(255, 154, 158, 0.1) 0%, transparent 50%);
   min-height: 100vh;
 }
 
 html {
-  transition: background-color 0.3s ease-in-out;
+  transition: background-color 0.2s ease-in-out;
   scroll-behavior: smooth;
 }
 
 #root {
   min-height: 100vh;
-  transition: background-color 0.3s ease-in-out;
+  transition: background-color 0.2s ease-in-out;
   position: relative;
 }
 
@@ -89,10 +89,10 @@ html {
 
 /* Dark mode overrides for immediate visual feedback */
 [data-theme="dark"] body {
-  background: #0a0a0a;
+  background: #0a0a0a !important;
   background-image: 
     radial-gradient(ellipse at top, rgba(88, 28, 135, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom, rgba(219, 39, 119, 0.15) 0%, transparent 50%);
+    radial-gradient(ellipse at bottom, rgba(219, 39, 119, 0.15) 0%, transparent 50%) !important;
   color: #f8fafc !important;
 }
 
@@ -185,4 +185,23 @@ html {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Immediate theme transition classes */
+.theme-transition {
+  transition: background-color 0.2s ease-in-out, 
+              color 0.2s ease-in-out, 
+              border-color 0.2s ease-in-out,
+              box-shadow 0.2s ease-in-out !important;
+}
+
+/* Force immediate updates for critical elements */
+[data-theme="dark"] .MuiCssBaseline-root {
+  background-color: #0a0a0a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme="light"] .MuiCssBaseline-root {
+  background-color: #ffffff !important;
+  color: #111827 !important;
 }

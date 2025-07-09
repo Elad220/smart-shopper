@@ -63,6 +63,15 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
     setAnchorEl(null);
   };
 
+  const handleThemeToggle = () => {
+    const newMode = mode === 'light' ? 'dark' : 'light';
+    setMode(newMode);
+    // Force immediate visual update
+    setTimeout(() => {
+      document.body.offsetHeight;
+    }, 0);
+  };
+
   const open = Boolean(anchorEl);
   const id = open ? 'simple-popover' : undefined;
 
@@ -107,7 +116,7 @@ const AuthHeader: React.FC<AuthHeaderProps> = ({
         </Box>
 
         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton sx={{ ml: 1 }} onClick={() => setMode(mode === 'light' ? 'dark' : 'light')} color="inherit">
+          <IconButton sx={{ ml: 1 }} onClick={handleThemeToggle} color="inherit">
             {mode === 'dark' ? <Brightness7Icon /> : <Brightness4Icon />}
           </IconButton>
           {isLoggedIn && currentUser && handleLogout && (
