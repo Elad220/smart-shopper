@@ -552,8 +552,12 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
             </DialogContent>
 
             {/* Input Area */}
-            <Box sx={{ p: 3, borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
-              <Stack direction="row" spacing={2} alignItems="flex-end">
+            <Box sx={{ 
+              p: isMobile ? 1.5 : 3, 
+              borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              background: isMobile ? alpha(theme.palette.background.paper, 0.85) : undefined,
+            }}>
+              <Stack direction="row" spacing={isMobile ? 1 : 2} alignItems="flex-end">
                 <TextField
                   ref={inputRef}
                   fullWidth
@@ -566,10 +570,12 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
                   disabled={isLoading || !hasApiKey}
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: '16px',
+                      borderRadius: isMobile ? '12px' : '16px',
                       backgroundColor: alpha(theme.palette.background.paper, 0.5),
                       backdropFilter: 'blur(10px)',
                       border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+                      fontSize: isMobile ? '0.98rem' : '1rem',
+                      padding: isMobile ? '10px' : undefined,
                       '&:hover': {
                         borderColor: theme.palette.primary.main,
                       },
@@ -582,17 +588,23 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
                 />
                 <Fab
                   color="primary"
-                  size="medium"
+                  size={isMobile ? 'small' : 'medium'}
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isLoading || !hasApiKey}
                   sx={{
+                    width: isMobile ? 48 : 56,
+                    height: isMobile ? 48 : 56,
+                    minWidth: 44,
+                    minHeight: 44,
+                    ml: isMobile ? 0.5 : 1,
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                     '&:hover': {
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
-                    }
+                    },
+                    boxShadow: isMobile ? '0 2px 8px rgba(0,0,0,0.10)' : undefined,
                   }}
                 >
-                  <Send size={20} />
+                  <Send size={isMobile ? 18 : 20} />
                 </Fab>
               </Stack>
             </Box>
