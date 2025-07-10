@@ -88,9 +88,15 @@ const RegisterFormWithNavigation: React.FC = () => {
 
 const App: React.FC = () => {
   const { theme } = useTheme();
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+
+  // Check if Google Client ID is configured
+  if (!googleClientId || googleClientId === 'your-google-client-id-here') {
+    console.warn('Google Client ID not configured. Google authentication will be disabled.');
+  }
 
   return (
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
+    <GoogleOAuthProvider clientId={googleClientId || ''}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
         
