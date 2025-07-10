@@ -7,6 +7,12 @@ export interface User {
   email: string;
   username: string;
   token: string;
+  authMethod?: 'local' | 'google';
+  googleProfile?: {
+    name: string;
+    picture: string;
+    locale: string;
+  };
 }
 
 export const useAuth = () => {
@@ -35,6 +41,8 @@ export const useAuth = () => {
         email: data.user?.email || credentials.email || '',
         username: data.user?.username || credentials.username || '',
         token: data.token,
+        authMethod: data.user?.authMethod || 'local',
+        googleProfile: data.user?.googleProfile,
       };
       
       setUser(userData);
@@ -49,6 +57,39 @@ export const useAuth = () => {
       return { success: true };
     } catch (error: any) {
       const message = error.message || 'Login failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const googleLogin = useCallback(async (idToken: string) => {
+    setIsLoading(true);
+    try {
+      const data = await api.googleAuth(idToken);
+      const userData: User = {
+        id: data.userId,
+        email: data.user?.email || '',
+        username: data.user?.username || '',
+        token: data.token,
+        authMethod: data.user?.authMethod || 'google',
+        googleProfile: data.user?.googleProfile,
+      };
+      
+      setUser(userData);
+      setToken(data.token);
+      localStorage.setItem('authToken', data.token);
+      localStorage.setItem('currentUser', JSON.stringify(userData));
+      
+      const displayName = userData.googleProfile?.name || userData.username || userData.email;
+      toast.success(`Welcome back, ${displayName}! 🎉`, {
+        duration: 8000,
+      });
+      
+      return { success: true };
+    } catch (error: any) {
+      const message = error.message || 'Google login failed';
       toast.error(message);
       return { success: false, error: message };
     } finally {
@@ -88,6 +129,7 @@ export const useAuth = () => {
     isAuthenticated,
     isLoading,
     login,
+    googleLogin,
     register,
     logout,
   };

@@ -8,4 +8,7 @@ router.post('/register', authController.register);
 // Login route
 router.post('/login', authController.login);
 
+// Google OAuth route
+router.post('/google', authController.googleAuth);
+
 module.exports = router;

@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline, IconButton } from '@mui/material';
 import { Toaster, toast, ToastBar, type Toast } from 'react-hot-toast';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
 import LandingPage from './components/auth/LandingPage';
@@ -22,9 +23,14 @@ const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }: { ch
   return <>{children}</>;
 };
 
-// Landing Page with Navigation
-const LandingPageWithNavigation: React.FC = () => {
+// Root Route Component
+const RootRoute: React.FC = () => {
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
+  
+  if (isAuthenticated && user) {
+    return <MainApp />;
+  }
   
   return (
     <LandingPage 
@@ -46,12 +52,17 @@ const LoginFormWithNavigation: React.FC = () => {
     }
     return result;
   };
+
+  const handleGoogleLoginSuccess = () => {
+    navigate('/');
+  };
   
   return (
     <LoginForm 
       onLogin={handleLogin}
       onSwitchToRegister={() => navigate('/register')}
       isLoading={isLoading}
+      onGoogleLoginSuccess={handleGoogleLoginSuccess}
     />
   );
 };
@@ -61,101 +72,104 @@ const RegisterFormWithNavigation: React.FC = () => {
   const navigate = useNavigate();
   const { register, isLoading } = useAuth();
   
+  const handleGoogleLoginSuccess = () => {
+    navigate('/');
+  };
+  
   return (
     <RegisterForm 
       onRegister={register}
       onSwitchToLogin={() => navigate('/auth')}
       isLoading={isLoading}
+      onGoogleLoginSuccess={handleGoogleLoginSuccess}
     />
   );
-};
-
-// Root Route Component - handles both authenticated and unauthenticated states
-const RootRoute: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
-  
-  if (isAuthenticated && user) {
-    return <MainApp />;
-  }
-  
-  return <LandingPageWithNavigation />;
 };
 
 const App: React.FC = () => {
   const { theme } = useTheme();
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline enableColorScheme />
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 6000,
-          style: {
-            borderRadius: '8px',
-            background: theme.palette.background.paper,
-            color: theme.palette.text.primary,
-            border: `1px solid ${theme.palette.divider}`,
-            fontSize: '14px',
-            display: 'flex',
-            alignItems: 'center',
-          },
-          success: {
-            iconTheme: {
-              primary: theme.palette.success?.main || '#22c55e',
-              secondary: theme.palette.common.white,
+    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID || ''}>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        
+        {/* Custom Toast Styling */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: theme.palette.mode === 'dark' ? '#333' : '#fff',
+              color: theme.palette.mode === 'dark' ? '#fff' : '#333',
+              border: `1px solid ${theme.palette.divider}`,
+              borderRadius: '8px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             },
-          },
-          error: {
-            iconTheme: {
-              primary: theme.palette.error?.main || '#ef4444',
-              secondary: theme.palette.common.white,
+            success: {
+              iconTheme: {
+                primary: theme.palette.success.main,
+                secondary: theme.palette.common.white,
+              },
             },
-          },
-        }}
-      >
-        {(t: Toast) => (
-          <ToastBar toast={t} style={{ ...t.style }}>
-            {({ icon, message }: { icon?: React.ReactNode; message?: React.ReactNode }) => (
-              <>
-                {icon}
-                <span style={{ flex: 1, marginLeft: 8 }}>{message}</span>
-                <IconButton
-                  size="small"
-                  onClick={() => toast.dismiss(t.id)}
-                  sx={{ ml: 1, color: theme.palette.text.secondary }}
-                  aria-label="Dismiss"
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </>
-            )}
-          </ToastBar>
-        )}
-      </Toaster>
-      <Router>
-        <Routes>
-          {/* Root route - shows landing page or main app based on auth state */}
-          <Route path="/" element={<RootRoute />} />
-          
-          {/* Public routes */}
-          <Route path="/auth" element={
-            <PublicRoute>
-              <LoginFormWithNavigation />
-            </PublicRoute>
-          } />
-          
-          <Route path="/register" element={
-            <PublicRoute>
-              <RegisterFormWithNavigation />
-            </PublicRoute>
-          } />
-          
-          {/* Catch-all route for any other paths - redirect to root */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+            error: {
+              iconTheme: {
+                primary: theme.palette.error.main,
+                secondary: theme.palette.common.white,
+              },
+            },
+          }}
+        >
+          {(t: Toast) => (
+            <ToastBar toast={t}>
+              {({ icon, message }) => (
+                <>
+                  {icon}
+                  {message}
+                  {t.type !== 'loading' && (
+                    <IconButton
+                      size="small"
+                      onClick={() => toast.dismiss(t.id)}
+                      sx={{
+                        color: theme.palette.text.secondary,
+                        '&:hover': {
+                          color: theme.palette.text.primary,
+                        },
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </>
+              )}
+            </ToastBar>
+          )}
+        </Toaster>
+
+        <Router>
+          <Routes>
+            {/* Root route - shows landing page or main app based on auth state */}
+            <Route path="/" element={<RootRoute />} />
+            
+            {/* Public routes */}
+            <Route path="/auth" element={
+              <PublicRoute>
+                <LoginFormWithNavigation />
+              </PublicRoute>
+            } />
+            
+            <Route path="/register" element={
+              <PublicRoute>
+                <RegisterFormWithNavigation />
+              </PublicRoute>
+            } />
+            
+            {/* Catch-all route for any other paths - redirect to root */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </GoogleOAuthProvider>
   );
 };
 

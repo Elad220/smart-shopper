@@ -126,6 +126,15 @@ export const loginUserFlexible = async (payload: { email?: string; username?: st
   return handleResponse<AuthResponse>(response);
 };
 
+export const googleAuth = async (accessToken: string): Promise<AuthResponse> => {
+  const response = await fetch(`${BASE_URL}/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accessToken }),
+  });
+  return handleResponse<AuthResponse>(response);
+};
+
 // New functions for user API key and smart assistant
 export const saveApiKey = async (token: string, apiKey: string): Promise<{ message: string }> => {
     const response = await fetch(`${BASE_URL}/api/user/api-key`, {

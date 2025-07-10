@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const userSchema = new mongoose.Schema({
   username: {
     type: String,
-    required: true,
+    required: function() { return !this.googleId; }, // Required only if not Google user
     unique: true,
     trim: true,
     minlength: [3, 'Username must be at least 3 characters.'],
@@ -20,7 +20,24 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    required: function() { return !this.googleId; }, // Required only if not Google user
+  },
+  // Google OAuth fields
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple null values
+  },
+  googleProfile: {
+    name: String,
+    picture: String,
+    locale: String,
+  },
+  // Authentication method
+  authMethod: {
+    type: String,
+    enum: ['local', 'google'],
+    default: 'local'
   },
   customCategories: {
     type: [String],
@@ -75,9 +92,9 @@ const userSchema = new mongoose.Schema({
   }
 });
 
-// Hash password before saving
+// Hash password before saving (only for local auth)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);
@@ -90,7 +107,13 @@ userSchema.pre('save', async function(next) {
 
 // Method to compare passwords
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
   return bcrypt.compare(candidatePassword, this.password);
+};
+
+// Method to check if user is Google user
+userSchema.methods.isGoogleUser = function() {
+  return this.authMethod === 'google' || !!this.googleId;
 };
 
 module.exports = mongoose.model('User', userSchema);

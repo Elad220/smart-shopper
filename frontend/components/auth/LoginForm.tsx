@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Box, Container, Paper, TextField, Button, Typography,
-  Link, InputAdornment, IconButton, Stack, useTheme
+  Link, InputAdornment, IconButton, Stack, useTheme, LinearProgress, Divider
 } from '@mui/material';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, ShoppingCart } from 'lucide-react';
+import GoogleLoginButton from './GoogleLoginButton';
 
 interface LoginFormProps {
-  onLogin: (credentials: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
+  onLogin: (data: { email: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   onSwitchToRegister: () => void;
   isLoading: boolean;
+  onGoogleLoginSuccess?: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLoading }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLoading, onGoogleLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -40,160 +42,166 @@ const LoginForm: React.FC<LoginFormProps> = ({ onLogin, onSwitchToRegister, isLo
       display: 'flex',
       alignItems: 'center',
       background: `linear-gradient(135deg, ${theme.palette.primary.main}15 0%, ${theme.palette.secondary.main}15 100%)`,
+      py: 4,
     }}>
       <Container maxWidth="sm">
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 0.5 }}
         >
           <Paper
-            elevation={0}
+            elevation={3}
             sx={{
               p: 4,
-              borderRadius: '24px',
-              background: theme.palette.mode === 'dark'
-                ? 'rgba(255, 255, 255, 0.05)'
+              borderRadius: '16px',
+              background: theme.palette.mode === 'dark' 
+                ? 'rgba(255, 255, 255, 0.05)' 
                 : 'rgba(255, 255, 255, 0.8)',
-              backdropFilter: 'blur(20px)',
+              backdropFilter: 'blur(10px)',
               border: `1px solid ${theme.palette.divider}`,
             }}
           >
-            {/* Header */}
-            <Box textAlign="center" sx={{ mb: 4 }}>
-              <Box
-                sx={{
-                  width: 80,
-                  height: 80,
-                  borderRadius: '20px',
-                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  mx: 'auto',
-                  mb: 3,
-                }}
+            <Box sx={{ textAlign: 'center', mb: 4 }}>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                style={{ display: 'inline-block', marginBottom: '16px' }}
               >
-                <ShoppingCart size={40} color="white" />
-              </Box>
-              
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                Welcome Back!
+                <ShoppingCart size={48} color={theme.palette.primary.main} />
+              </motion.div>
+              <Typography variant="h4" component="h1" gutterBottom sx={{ fontWeight: 700 }}>
+                Welcome Back
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 Sign in to your Smart Shopper account
               </Typography>
             </Box>
 
-            {/* Error Message */}
-            {error && (
-              <Box sx={{ 
-                p: 2, 
-                mb: 3, 
-                borderRadius: '12px', 
-                background: `${theme.palette.error.main}10`,
-                border: `1px solid ${theme.palette.error.light}`,
-              }}>
-                <Typography color="error" variant="body2">{error}</Typography>
-              </Box>
-            )}
+            {/* Google Login Button */}
+            <Box sx={{ mb: 3 }}>
+              <GoogleLoginButton
+                fullWidth
+                size="large"
+                onSuccess={onGoogleLoginSuccess}
+                onError={(error) => setError(error)}
+              />
+            </Box>
 
-            {/* Login Form */}
-            <form onSubmit={handleSubmit}>
-              <Stack spacing={3}>
-                <TextField
-                  fullWidth
-                  label="Email or Username"
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  disabled={isLoading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Mail size={20} />
-                      </InputAdornment>
-                    ),
-                    sx: { borderRadius: '12px' },
-                  }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock size={20} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                          size="small"
-                        >
-                          {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                    sx: { borderRadius: '12px' },
-                  }}
-                />
-
-                <Button
-                  type="submit"
-                  fullWidth
-                  size="large"
-                  disabled={isLoading}
-                  endIcon={<ArrowRight size={20} />}
-                  sx={{
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontSize: '1.1rem',
-                    fontWeight: 600,
-                    py: 1.5,
-                    color: theme.palette.common.white,
-                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
-                    '&:hover': {
-                      color: theme.palette.common.white,
-                      background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.primary.main})`,
-                    },
-                    '&:disabled': {
-                      background: theme.palette.action.disabledBackground,
-                      color: `${theme.palette.common.white} !important`,
-                      opacity: 0.7,
-                    },
-                  }}
-                >
-                  {isLoading ? 'Signing In...' : 'Sign In'}
-                </Button>
-              </Stack>
-            </form>
-
-            {/* Sign Up Link */}
-            <Box textAlign="center" sx={{ mt: 4 }}>
+            <Divider sx={{ my: 3 }}>
               <Typography variant="body2" color="text.secondary">
-                Don't have an account?{' '}
+                or continue with email
+              </Typography>
+            </Divider>
+
+            <Box component="form" onSubmit={handleSubmit} noValidate>
+              {error && (
+                <Typography color="error" variant="body2" sx={{ mb: 2, textAlign: 'center' }}>
+                  {error}
+                </Typography>
+              )}
+
+              <TextField
+                fullWidth
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                margin="normal"
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Mail size={20} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                  },
+                }}
+              />
+
+              <TextField
+                fullWidth
+                label="Password"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                margin="normal"
+                required
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Lock size={20} color={theme.palette.text.secondary} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                      >
+                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '8px',
+                  },
+                }}
+              />
+
+              {isLoading && (
+                <LinearProgress sx={{ mt: 2, borderRadius: '4px' }} />
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                size="large"
+                disabled={isLoading}
+                endIcon={<ArrowRight size={20} />}
+                sx={{
+                  mt: 3,
+                  mb: 2,
+                  borderRadius: '8px',
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  fontSize: '1rem',
+                  py: 1.5,
+                  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                  '&:hover': {
+                    background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
+                  },
+                }}
+              >
+                {isLoading ? 'Signing in...' : 'Sign In'}
+              </Button>
+
+              <Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
+                <Typography variant="body2" color="text.secondary">
+                  Don't have an account?
+                </Typography>
                 <Link
                   component="button"
-                  type="button"
+                  variant="body2"
                   onClick={onSwitchToRegister}
                   sx={{
-                    fontWeight: 600,
                     textDecoration: 'none',
-                    color: theme.palette.primary.main,
-                    '&:hover': { textDecoration: 'underline' },
+                    fontWeight: 600,
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
                   }}
                 >
-                  Create one here
+                  Sign up
                 </Link>
-              </Typography>
+              </Stack>
             </Box>
           </Paper>
         </motion.div>
