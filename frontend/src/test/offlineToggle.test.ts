@@ -33,7 +33,7 @@ describe('offline toggle flow', () => {
     globalThis.fetch = fetchMock;
 
     // Call PUT toggle completed
-    const response = await fetch(`${BASE}/api/shopping-lists/${listId}/items/${itemId}`, {
+    await fetch(`${BASE}/api/shopping-lists/${listId}/items/${itemId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ completed: true })

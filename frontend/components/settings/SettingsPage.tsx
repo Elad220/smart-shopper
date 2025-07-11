@@ -132,7 +132,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
     }
   };
 
-  const handleLanguageChange = async (newLanguage: string) => {
+  const handleLanguageChange = async (newLanguage: 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'zh' | 'ja' | 'ko' | 'ar' | 'hi' | 'he') => {
     setIsUpdatingLanguage(true);
     setError(null);
     setSuccess(null);
