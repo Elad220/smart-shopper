@@ -381,7 +381,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
                   labelId="ai-language-label"
                   value={aiLanguage}
                   label="AI Reply Language"
-                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  onChange={(e) => handleLanguageChange(e.target.value as 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'zh' | 'ja' | 'ko' | 'ar' | 'hi' | 'he')}
                   disabled={isUpdatingLanguage}
                   sx={{
                     borderRadius: '8px',
