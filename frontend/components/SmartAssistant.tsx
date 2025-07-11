@@ -592,11 +592,6 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isLoading || !hasApiKey}
                   sx={{
-                    width: isMobile ? 48 : 56,
-                    height: isMobile ? 48 : 56,
-                    minWidth: 44,
-                    minHeight: 44,
-                    ml: isMobile ? 0.5 : 1,
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                     '&:hover': {
                       background: `linear-gradient(135deg, ${theme.palette.primary.dark}, ${theme.palette.secondary.dark})`,
