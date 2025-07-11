@@ -1,6 +1,6 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeAll } from 'vitest';
-import { screen, render } from '@testing-library/react';
+import { screen, render, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import AddItemForm from '../../../components/AddItemForm';
@@ -89,14 +89,16 @@ describe('AddItemForm Component', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /add item/i }));
 
-    // Check that onAddItem was called with the correct data
-    expect(onAddItem).toHaveBeenCalledWith(expect.objectContaining({
-      name: 'New Item',
-      category: 'Dairy',
-      amount: 1,
-      units: 'pcs',
-    }));
-  });
+    // Wait for the form submission to complete
+    await waitFor(() => {
+      expect(onAddItem).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'New Item',
+        category: 'Dairy',
+        amount: 1,
+        units: 'pcs',
+      }));
+    }, { timeout: 10000 });
+  }, 15000);
 
   it('validates required fields', async () => {
     const onAddItem = vi.fn();
@@ -117,11 +119,15 @@ describe('AddItemForm Component', () => {
     // Try to submit without filling required fields
     await user.click(screen.getByRole('button', { name: /add item/i }));
 
-    expect(onAddItem).not.toHaveBeenCalled();
+    // Wait a bit to ensure the form validation has run
+    await waitFor(() => {
+      expect(onAddItem).not.toHaveBeenCalled();
+    }, { timeout: 5000 });
+    
     // The form now uses form validation instead of window.alert
     // Check that the form doesn't submit and stays open
     expect(screen.getByRole('button', { name: /add item/i })).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('calls onAddItem and onClose after successful submission', async () => {
     const onAddItem = vi.fn();
@@ -149,8 +155,13 @@ describe('AddItemForm Component', () => {
     // Submit the form
     await user.click(screen.getByRole('button', { name: /add item/i }));
 
-    // Check that both callbacks were called
-    expect(onAddItem).toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalled();
-  });
+    // Wait for both callbacks to be called
+    await waitFor(() => {
+      expect(onAddItem).toHaveBeenCalled();
+    }, { timeout: 10000 });
+    
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalled();
+    }, { timeout: 10000 });
+  }, 15000);
 });

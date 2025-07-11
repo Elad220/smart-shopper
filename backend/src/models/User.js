@@ -84,6 +84,11 @@ const userSchema = new mongoose.Schema({
       type: String,
       enum: ['daily', 'weekly', 'biweekly', 'monthly'],
       default: 'weekly'
+    },
+    aiLanguage: {
+      type: String,
+      enum: ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'zh', 'ja', 'ko', 'ar', 'hi', 'he'],
+      default: 'en'
     }
   },
   createdAt: {

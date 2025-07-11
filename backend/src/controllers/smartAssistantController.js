@@ -42,10 +42,14 @@ exports.chat = async (req, res) => {
             parts: [{ text: msg.content }]
         }));
 
-        // Add the new user message
+        // Add language instruction based on user preference
+        const languageInstruction = getLanguageInstruction(user.preferences?.aiLanguage || 'en');
+        
+        // Add the new user message with language instruction
+        const messageWithLanguage = `${languageInstruction}\n\nUser message: ${message}`;
         conversationHistory.push({
             role: 'user',
-            parts: [{ text: message }]
+            parts: [{ text: messageWithLanguage }]
         });
 
         // Create the chat session
@@ -58,7 +62,7 @@ exports.chat = async (req, res) => {
         });
 
         // Send the message and get response
-        const result = await chat.sendMessage(message);
+        const result = await chat.sendMessage(messageWithLanguage);
         const response = await result.response;
 
         if (!response.text) {
@@ -190,7 +194,12 @@ exports.generateItems = async (req, res) => {
 
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", safetySettings });
 
-        const fullPrompt = `Based on the theme "${prompt}", generate a list of 5-10 shopping items. For each item, suggest a relevant category from the following list: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other. Format the output as a JSON array of objects, where each object has a "name" and "category" property. For example: [{"name": "Taco Shells", "category": "Pantry"}]`;
+        // Add language instruction based on user preference
+        const languageInstruction = getLanguageInstruction(user.preferences?.aiLanguage || 'en');
+        
+        const fullPrompt = `${languageInstruction}
+
+Based on the theme "${prompt}", generate a list of 5-10 shopping items. For each item, suggest a relevant category from the following list: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other. Format the output as a JSON array of objects, where each object has a "name" and "category" property. For example: [{"name": "Taco Shells", "category": "Pantry"}]`;
 
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
@@ -275,7 +284,12 @@ exports.autofillItemDetails = async (req, res) => {
         // Build context from user preferences
         const userContext = buildUserContext(user);
         
-        const fullPrompt = `Based on the item name "${itemName.trim()}", suggest appropriate values for a shopping list item. Consider the user's context: ${userContext}
+        // Add language instruction based on user preference
+        const languageInstruction = getLanguageInstruction(user.preferences?.aiLanguage || 'en');
+        
+        const fullPrompt = `${languageInstruction}
+
+Based on the item name "${itemName.trim()}", suggest appropriate values for a shopping list item. Consider the user's context: ${userContext}
 
 Available categories: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other
 Available units: pcs, kg, g, lb, oz, l, ml, cups, tbsp, tsp, packs, bottles, cans, boxes, bags, loaves, bunches, dozen, lbs, gallon, quart, pint
@@ -341,3 +355,24 @@ Make the suggestions practical and consider typical household usage patterns.`;
         res.status(500).json({ message: error.message || 'Failed to autofill item details.' });
     }
 };
+
+// Helper function to get language instruction for AI
+function getLanguageInstruction(languageCode) {
+    const languageInstructions = {
+        'en': 'Please respond in English.',
+        'es': 'Por favor, responde en español.',
+        'fr': 'Veuillez répondre en français.',
+        'de': 'Bitte antworten Sie auf Deutsch.',
+        'it': 'Per favore, rispondi in italiano.',
+        'pt': 'Por favor, responda em português.',
+        'ru': 'Пожалуйста, отвечайте на русском языке.',
+        'zh': '请用中文回答。',
+        'ja': '日本語でお答えください。',
+        'ko': '한국어로 답변해 주세요.',
+        'ar': 'يرجى الرد باللغة العربية.',
+        'hi': 'कृपया हिंदी में जवाब दें।',
+        'he': 'אנא ענה בעברית.'
+    };
+    
+    return languageInstructions[languageCode] || languageInstructions['en'];
+}

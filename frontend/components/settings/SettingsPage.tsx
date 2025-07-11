@@ -14,10 +14,14 @@ import {
   CircularProgress,
   useTheme,
   alpha,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
-import { User, Key, Shield, Info } from 'lucide-react';
+import { User, Key, Shield, Info, MessageCircle } from 'lucide-react';
 import { User as UserType } from '../../hooks/useAuth';
-import { saveApiKey, removeApiKey, checkApiKeyStatus } from '../../src/services/api';
+import { saveApiKey, removeApiKey, checkApiKeyStatus, updateUserPreferences, getChatHistory } from '../../src/services/api';
 
 interface SettingsPageProps {
   user: UserType;
@@ -33,6 +37,24 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [aiLanguage, setAiLanguage] = useState('en');
+  const [isUpdatingLanguage, setIsUpdatingLanguage] = useState(false);
+
+  const languageOptions = [
+    { code: 'en', name: 'English' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'pt', name: 'Português' },
+    { code: 'ru', name: 'Русский' },
+    { code: 'zh', name: '中文' },
+    { code: 'ja', name: '日本語' },
+    { code: 'ko', name: '한국어' },
+    { code: 'ar', name: 'العربية' },
+    { code: 'hi', name: 'हिंदी' },
+    { code: 'he', name: 'עברית' }
+  ];
 
   useEffect(() => {
     const fetchApiKeyStatus = async () => {
@@ -50,7 +72,19 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
       }
     };
 
+    const fetchUserPreferences = async () => {
+      try {
+        const { preferences } = await getChatHistory(user.token);
+        if (preferences?.aiLanguage) {
+          setAiLanguage(preferences.aiLanguage as 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'zh' | 'ja' | 'ko' | 'ar' | 'hi' | 'he');
+        }
+      } catch (err) {
+        console.error("Could not load user preferences:", err);
+      }
+    };
+
     fetchApiKeyStatus();
+    fetchUserPreferences();
   }, [user.token]);
 
   const handleSaveApiKey = async () => {
@@ -95,6 +129,22 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
   const handleApiKeyFocus = () => {
     if (apiKey === API_KEY_PLACEHOLDER) {
       setApiKey('');
+    }
+  };
+
+  const handleLanguageChange = async (newLanguage: string) => {
+    setIsUpdatingLanguage(true);
+    setError(null);
+    setSuccess(null);
+    
+    try {
+      await updateUserPreferences(user.token, { aiLanguage: newLanguage });
+      setAiLanguage(newLanguage);
+      setSuccess("AI language preference updated successfully!");
+    } catch (err: any) {
+      setError(err.message || "Failed to update language preference.");
+    } finally {
+      setIsUpdatingLanguage(false);
     }
   };
 
@@ -296,25 +346,64 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ user }) => {
           </CardContent>
         </Card>
 
-        {/* Additional Settings Card - Placeholder for future features */}
+        {/* AI Language Settings */}
         <Card 
           sx={{ 
             borderRadius: '16px',
             border: `1px solid ${theme.palette.divider}`,
-            opacity: 0.7,
           }}
         >
           <CardContent sx={{ p: 3 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-              <Shield size={24} color={theme.palette.text.secondary} />
-              <Typography variant="h6" sx={{ fontWeight: 600, color: theme.palette.text.secondary }}>
-                Additional Settings
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+              <MessageCircle size={24} color={theme.palette.primary.main} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                AI Language Settings
               </Typography>
             </Box>
-            
-            <Typography variant="body2" color="text.secondary">
-              More settings and preferences will be available in future updates.
-            </Typography>
+
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3,
+                background: alpha(theme.palette.background.paper, 0.6),
+                border: `1px solid ${theme.palette.divider}`,
+                borderRadius: '8px',
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Choose the language for AI assistant responses. The AI will respond in your selected language.
+              </Typography>
+              
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <InputLabel id="ai-language-label">AI Reply Language</InputLabel>
+                <Select
+                  labelId="ai-language-label"
+                  value={aiLanguage}
+                  label="AI Reply Language"
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  disabled={isUpdatingLanguage}
+                  sx={{
+                    borderRadius: '8px',
+                  }}
+                >
+                  {languageOptions.map((option) => (
+                    <MenuItem key={option.code} value={option.code}>
+                      {option.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
+              {isUpdatingLanguage && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <CircularProgress size={20} />
+                  <Typography variant="body2">
+                    Updating language preference...
+                  </Typography>
+                </Box>
+              )}
+            </Paper>
           </CardContent>
         </Card>
       </Stack>

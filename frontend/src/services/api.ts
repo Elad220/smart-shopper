@@ -383,6 +383,7 @@ export interface UserPreferences {
     householdSize?: number;
     budgetPreference?: 'budget' | 'moderate' | 'premium';
     shoppingFrequency?: 'daily' | 'weekly' | 'biweekly' | 'monthly';
+    aiLanguage?: 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt' | 'ru' | 'zh' | 'ja' | 'ko' | 'ar' | 'hi' | 'he';
 }
 
 export interface ChatHistoryResponse {
@@ -439,13 +440,13 @@ export const clearChatHistory = async (token: string): Promise<{ message: string
 };
 
 export const updateUserPreferences = async (token: string, preferences: Partial<UserPreferences>): Promise<{ message: string; preferences: UserPreferences }> => {
-    const response = await fetch(`${BASE_URL}/api/user/preferences`, {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/preferences`, {
         method: 'PUT',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(preferences),
+        body: JSON.stringify({ preferences }),
     });
     return handleResponse<{ message: string; preferences: UserPreferences }>(response);
 };
