@@ -575,7 +575,6 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
                       backdropFilter: 'blur(10px)',
                       border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
                       fontSize: isMobile ? '0.98rem' : '1rem',
-                      padding: isMobile ? '10px' : undefined,
                       '&:hover': {
                         borderColor: theme.palette.primary.main,
                       },
