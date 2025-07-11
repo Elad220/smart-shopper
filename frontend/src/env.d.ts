@@ -9,3 +9,18 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+// SVG element type definitions
+declare namespace JSX {
+  interface IntrinsicElements {
+    svg: React.SVGProps<SVGSVGElement>;
+    defs: React.SVGProps<SVGDefsElement>;
+    linearGradient: React.SVGProps<SVGLinearGradientElement>;
+    stop: React.SVGProps<SVGStopElement>;
+    rect: React.SVGProps<SVGRectElement>;
+    text: React.SVGProps<SVGTextElement>;
+    g: React.SVGProps<SVGGElement>;
+    path: React.SVGProps<SVGPathElement>;
+    circle: React.SVGProps<SVGCircleElement>;
+  }
+}
