@@ -11,6 +11,9 @@ router.get('/chat/history', smartAssistantController.getChatHistory);
 router.delete('/chat/history', smartAssistantController.clearChatHistory);
 router.put('/preferences', smartAssistantController.updatePreferences);
 
+// Autofill item details
+router.post('/autofill', smartAssistantController.autofillItemDetails);
+
 // Original item generation (kept for backward compatibility)
 router.post('/generate', smartAssistantController.generateItems);
 

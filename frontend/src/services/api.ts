@@ -402,6 +402,27 @@ export const sendChatMessage = async (token: string, message: string): Promise<{
     return handleResponse<{ message: string; timestamp: Date }>(response);
 };
 
+// Autofill item details
+export interface AutofillItemDetails {
+    category: string;
+    amount: number;
+    units: string;
+    priority: 'Low' | 'Medium' | 'High';
+    notes: string;
+}
+
+export const autofillItemDetails = async (token: string, itemName: string): Promise<AutofillItemDetails> => {
+    const response = await fetch(`${BASE_URL}/api/smart-assistant/autofill`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ itemName }),
+    });
+    return handleResponse<AutofillItemDetails>(response);
+};
+
 export const getChatHistory = async (token: string): Promise<ChatHistoryResponse> => {
     const response = await fetch(`${BASE_URL}/api/smart-assistant/chat/history`, {
         headers: { 'Authorization': `Bearer ${token}` },

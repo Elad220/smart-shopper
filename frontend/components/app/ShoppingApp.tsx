@@ -468,6 +468,7 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
           onClose={() => !isAddingItem && setIsAddModalOpen(false)}
           onAdd={handleAddItem}
           isLoading={isAddingItem}
+          token={user.token}
         />
 
         {/* Edit Item Modal */}

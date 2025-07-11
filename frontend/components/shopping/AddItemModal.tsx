@@ -10,6 +10,8 @@ import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Package, X, Upload, Trash2, Sparkles, ImageIcon } from 'lucide-react';
 import NewCategoryModal from './NewCategoryModal';
+import { autofillItemDetails } from '../../src/services/api';
+import toast from 'react-hot-toast';
 
 interface AddItemModalProps {
   open: boolean;
@@ -24,9 +26,10 @@ interface AddItemModalProps {
     imageUrl?: string;
   }) => Promise<void>;
   isLoading?: boolean;
+  token?: string | null;
 }
 
-const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoading = false }) => {
+const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoading = false, token }) => {
   const theme = useTheme();
   const [formData, setFormData] = useState({
     name: '',
@@ -40,6 +43,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
   
   const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [isNewCategoryModalOpen, setIsNewCategoryModalOpen] = useState(false);
+  const [isAutofilling, setIsAutofilling] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Load custom categories from localStorage
@@ -124,7 +128,35 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
     }
   };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+  const handleAutofill = async () => {
+    if (!token || !formData.name.trim()) {
+      toast.error('Please enter an item name first');
+      return;
+    }
+
+    setIsAutofilling(true);
+    try {
+      const autofilledData = await autofillItemDetails(token, formData.name.trim());
+      
+      setFormData(prev => ({
+        ...prev,
+        category: autofilledData.category,
+        amount: autofilledData.amount,
+        units: autofilledData.units,
+        priority: autofilledData.priority,
+        notes: autofilledData.notes,
+      }));
+
+      toast.success('Item details autofilled! ✨');
+    } catch (error: any) {
+      console.error('Autofill error:', error);
+      toast.error(error.message || 'Failed to autofill item details');
+    } finally {
+      setIsAutofilling(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.name.trim() && formData.category && formData.category !== '') {
       // Ensure imageUrl is included in the data being sent
@@ -328,33 +360,68 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                   >
                     <Stack spacing={4} sx={{ mt: 1 }}>
                       <motion.div whileHover={{ scale: 1.02 }} transition={{ duration: 0.2 }}>
-                        <TextField
-                          fullWidth
-                          label="Item Name"
-                          value={formData.name}
-                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          required
-                          autoFocus
-                          sx={{ 
-                            '& .MuiOutlinedInput-root': { 
-                              borderRadius: '16px',
-                              background: 'rgba(255, 255, 255, 0.05)',
-                              backdropFilter: 'blur(10px)',
-                              transition: 'all 0.3s ease',
-                              '&:hover': {
-                                background: 'rgba(255, 255, 255, 0.08)',
-                                transform: 'translateY(-1px)',
+                        <Stack direction="row" spacing={2} alignItems="flex-end">
+                          <TextField
+                            fullWidth
+                            label="Item Name"
+                            value={formData.name}
+                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                            required
+                            autoFocus
+                            disabled={isAutofilling}
+                            sx={{ 
+                              '& .MuiOutlinedInput-root': { 
+                                borderRadius: '16px',
+                                background: 'rgba(255, 255, 255, 0.05)',
+                                backdropFilter: 'blur(10px)',
+                                transition: 'all 0.3s ease',
+                                '&:hover': {
+                                  background: 'rgba(255, 255, 255, 0.08)',
+                                  transform: 'translateY(-1px)',
+                                },
+                                '&.Mui-focused': {
+                                  background: 'rgba(255, 255, 255, 0.1)',
+                                  boxShadow: `0 0 20px ${theme.palette.primary.main}30`,
+                                }
                               },
-                              '&.Mui-focused': {
-                                background: 'rgba(255, 255, 255, 0.1)',
-                                boxShadow: `0 0 20px ${theme.palette.primary.main}30`,
+                              '& .MuiInputLabel-root': {
+                                fontWeight: 500,
                               }
-                            },
-                            '& .MuiInputLabel-root': {
-                              fontWeight: 500,
-                            }
-                          }}
-                        />
+                            }}
+                          />
+                          {token && (
+                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                              <Button
+                                variant="outlined"
+                                onClick={handleAutofill}
+                                disabled={!formData.name.trim() || isAutofilling || isLoading}
+                                startIcon={isAutofilling ? <CircularProgress size={16} /> : <Sparkles size={16} />}
+                                sx={{
+                                  borderRadius: '16px',
+                                  textTransform: 'none',
+                                  height: '56px',
+                                  minWidth: '120px',
+                                  background: 'rgba(255, 255, 255, 0.05)',
+                                  backdropFilter: 'blur(10px)',
+                                  border: `1px solid ${theme.palette.secondary.main}`,
+                                  color: theme.palette.secondary.main,
+                                  '&:hover': {
+                                    background: `${theme.palette.secondary.main}10`,
+                                    borderColor: theme.palette.secondary.dark,
+                                    transform: 'translateY(-1px)',
+                                    boxShadow: `0 8px 25px ${theme.palette.secondary.main}20`,
+                                  },
+                                  '&:disabled': {
+                                    background: theme.palette.action.disabledBackground,
+                                    color: theme.palette.action.disabled,
+                                  }
+                                }}
+                              >
+                                {isAutofilling ? 'Filling...' : 'Autofill'}
+                              </Button>
+                            </motion.div>
+                          )}
+                        </Stack>
                       </motion.div>
 
                       {/* Enhanced Image Upload Section */}
@@ -413,6 +480,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                               component="label"
                               fullWidth
                               startIcon={<Upload size={20} />}
+                              disabled={isAutofilling}
                               sx={{
                                 borderRadius: '20px',
                                 borderStyle: 'dashed',
@@ -454,6 +522,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                               onChange={(e) => setFormData({ ...formData, amount: Math.max(1, Number(e.target.value)) })}
                               label="Amount"
                               inputProps={{ min: 1 }}
+                              disabled={isAutofilling}
                               sx={{ 
                                 borderRadius: '16px',
                                 background: 'rgba(255, 255, 255, 0.05)',
@@ -466,7 +535,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                 <InputAdornment position="start">
                                   <IconButton
                                     onClick={() => setFormData({ ...formData, amount: Math.max(1, formData.amount - 1) })}
-                                    disabled={formData.amount <= 1}
+                                    disabled={formData.amount <= 1 || isAutofilling}
                                     size="small"
                                   >
                                     <KeyboardArrowDownIcon />
@@ -477,6 +546,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                                 <InputAdornment position="end">
                                   <IconButton
                                     onClick={() => setFormData({ ...formData, amount: formData.amount + 1 })}
+                                    disabled={isAutofilling}
                                     size="small"
                                   >
                                     <KeyboardArrowUpIcon />
@@ -492,6 +562,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                             label="Units"
                             value={formData.units}
                             onChange={(e) => setFormData({ ...formData, units: e.target.value })}
+                            disabled={isAutofilling}
                             sx={{ 
                               width: '100%',
                               '& .MuiOutlinedInput-root': { 
@@ -521,6 +592,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                             label="Category"
                             value={formData.category}
                             onChange={(e) => handleCategoryChange(e.target.value)}
+                            disabled={isAutofilling}
                             sx={{ 
                               '& .MuiOutlinedInput-root': { 
                                 borderRadius: '16px',
@@ -547,6 +619,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                             label="Priority"
                             value={formData.priority}
                             onChange={(e) => setFormData({ ...formData, priority: e.target.value as 'Low' | 'Medium' | 'High' })}
+                            disabled={isAutofilling}
                             sx={{ 
                               '& .MuiOutlinedInput-root': { 
                                 borderRadius: '16px',
@@ -575,6 +648,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                           rows={3}
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          disabled={isAutofilling}
                           sx={{ 
                             '& .MuiOutlinedInput-root': { 
                               borderRadius: '16px',
@@ -597,7 +671,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} style={{ flex: 1 }}>
                     <Button
                       onClick={handleClose}
-                      disabled={isLoading}
+                      disabled={isLoading || isAutofilling}
                       startIcon={<X size={16} />}
                       sx={{
                         width: '100%',
@@ -621,7 +695,7 @@ const AddItemModal: React.FC<AddItemModalProps> = ({ open, onClose, onAdd, isLoa
                     <Button
                       type="submit"
                       variant="contained"
-                      disabled={isLoading || !formData.name.trim() || !formData.category}
+                      disabled={isLoading || isAutofilling || !formData.name.trim() || !formData.category}
                       startIcon={isLoading ? <CircularProgress size={16} color="inherit" /> : <Package size={16} />}
                       sx={{
                         width: '100%',

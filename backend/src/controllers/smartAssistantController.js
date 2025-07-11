@@ -243,3 +243,101 @@ function buildUserContext(user) {
     
     return context.join('. ');
 }
+
+// Autofill item details using GenAI
+exports.autofillItemDetails = async (req, res) => {
+    try {
+        const { itemName } = req.body;
+        const userId = req.user.userId;
+
+        if (!itemName || !itemName.trim()) {
+            return res.status(400).json({ message: 'Item name is required.' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user || !user.apiKey) {
+            return res.status(400).json({ message: 'API key not configured for this user.' });
+        }
+
+        // Decrypt the API key before using it
+        const decryptedApiKey = decrypt(user.apiKey);
+        const genAI = new GoogleGenerativeAI(decryptedApiKey);
+
+        const safetySettings = [
+            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE },
+        ];
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", safetySettings });
+
+        // Build context from user preferences
+        const userContext = buildUserContext(user);
+        
+        const fullPrompt = `Based on the item name "${itemName.trim()}", suggest appropriate values for a shopping list item. Consider the user's context: ${userContext}
+
+Available categories: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other
+Available units: pcs, kg, g, lb, oz, l, ml, cups, tbsp, tsp, packs, bottles, cans, boxes, bags, loaves, bunches, dozen, lbs, gallon, quart, pint
+Available priorities: Low, Medium, High
+
+Return a JSON object with the following structure:
+{
+  "category": "suggested_category",
+  "amount": suggested_amount_number,
+  "units": "suggested_unit",
+  "priority": "suggested_priority",
+  "notes": "suggested_notes_or_empty_string"
+}
+
+For example, for "bananas" you might return:
+{
+  "category": "Produce",
+  "amount": 1,
+  "units": "bunches",
+  "priority": "Medium",
+  "notes": "Choose ripe bananas for immediate use or green ones for later"
+}
+
+For "milk" you might return:
+{
+  "category": "Dairy",
+  "amount": 1,
+  "units": "gallon",
+  "priority": "High",
+  "notes": "Check expiration date"
+}
+
+Make the suggestions practical and consider typical household usage patterns.`;
+
+        const result = await model.generateContent(fullPrompt);
+        const response = await result.response;
+
+        if (!response.text) {
+            throw new Error("The response was blocked for safety reasons. Please try a different item name.");
+        }
+
+        const text = await response.text();
+        const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const itemDetails = JSON.parse(jsonText);
+
+        // Validate the response structure
+        const requiredFields = ['category', 'amount', 'units', 'priority', 'notes'];
+        const missingFields = requiredFields.filter(field => !(field in itemDetails));
+        
+        if (missingFields.length > 0) {
+            throw new Error(`Invalid response structure. Missing fields: ${missingFields.join(', ')}`);
+        }
+
+        // Ensure amount is a number
+        if (typeof itemDetails.amount !== 'number' || itemDetails.amount < 1) {
+            itemDetails.amount = 1;
+        }
+
+        res.json(itemDetails);
+
+    } catch (error) {
+        console.error("Error in autofill item details:", error);
+        res.status(500).json({ message: error.message || 'Failed to autofill item details.' });
+    }
+};
