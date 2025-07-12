@@ -30,7 +30,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { User as UserType } from '../../hooks/useAuth';
-import { fetchShoppingLists, updateShoppingList, deleteShoppingList, shareShoppingList } from '../../src/services/api';
+import { fetchShoppingLists, deleteShoppingList } from '../../src/services/api';
 import toast from 'react-hot-toast';
 
 interface ShoppingList {
@@ -76,16 +76,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [isLoadingLists, setIsLoadingLists] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-  const [shareEmail, setShareEmail] = useState('');
-  const [sharePermission, setSharePermission] = useState<'read' | 'write'>('read');
-  const [sharingListId, setSharingListId] = useState<string | null>(null);
-  const [sharingListName, setSharingListName] = useState('');
 
-  const menuItems = [
-    { key: 'lists', icon: ListIcon, label: 'Shopping List' },
-    { key: 'settings', icon: Settings, label: 'Settings' },
-  ];
 
   // Load lists when My Lists is expanded
   useEffect(() => {
@@ -125,25 +116,8 @@ const SideMenu: React.FC<SideMenuProps> = ({
 
   const openShareDialog = (list: ShoppingList, e: React.MouseEvent) => {
     e.stopPropagation();
-    setSharingListId(list._id);
-    setSharingListName(list.name);
-    setIsShareDialogOpen(true);
-  };
-
-  const handleShare = async () => {
-    if (!shareEmail.trim()) {
-      toast.error('Please enter an email address');
-      return;
-    }
-
-    try {
-      await shareShoppingList(user.token, sharingListId!, shareEmail.trim(), sharePermission);
-      setIsShareDialogOpen(false);
-      setShareEmail('');
-      toast.success(`List shared with ${shareEmail}`);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to share list');
-    }
+    // Note: Share dialog functionality would need to be implemented separately
+    toast.success('Share functionality coming soon!');
   };
 
   const handleNavigate = (view: 'lists' | 'mylists' | 'settings') => {
