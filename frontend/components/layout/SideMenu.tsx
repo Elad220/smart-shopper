@@ -621,14 +621,12 @@ const SideMenu: React.FC<SideMenuProps> = ({
                                   disabled={!!deletingListId}
                                   sx={{
                                     borderRadius: '4px',
-                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                                    color: 'white',
                                     '&:hover': {
-                                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                                      background: theme.palette.action.hover,
                                     },
                                   }}
                                 >
-                                  <ImportIcon sx={{ fontSize: 12 }} />
+                                  <ImportIcon sx={{ fontSize: 12, color: theme.palette.primary.main }} />
                                 </IconButton>
                               </Tooltip>
                             )}
@@ -644,14 +642,12 @@ const SideMenu: React.FC<SideMenuProps> = ({
                                   disabled={!!deletingListId}
                                   sx={{
                                     borderRadius: '4px',
-                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                                    color: 'white',
                                     '&:hover': {
-                                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                                      background: theme.palette.action.hover,
                                     },
                                   }}
                                 >
-                                  <ExportIcon sx={{ fontSize: 12 }} />
+                                  <ExportIcon sx={{ fontSize: 12, color: theme.palette.primary.main }} />
                                 </IconButton>
                               </Tooltip>
                             )}
