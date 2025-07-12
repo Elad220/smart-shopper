@@ -48,21 +48,24 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   // New fields for smart assistant chatbot
-  chatHistory: [{
-    role: {
-      type: String,
-      enum: ['user', 'assistant'],
-      required: true
-    },
-    content: {
-      type: String,
-      required: true
-    },
-    timestamp: {
-      type: Date,
-      default: Date.now
-    }
-  }],
+  chatHistory: {
+    type: [{
+      role: {
+        type: String,
+        enum: ['user', 'assistant'],
+        required: true
+      },
+      content: {
+        type: String,
+        required: true
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }],
+    default: []
+  },
   preferences: {
     dietaryRestrictions: [String],
     favoriteCuisines: [String],
@@ -108,6 +111,14 @@ userSchema.pre('save', async function(next) {
   } catch (error) {
     next(error);
   }
+});
+
+// Ensure chatHistory is always an array
+userSchema.pre('save', function(next) {
+  if (!this.chatHistory) {
+    this.chatHistory = [];
+  }
+  next();
 });
 
 // Method to compare passwords

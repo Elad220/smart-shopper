@@ -2,11 +2,23 @@ const User = require('../models/User');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
 const { decrypt } = require('../utils/crypto');
 
+// Migration function to ensure all users have chatHistory initialized
+const ensureChatHistoryInitialized = async (user) => {
+    if (!user.chatHistory) {
+        user.chatHistory = [];
+        await user.save();
+        console.log(`Initialized chatHistory for user ${user._id}`);
+    }
+    return user;
+};
+
 // Chat with the smart assistant
 exports.chat = async (req, res) => {
     try {
         const { message } = req.body;
         const userId = req.user.userId;
+
+        console.log(`Chat request received for user ${userId} with message: ${message}`);
 
         if (!message || !message.trim()) {
             return res.status(400).json({ message: 'Message is required.' });
@@ -16,6 +28,11 @@ exports.chat = async (req, res) => {
         if (!user || !user.apiKey) {
             return res.status(400).json({ message: 'API key not configured for this user.' });
         }
+
+        // Ensure chatHistory is initialized
+        await ensureChatHistoryInitialized(user);
+
+        console.log(`User found, chatHistory length: ${user.chatHistory ? user.chatHistory.length : 0}`);
 
         // Decrypt the API key before using it
         const decryptedApiKey = decrypt(user.apiKey);
@@ -34,7 +51,9 @@ exports.chat = async (req, res) => {
         const context = buildUserContext(user);
         
         // Get recent chat history (last 10 messages for context)
-        const recentHistory = user.chatHistory.slice(-10);
+        const recentHistory = user.chatHistory ? user.chatHistory.slice(-10) : [];
+        
+        console.log(`Recent history length: ${recentHistory.length}`);
         
         // Build conversation history for the AI
         const conversationHistory = recentHistory.map(msg => ({
@@ -52,6 +71,8 @@ exports.chat = async (req, res) => {
             parts: [{ text: messageWithLanguage }]
         });
 
+        console.log(`Conversation history prepared, total messages: ${conversationHistory.length}`);
+
         // Create the chat session
         const chat = model.startChat({
             history: conversationHistory.slice(0, -1), // Exclude the current message
@@ -60,6 +81,8 @@ exports.chat = async (req, res) => {
                 temperature: 0.7,
             },
         });
+
+        console.log('Chat session created, sending message...');
 
         // Send the message and get response
         const result = await chat.sendMessage(messageWithLanguage);
@@ -71,7 +94,13 @@ exports.chat = async (req, res) => {
 
         const assistantMessage = response.text();
 
+        console.log(`Assistant response received, length: ${assistantMessage.length}`);
+
         // Save the conversation to user's chat history
+        if (!user.chatHistory) {
+            user.chatHistory = [];
+        }
+        
         user.chatHistory.push(
             { role: 'user', content: message },
             { role: 'assistant', content: assistantMessage }
@@ -82,6 +111,7 @@ exports.chat = async (req, res) => {
             user.chatHistory = user.chatHistory.slice(-50);
         }
 
+        console.log(`Saving chat history, new length: ${user.chatHistory.length}`);
         await user.save();
 
         res.json({
@@ -91,7 +121,23 @@ exports.chat = async (req, res) => {
 
     } catch (error) {
         console.error("Error in smart assistant chat:", error);
-        res.status(500).json({ message: error.message || 'Failed to process chat message.' });
+        
+        // Provide more specific error messages
+        let errorMessage = 'Failed to process chat message.';
+        
+        if (error.message.includes('API key')) {
+            errorMessage = 'Invalid API key. Please check your configuration.';
+        } else if (error.message.includes('quota')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else if (error.message.includes('blocked')) {
+            errorMessage = 'Message blocked for safety reasons. Please try a different message.';
+        } else if (error.message.includes('network') || error.message.includes('fetch')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+        } else {
+            errorMessage = error.message || 'Failed to process chat message.';
+        }
+        
+        res.status(500).json({ message: errorMessage });
     }
 };
 
@@ -104,6 +150,9 @@ exports.getChatHistory = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found.' });
         }
+
+        // Ensure chatHistory is initialized
+        await ensureChatHistoryInitialized(user);
 
         res.json({
             chatHistory: user.chatHistory,
