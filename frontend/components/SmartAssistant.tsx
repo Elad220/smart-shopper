@@ -119,6 +119,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
       timestamp: new Date()
     };
 
+    setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
     setInputMessage('');
@@ -140,8 +141,14 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      // Only clear input message after successful send
+      setInputMessage('');
     } catch (err: any) {
-      setError(err.message || "Failed to send message.");
+      // Remove the user message from the chat since it failed to send
+      setMessages(prev => prev.slice(0, -1));
+      // Safe error message handling
+      const errorMessage = err?.message || "Failed to send message.";
+      setError(errorMessage);
       toast.error("Failed to send message. Please try again.");
       
       // Remove the user message that was added but the API call failed
