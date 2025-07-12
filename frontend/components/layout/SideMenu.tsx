@@ -414,15 +414,101 @@ const SideMenu: React.FC<SideMenuProps> = ({
                     },
                   }}
                 />
-                <IconButton
-                  size="small"
-                  sx={{
-                    transform: isMyListsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s',
-                  }}
-                >
-                  <ChevronDown size={16} />
-                </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {/* Control Buttons - Only show when expanded */}
+                  {isMyListsExpanded && (
+                    <>
+                      <Tooltip title="Create New List">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openCreateDialog();
+                          }}
+                          disabled={isCreatingList}
+                          sx={{
+                            borderRadius: '4px',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            color: 'white',
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                            },
+                          }}
+                        >
+                          <AddIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Sort Lists">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleSortClick(e);
+                          }}
+                          sx={{
+                            borderRadius: '4px',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            color: 'white',
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                            },
+                          }}
+                        >
+                          <SortIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Import Items">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleImportClick();
+                          }}
+                          disabled={!selectedListId}
+                          sx={{
+                            borderRadius: '4px',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            color: 'white',
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                            },
+                          }}
+                        >
+                          <ImportIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Export Selected List">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExport();
+                          }}
+                          disabled={!selectedListId}
+                          sx={{
+                            borderRadius: '4px',
+                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                            color: 'white',
+                            '&:hover': {
+                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                            },
+                          }}
+                        >
+                          <ExportIcon sx={{ fontSize: 12 }} />
+                        </IconButton>
+                      </Tooltip>
+                    </>
+                  )}
+                  <IconButton
+                    size="small"
+                    sx={{
+                      transform: isMyListsExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.2s',
+                    }}
+                  >
+                    <ChevronDown size={16} />
+                  </IconButton>
+                </Box>
               </ListItemButton>
             </ListItem>
 
@@ -434,77 +520,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
                     {error}
                   </Alert>
                 )}
-
-                {/* Control Buttons */}
-                <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: 'center' }}>
-                  <Tooltip title="Create New List">
-                    <IconButton
-                      size="small"
-                      onClick={openCreateDialog}
-                      disabled={isCreatingList}
-                      sx={{
-                        borderRadius: '6px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        color: 'white',
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                        },
-                      }}
-                    >
-                      <AddIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Sort Lists">
-                    <IconButton
-                      size="small"
-                      onClick={handleSortClick}
-                      sx={{
-                        borderRadius: '6px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        color: 'white',
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                        },
-                      }}
-                    >
-                      <SortIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Import Items">
-                    <IconButton
-                      size="small"
-                      onClick={handleImportClick}
-                      disabled={!selectedListId}
-                      sx={{
-                        borderRadius: '6px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        color: 'white',
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                        },
-                      }}
-                    >
-                      <ImportIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Export Selected List">
-                    <IconButton
-                      size="small"
-                      onClick={handleExport}
-                      disabled={!selectedListId}
-                      sx={{
-                        borderRadius: '6px',
-                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                        color: 'white',
-                        '&:hover': {
-                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                        },
-                      }}
-                    >
-                      <ExportIcon sx={{ fontSize: 14 }} />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
 
                 <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
                   {SORT_MODES.map(mode => (
