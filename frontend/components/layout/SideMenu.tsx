@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Drawer,
   Box,
@@ -16,6 +16,16 @@ import {
   Stack,
   Chip,
   CircularProgress,
+  Tooltip,
+  Menu,
+  MenuItem,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
 } from '@mui/material';
 import { 
   List as ListIcon, 
@@ -28,9 +38,13 @@ import {
 import {
   Share as ShareIcon,
   Delete as DeleteIcon,
+  Add as AddIcon,
+  Sort as SortIcon,
+  UploadFile as ImportIcon,
+  Download as ExportIcon,
 } from '@mui/icons-material';
 import { User as UserType } from '../../hooks/useAuth';
-import { fetchShoppingLists, deleteShoppingList } from '../../src/services/api';
+import { fetchShoppingLists, deleteShoppingList, createShoppingList, exportShoppingList, importShoppingList } from '../../src/services/api';
 import toast from 'react-hot-toast';
 
 interface ShoppingList {
@@ -60,6 +74,12 @@ interface SideMenuProps {
   onListSelect?: (listId: string) => void;
 }
 
+const SORT_MODES = [
+  { key: 'alpha', label: 'Alphabetical (A-Z)' },
+  { key: 'created', label: 'Creation Date (Newest)' },
+  { key: 'custom', label: 'Custom Order' },
+];
+
 const SideMenu: React.FC<SideMenuProps> = ({
   open,
   onClose,
@@ -76,7 +96,13 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [lists, setLists] = useState<ShoppingList[]>([]);
   const [isLoadingLists, setIsLoadingLists] = useState(false);
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
-
+  const [sortMode, setSortMode] = useState<string>(localStorage.getItem('shoppingListSortMode') || 'alpha');
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isCreatingList, setIsCreatingList] = useState(false);
+  const [newListName, setNewListName] = useState('');
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load lists when My Lists is expanded
   useEffect(() => {
@@ -85,8 +111,13 @@ const SideMenu: React.FC<SideMenuProps> = ({
     }
   }, [isMyListsExpanded]);
 
+  useEffect(() => {
+    localStorage.setItem('shoppingListSortMode', sortMode);
+  }, [sortMode]);
+
   const loadLists = async () => {
     setIsLoadingLists(true);
+    setError(null);
     try {
       const fetchedLists = await fetchShoppingLists(user.token);
       setLists(fetchedLists);
@@ -95,6 +126,29 @@ const SideMenu: React.FC<SideMenuProps> = ({
       toast.error('Failed to load shopping lists');
     } finally {
       setIsLoadingLists(false);
+    }
+  };
+
+  const handleCreateList = async () => {
+    if (!newListName.trim()) {
+      toast.error('Please enter a list name');
+      return;
+    }
+
+    setIsCreatingList(true);
+    try {
+      const newList = await createShoppingList(user.token, newListName.trim());
+      setNewListName('');
+      setIsCreateDialogOpen(false);
+      await loadLists();
+      if (onListSelect) {
+        onListSelect(newList._id);
+      }
+      toast.success(`Created "${newListName}" successfully! ✅`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create shopping list');
+    } finally {
+      setIsCreatingList(false);
     }
   };
 
@@ -111,6 +165,63 @@ const SideMenu: React.FC<SideMenuProps> = ({
       toast.error(error.message || 'Failed to delete list');
     } finally {
       setDeletingListId(null);
+    }
+  };
+
+  const handleSortClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleSortClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSortChange = (mode: string) => {
+    setSortMode(mode);
+    setAnchorEl(null);
+  };
+
+  const handleExport = async () => {
+    if (!selectedListId) {
+      toast.error('Please select a list to export');
+      return;
+    }
+    try {
+      const itemsToExport = await exportShoppingList(user.token, selectedListId);
+      const dataStr = JSON.stringify(itemsToExport, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `shopping-list-${Date.now()}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('List exported successfully! 📁');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to export list');
+    }
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const items = JSON.parse(text);
+      await importShoppingList(user.token, selectedListId!, items);
+      toast.success('Items imported successfully! 📥');
+      await loadLists();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to import items');
+    } finally {
+      event.target.value = '';
     }
   };
 
@@ -139,6 +250,20 @@ const SideMenu: React.FC<SideMenuProps> = ({
       }
     }
   };
+
+  const openCreateDialog = () => {
+    setIsCreateDialogOpen(true);
+  };
+
+  // Sort lists based on current sort mode
+  const sortedLists = [...lists].sort((a, b) => {
+    if (sortMode === 'alpha') {
+      return a.name.localeCompare(b.name);
+    } else if (sortMode === 'created') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+    return 0;
+  });
 
   return (
     <Drawer
@@ -304,17 +429,115 @@ const SideMenu: React.FC<SideMenuProps> = ({
             {/* My Lists Content */}
             <Collapse in={isMyListsExpanded} timeout="auto" unmountOnExit>
               <Box sx={{ pl: 4, pr: 1 }}>
+                {error && (
+                  <Alert severity="error" sx={{ mb: 2, fontSize: '0.75rem' }} onClose={() => setError(null)}>
+                    {error}
+                  </Alert>
+                )}
+
+                {/* Control Buttons */}
+                <Stack direction="row" spacing={1} sx={{ mb: 2, justifyContent: 'center' }}>
+                  <Tooltip title="Create New List">
+                    <IconButton
+                      size="small"
+                      onClick={openCreateDialog}
+                      disabled={isCreatingList}
+                      sx={{
+                        borderRadius: '6px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: 'white',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                        },
+                      }}
+                    >
+                      <AddIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Sort Lists">
+                    <IconButton
+                      size="small"
+                      onClick={handleSortClick}
+                      sx={{
+                        borderRadius: '6px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: 'white',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                        },
+                      }}
+                    >
+                      <SortIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Import Items">
+                    <IconButton
+                      size="small"
+                      onClick={handleImportClick}
+                      disabled={!selectedListId}
+                      sx={{
+                        borderRadius: '6px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: 'white',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                        },
+                      }}
+                    >
+                      <ImportIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Export Selected List">
+                    <IconButton
+                      size="small"
+                      onClick={handleExport}
+                      disabled={!selectedListId}
+                      sx={{
+                        borderRadius: '6px',
+                        background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                        color: 'white',
+                        '&:hover': {
+                          background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                        },
+                      }}
+                    >
+                      <ExportIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleSortClose}>
+                  {SORT_MODES.map(mode => (
+                    <MenuItem
+                      key={mode.key}
+                      selected={sortMode === mode.key}
+                      onClick={() => handleSortChange(mode.key)}
+                    >
+                      {mode.label}
+                    </MenuItem>
+                  ))}
+                </Menu>
+
+                {/* Hidden file input for import functionality */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileImport}
+                  style={{ display: 'none' }}
+                  accept=".json"
+                />
+
                 {isLoadingLists ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
                     <CircularProgress size={20} />
                   </Box>
-                ) : lists.length === 0 ? (
+                ) : sortedLists.length === 0 ? (
                   <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                     No lists yet
                   </Typography>
                 ) : (
                   <Stack spacing={1} sx={{ py: 1 }}>
-                    {lists.map((list) => (
+                    {sortedLists.map((list) => (
                       <Box
                         key={list._id}
                         sx={{
@@ -494,8 +717,73 @@ const SideMenu: React.FC<SideMenuProps> = ({
         </Box>
       </Box>
 
-      {/* Share Dialog */}
-      {/* This would need to be implemented as a separate dialog component */}
+      {/* Create Shopping List Dialog */}
+      <Dialog 
+        open={isCreateDialogOpen} 
+        onClose={() => !isCreatingList && setIsCreateDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            border: `1px solid ${theme.palette.divider}`,
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Create New Shopping List
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="List Name"
+            fullWidth
+            variant="outlined"
+            value={newListName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewListName(e.target.value)}
+            disabled={isCreatingList}
+            onKeyPress={(e: React.KeyboardEvent) => {
+              if (e.key === 'Enter' && !isCreatingList && newListName.trim()) {
+                handleCreateList();
+              }
+            }}
+            sx={{ 
+              mt: 1,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+              },
+            }}
+            placeholder="e.g., Weekly Groceries, Party Supplies..."
+          />
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(false)} 
+            disabled={isCreatingList}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleCreateList} 
+            variant="contained" 
+            disabled={isCreatingList || !newListName.trim()}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            }}
+          >
+            {isCreatingList ? 'Creating...' : 'Create List'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 };
