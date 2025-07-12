@@ -496,46 +496,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
                           <SortIcon sx={{ fontSize: 12 }} />
                         </IconButton>
                       </Tooltip>
-                      <Tooltip title="Import Items">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleImportClick();
-                          }}
-                          disabled={!selectedListId}
-                          sx={{
-                            borderRadius: '4px',
-                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                            color: 'white',
-                            '&:hover': {
-                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                            },
-                          }}
-                        >
-                          <ImportIcon sx={{ fontSize: 12 }} />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Export Selected List">
-                        <IconButton
-                          size="small"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleExport();
-                          }}
-                          disabled={!selectedListId}
-                          sx={{
-                            borderRadius: '4px',
-                            background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-                            color: 'white',
-                            '&:hover': {
-                              background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
-                            },
-                          }}
-                        >
-                          <ExportIcon sx={{ fontSize: 12 }} />
-                        </IconButton>
-                      </Tooltip>
                     </>
                   )}
                   <IconButton
@@ -649,6 +609,52 @@ const SideMenu: React.FC<SideMenuProps> = ({
                           </Box>
                           
                           <Stack direction="row" spacing={0.5}>
+                            {/* Import button - only show for selected list */}
+                            {selectedListId === list._id && (
+                              <Tooltip title="Import Items">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleImportClick();
+                                  }}
+                                  disabled={!!deletingListId}
+                                  sx={{
+                                    borderRadius: '4px',
+                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                                    color: 'white',
+                                    '&:hover': {
+                                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                                    },
+                                  }}
+                                >
+                                  <ImportIcon sx={{ fontSize: 12 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                            {/* Export button - only show for selected list */}
+                            {selectedListId === list._id && (
+                              <Tooltip title="Export List">
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExport();
+                                  }}
+                                  disabled={!!deletingListId}
+                                  sx={{
+                                    borderRadius: '4px',
+                                    background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+                                    color: 'white',
+                                    '&:hover': {
+                                      background: `linear-gradient(135deg, ${theme.palette.secondary.main}, ${theme.palette.primary.main})`,
+                                    },
+                                  }}
+                                >
+                                  <ExportIcon sx={{ fontSize: 12 }} />
+                                </IconButton>
+                              </Tooltip>
+                            )}
                             {list.isOwner && (
                               <IconButton
                                 size="small"
