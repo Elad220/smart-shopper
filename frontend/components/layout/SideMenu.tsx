@@ -114,7 +114,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
     }
   };
 
-  const openShareDialog = (list: ShoppingList, e: React.MouseEvent) => {
+  const openShareDialog = (e: React.MouseEvent) => {
     e.stopPropagation();
     // Note: Share dialog functionality would need to be implemented separately
     toast.success('Share functionality coming soon!');
@@ -375,7 +375,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
                             {list.isOwner && (
                               <IconButton
                                 size="small"
-                                onClick={(e) => openShareDialog(list, e)}
+                                onClick={(e) => openShareDialog(e)}
                                 disabled={!!deletingListId}
                                 sx={{
                                   borderRadius: '4px',
