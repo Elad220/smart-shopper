@@ -110,7 +110,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
     }
   }, [open, token]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = async (retryCount = 0) => {
     if (!inputMessage.trim() || !token || !hasApiKey) return;
 
     const userMessage: ChatMessage = {
@@ -135,8 +135,38 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
 
       setMessages(prev => [...prev, assistantMessage]);
     } catch (err: any) {
-      setError(err.message || "Failed to send message.");
-      toast.error("Failed to send message. Please try again.");
+      console.error("Chat error:", err);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to send message.";
+      
+      if (err.message) {
+        if (err.message.includes('API key')) {
+          errorMessage = "Invalid API key. Please check your configuration in Settings.";
+        } else if (err.message.includes('quota')) {
+          errorMessage = "API quota exceeded. Please try again later.";
+        } else if (err.message.includes('blocked')) {
+          errorMessage = "Message blocked for safety reasons. Please try a different message.";
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
+          errorMessage = "Session expired. Please log in again.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      // Retry logic for network errors
+      if ((err.message.includes('network') || err.message.includes('fetch')) && retryCount < 2) {
+        console.log(`Retrying chat message (attempt ${retryCount + 1})`);
+        setTimeout(() => {
+          handleSendMessage(retryCount + 1);
+        }, 1000 * (retryCount + 1)); // Exponential backoff
+        return;
+      }
+      
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
