@@ -26,6 +26,9 @@ import {
   DialogActions,
   Button,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
 } from '@mui/material';
 import { 
   List as ListIcon, 
@@ -44,7 +47,7 @@ import {
   Download as ExportIcon,
 } from '@mui/icons-material';
 import { User as UserType } from '../../hooks/useAuth';
-import { fetchShoppingLists, deleteShoppingList, createShoppingList, exportShoppingList, importShoppingList } from '../../src/services/api';
+import { fetchShoppingLists, deleteShoppingList, createShoppingList, exportShoppingList, importShoppingList, shareShoppingList } from '../../src/services/api';
 import toast from 'react-hot-toast';
 
 interface ShoppingList {
@@ -103,6 +106,14 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [newListName, setNewListName] = useState('');
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Sharing state
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [shareEmail, setShareEmail] = useState('');
+  const [sharePermission, setSharePermission] = useState<'read' | 'write'>('read');
+  const [sharingListId, setSharingListId] = useState<string | null>(null);
+  const [sharingListName, setSharingListName] = useState('');
+  const [isSharing, setIsSharing] = useState(false);
 
   // Load lists when My Lists is expanded
   useEffect(() => {
@@ -225,10 +236,42 @@ const SideMenu: React.FC<SideMenuProps> = ({
     }
   };
 
-  const openShareDialog = (e: React.MouseEvent) => {
+  const openShareDialog = (list: ShoppingList, e: React.MouseEvent) => {
     e.stopPropagation();
-    // Note: Share dialog functionality would need to be implemented separately
-    toast.success('Share functionality coming soon!');
+    setSharingListId(list._id);
+    setSharingListName(list.name);
+    setIsShareDialogOpen(true);
+  };
+
+  const handleShare = async () => {
+    if (!shareEmail.trim()) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    setIsSharing(true);
+    try {
+      await shareShoppingList(user.token, sharingListId!, shareEmail.trim(), sharePermission);
+      setIsShareDialogOpen(false);
+      setShareEmail('');
+      setSharePermission('read');
+      await loadLists();
+      toast.success(`List shared with ${shareEmail} successfully! 📤`);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to share list');
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const closeShareDialog = () => {
+    setIsShareDialogOpen(false);
+    setShareEmail('');
+    setSharePermission('read');
+  };
+
+  const openCreateDialog = () => {
+    setIsCreateDialogOpen(true);
   };
 
   const handleNavigate = (view: 'lists' | 'mylists' | 'settings') => {
@@ -249,10 +292,6 @@ const SideMenu: React.FC<SideMenuProps> = ({
         onClose();
       }
     }
-  };
-
-  const openCreateDialog = () => {
-    setIsCreateDialogOpen(true);
   };
 
   // Sort lists based on current sort mode
@@ -613,7 +652,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
                             {list.isOwner && (
                               <IconButton
                                 size="small"
-                                onClick={(e) => openShareDialog(e)}
+                                onClick={(e) => openShareDialog(list, e)}
                                 disabled={!!deletingListId}
                                 sx={{
                                   borderRadius: '4px',
@@ -796,6 +835,90 @@ const SideMenu: React.FC<SideMenuProps> = ({
             }}
           >
             {isCreatingList ? 'Creating...' : 'Create List'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Share List Dialog */}
+      <Dialog 
+        open={isShareDialogOpen} 
+        onClose={() => !isSharing && closeShareDialog()} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            border: `1px solid ${theme.palette.divider}`,
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <ShareIcon />
+            <Typography variant="h6">Share "{sharingListName}"</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Share your shopping list with friends and family. They can view or edit the list based on the permissions you give them.
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Email Address"
+            type="email"
+            fullWidth
+            variant="outlined"
+            value={shareEmail}
+            onChange={(e) => setShareEmail(e.target.value)}
+            disabled={isSharing}
+            helperText="Enter the email address of the person you want to share with"
+            sx={{ 
+              mb: 2,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+              },
+            }}
+          />
+          <FormControl fullWidth variant="outlined">
+            <InputLabel>Permission</InputLabel>
+            <Select
+              value={sharePermission}
+              onChange={(e) => setSharePermission(e.target.value as 'read' | 'write')}
+              disabled={isSharing}
+              label="Permission"
+              sx={{
+                borderRadius: '12px',
+              }}
+            >
+              <MenuItem value="read">Read Only - Can view the list</MenuItem>
+              <MenuItem value="write">Read & Write - Can view and edit the list</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={closeShareDialog} 
+            disabled={isSharing}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleShare} 
+            variant="contained" 
+            disabled={isSharing || !shareEmail.trim()}
+            startIcon={<ShareIcon />}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`,
+            }}
+          >
+            {isSharing ? 'Sharing...' : 'Share List'}
           </Button>
         </DialogActions>
       </Dialog>
