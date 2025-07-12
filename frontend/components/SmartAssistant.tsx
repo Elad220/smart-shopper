@@ -110,8 +110,8 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
     }
   }, [open, token]);
 
-  const handleSendMessage = async (retryCount = 0) => {
-    if (!inputMessage.trim() || !token || !hasApiKey) return;
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || !token || !hasApiKey || isLoading) return;
 
     const userMessage: ChatMessage = {
       role: 'user',
@@ -120,9 +120,16 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
     };
 
     setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
     setIsLoading(true);
     setError(null);
+    setInputMessage('');
+
+    // Add user message and store its index for potential removal
+    let userMessageIndex: number;
+    setMessages(prev => {
+      userMessageIndex = prev.length;
+      return [...prev, userMessage];
+    });
 
     try {
       const response = await sendChatMessage(token, userMessage.content);
@@ -134,39 +141,18 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+      // Only clear input message after successful send
+      setInputMessage('');
     } catch (err: any) {
-      console.error("Chat error:", err);
-      
-      // Provide more specific error messages
-      let errorMessage = "Failed to send message.";
-      
-      if (err.message) {
-        if (err.message.includes('API key')) {
-          errorMessage = "Invalid API key. Please check your configuration in Settings.";
-        } else if (err.message.includes('quota')) {
-          errorMessage = "API quota exceeded. Please try again later.";
-        } else if (err.message.includes('blocked')) {
-          errorMessage = "Message blocked for safety reasons. Please try a different message.";
-        } else if (err.message.includes('network') || err.message.includes('fetch')) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (err.message.includes('401') || err.message.includes('unauthorized')) {
-          errorMessage = "Session expired. Please log in again.";
-        } else {
-          errorMessage = err.message;
-        }
-      }
-      
-      // Retry logic for network errors
-      if ((err.message.includes('network') || err.message.includes('fetch')) && retryCount < 2) {
-        console.log(`Retrying chat message (attempt ${retryCount + 1})`);
-        setTimeout(() => {
-          handleSendMessage(retryCount + 1);
-        }, 1000 * (retryCount + 1)); // Exponential backoff
-        return;
-      }
-      
+      // Remove the user message from the chat since it failed to send
+      setMessages(prev => prev.slice(0, -1));
+      // Safe error message handling
+      const errorMessage = err?.message || "Failed to send message.";
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error("Failed to send message. Please try again.");
+      
+      // Remove the user message that was added but the API call failed
+      setMessages(prev => prev.filter((_: ChatMessage, index: number) => index !== userMessageIndex));
     } finally {
       setIsLoading(false);
     }
