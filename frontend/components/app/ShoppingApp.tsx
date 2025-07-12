@@ -147,6 +147,15 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
     }
   };
 
+  // Handle when a list is deleted and we need to navigate to another list or no lists view
+  const handleListDeleted = (deletedListId: string) => {
+    if (selectedListId === deletedListId) {
+      // The currently selected list was deleted
+      // The SideMenu will handle selecting another list, but we should ensure we're on the lists view
+      setCurrentView('lists');
+    }
+  };
+
   const handleDataChange = () => {
     // Handle data changes (functionality moved to MyListsPage)
   };
@@ -234,6 +243,7 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
             isMobile={isMobile}
             selectedListId={selectedListId}
             onListSelect={handleListSelect}
+            onListDeleted={handleListDeleted}
           />
         )}
 

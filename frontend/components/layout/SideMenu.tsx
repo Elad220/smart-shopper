@@ -75,6 +75,7 @@ interface SideMenuProps {
   isMobile?: boolean;
   selectedListId?: string | null;
   onListSelect?: (listId: string) => void;
+  onListDeleted?: (deletedListId: string) => void;
 }
 
 const SORT_MODES = [
@@ -93,6 +94,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
   isMobile = false,
   selectedListId,
   onListSelect,
+  onListDeleted,
 }) => {
   const theme = useTheme();
   const [isMyListsExpanded, setIsMyListsExpanded] = useState(false);
@@ -114,6 +116,11 @@ const SideMenu: React.FC<SideMenuProps> = ({
   const [sharingListId, setSharingListId] = useState<string | null>(null);
   const [sharingListName, setSharingListName] = useState('');
   const [isSharing, setIsSharing] = useState(false);
+
+  // Delete confirmation dialog state
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingListName, setDeletingListName] = useState('');
+  const [listToDeleteId, setListToDeleteId] = useState<string | null>(null);
 
   // Load lists when My Lists is expanded
   useEffect(() => {
@@ -163,19 +170,58 @@ const SideMenu: React.FC<SideMenuProps> = ({
     }
   };
 
-  const handleDeleteList = async (listId: string, e: React.MouseEvent) => {
+  const openDeleteDialog = (list: ShoppingList, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this list?')) return;
+    setListToDeleteId(list._id);
+    setDeletingListName(list.name);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const closeDeleteDialog = () => {
+    setIsDeleteDialogOpen(false);
+    setListToDeleteId(null);
+    setDeletingListName('');
+  };
+
+  const handleDeleteList = async () => {
+    if (!listToDeleteId) return;
     
-    setDeletingListId(listId);
+    setDeletingListId(listToDeleteId);
     try {
-      await deleteShoppingList(user.token, listId);
+      await deleteShoppingList(user.token, listToDeleteId);
       await loadLists();
-      toast.success('List deleted successfully');
+      
+      // Check if the deleted list was the currently selected one
+      if (selectedListId === listToDeleteId) {
+        // Find another list to select, or navigate to no lists view
+        const remainingLists = lists.filter(list => list._id !== listToDeleteId);
+        if (remainingLists.length > 0) {
+          // Select the first available list
+          const newSelectedListId = remainingLists[0]._id;
+          if (onListSelect) {
+            onListSelect(newSelectedListId);
+          }
+          toast.success(`List deleted. Switched to "${remainingLists[0].name}"`);
+        } else {
+          // No lists remaining, clear selection
+          if (onListSelect) {
+            onListSelect('');
+          }
+          toast.success('List deleted. No lists remaining.');
+        }
+      } else {
+        toast.success('List deleted successfully');
+      }
+      
+      // Notify parent component about the deletion
+      if (onListDeleted) {
+        onListDeleted(listToDeleteId);
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete list');
     } finally {
       setDeletingListId(null);
+      closeDeleteDialog();
     }
   };
 
@@ -669,7 +715,7 @@ const SideMenu: React.FC<SideMenuProps> = ({
                             {list.isOwner && (
                               <IconButton
                                 size="small"
-                                onClick={(e) => handleDeleteList(list._id, e)}
+                                onClick={(e) => openDeleteDialog(list, e)}
                                 disabled={!!deletingListId}
                                 sx={{
                                   borderRadius: '4px',
@@ -921,6 +967,69 @@ const SideMenu: React.FC<SideMenuProps> = ({
             }}
           >
             {isSharing ? 'Sharing...' : 'Share List'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog 
+        open={isDeleteDialogOpen} 
+        onClose={() => !deletingListId && closeDeleteDialog()} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            border: `1px solid ${theme.palette.divider}`,
+          }
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <DeleteIcon sx={{ color: theme.palette.error.main }} />
+            <Typography variant="h6">Delete List</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Are you sure you want to delete "{deletingListName}"? This action cannot be undone and will permanently remove all items in this list.
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ 
+            p: 2, 
+            borderRadius: '8px', 
+            background: alpha(theme.palette.warning.main, 0.1),
+            border: `1px solid ${alpha(theme.palette.warning.main, 0.3)}`,
+            fontSize: '0.875rem'
+          }}>
+            <strong>Note:</strong> If this is your currently selected list, you'll be automatically moved to another available list, or to the no lists screen if none remain.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button 
+            onClick={closeDeleteDialog} 
+            disabled={!!deletingListId}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+            }}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteList} 
+            variant="contained" 
+            disabled={!!deletingListId}
+            startIcon={<DeleteIcon />}
+            sx={{
+              borderRadius: '8px',
+              textTransform: 'none',
+              background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`,
+              '&:hover': {
+                background: `linear-gradient(135deg, ${theme.palette.error.dark}, ${theme.palette.error.main})`,
+              },
+            }}
+          >
+            {deletingListId ? 'Deleting...' : 'Delete List'}
           </Button>
         </DialogActions>
       </Dialog>
