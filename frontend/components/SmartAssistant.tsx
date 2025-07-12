@@ -111,7 +111,7 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
   }, [open, token]);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !token || !hasApiKey) return;
+    if (!inputMessage.trim() || !token || !hasApiKey || isLoading) return;
 
     const userMessage: ChatMessage = {
       role: 'user',
@@ -122,6 +122,14 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
     setError(null);
+    setInputMessage('');
+
+    // Add user message and store its index for potential removal
+    let userMessageIndex: number;
+    setMessages(prev => {
+      userMessageIndex = prev.length;
+      return [...prev, userMessage];
+    });
 
     try {
       const response = await sendChatMessage(token, userMessage.content);
@@ -142,6 +150,9 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
       const errorMessage = err?.message || "Failed to send message.";
       setError(errorMessage);
       toast.error("Failed to send message. Please try again.");
+      
+      // Remove the user message that was added but the API call failed
+      setMessages(prev => prev.filter((_: ChatMessage, index: number) => index !== userMessageIndex));
     } finally {
       setIsLoading(false);
     }
