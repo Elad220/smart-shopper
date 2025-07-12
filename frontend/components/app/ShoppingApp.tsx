@@ -232,6 +232,8 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
             onNavigate={handleNavigate}
             currentView={currentView}
             isMobile={isMobile}
+            selectedListId={selectedListId}
+            onListSelect={handleListSelect}
           />
         )}
 
