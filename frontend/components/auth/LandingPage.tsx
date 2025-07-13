@@ -2,11 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Box, Container, Typography, Button, Card, 
-  CardContent, useTheme, Stack, Chip 
+  CardContent, useTheme, Stack
 } from '@mui/material';
 import {
   ShoppingCart, Brain, Smartphone, Shield, 
-  Users, Star, ArrowRight, CheckCircle
+  Users, Star, CheckCircle
 } from 'lucide-react';
 
 interface LandingPageProps {
