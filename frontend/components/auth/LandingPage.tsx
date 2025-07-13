@@ -51,7 +51,7 @@ const HeroVideo: React.FC<{ onGetStarted: () => void; onSignIn: () => void }> = 
           background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
           p: { xs: 2, sm: 3 },
           display: 'flex',
-          flexDirection: { xs: 'column', sm: 'row' },
+          flexDirection: 'row',
           justifyContent: 'flex-end',
           gap: { xs: 1, sm: 2 },
         }}
@@ -74,7 +74,7 @@ const HeroVideo: React.FC<{ onGetStarted: () => void; onSignIn: () => void }> = 
             },
           }}
         >
-          Get Started Free
+          Register
         </Button>
         <Button
           variant="outlined"
