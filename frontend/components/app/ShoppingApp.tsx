@@ -467,8 +467,13 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
               bottom: 24,
               right: 24,
               background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
+              opacity: isLoading ? 0.5 : 1,
+              pointerEvents: isLoading ? 'none' : 'auto',
+              boxShadow: isLoading ? 'none' : undefined,
+              transition: 'opacity 0.2s',
             }}
             onClick={() => setIsAddModalOpen(true)}
+            disabled={isLoading}
           >
             <Plus size={24} />
           </Fab>
