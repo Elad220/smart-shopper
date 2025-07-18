@@ -52,17 +52,14 @@ exports.chat = async (req, res) => {
             parts: [{ text: messageWithLanguage }]
         });
 
-        // Create the chat session
-        const chat = model.startChat({
-            history: conversationHistory.slice(0, -1), // Exclude the current message
+        // Use stateless generateContent API
+        const result = await model.generateContent({
+            contents: conversationHistory,
             generationConfig: {
                 maxOutputTokens: 1000,
                 temperature: 0.7,
             },
         });
-
-        // Send the message and get response
-        const result = await chat.sendMessage(messageWithLanguage);
         const response = await result.response;
 
         if (!response.text) {
