@@ -406,7 +406,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           : 'inherit',
                       }}
                     >
-                      <CardContent sx={{ p: 1 }}>
+                      <CardContent sx={{ p: '8px 12px 4px 12px' }}>
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Checkbox
                             checked={item.completed}
