@@ -25,11 +25,11 @@ const FloatingParticles: React.FC = () => {
   useEffect(() => {
     const generateParticles = () => {
       const colors = [
-        'rgba(167, 139, 250, 0.2)',
-        'rgba(236, 72, 153, 0.2)', 
-        'rgba(56, 178, 172, 0.2)',
-        'rgba(245, 158, 11, 0.2)',
-        'rgba(59, 130, 246, 0.2)'
+        'rgba(59, 130, 246, 0.2)',
+        'rgba(37, 99, 235, 0.18)', 
+        'rgba(96, 165, 250, 0.15)',
+        'rgba(147, 197, 253, 0.12)',
+        'rgba(29, 78, 216, 0.2)'
       ];
       const newParticles = Array.from({ length: 18 }, (_, i) => ({
         id: i,
@@ -306,30 +306,30 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           {...provided.draggableProps}
           style={{
             ...provided.draggableProps.style,
-            marginBottom: '12px',
+            marginBottom: '6px',
           }}
           className="compact-fade-in"
         >
           <Card
             className={`glass-category glass-hover ${snapshot.isDragging ? 'glow-primary' : ''}`}
             sx={{
-              borderRadius: '16px',
+              borderRadius: '12px',
               overflow: 'hidden',
-              transform: snapshot.isDragging ? 'rotate(1deg) scale(1.02)' : 'none',
+              transform: snapshot.isDragging ? 'rotate(0.5deg) scale(1.01)' : 'none',
               transition: snapshot.isDragging ? 'none' : 'all 0.2s ease',
             }}
             >
-            {/* Compact Category Header */}
+            {/* Ultra Compact Category Header */}
             <CardContent 
               sx={{ 
-                p: 2, 
+                p: 1.5, 
                 cursor: 'pointer',
-                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                borderBottom: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                 transition: 'all 0.2s ease',
               }}
               onClick={() => !snapshot.isDragging && toggleCategoryCollapse(categoryName)}
             >
-              <Stack direction="row" alignItems="center" spacing={1.5}>
+              <Stack direction="row" alignItems="center" spacing={1}>
                 <div
                   {...provided.dragHandleProps}
                   style={{
@@ -337,8 +337,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: snapshot.isDragging ? 'grabbing' : 'grab',
-                    padding: '6px',
-                    borderRadius: '8px',
+                    padding: '4px',
+                    borderRadius: '6px',
                     backgroundColor: snapshot.isDragging 
                       ? alpha(theme.palette.primary.main, 0.2)
                       : alpha(theme.palette.action.hover, 0.3),
@@ -347,15 +347,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <GripVertical size={16} color={theme.palette.text.primary} />
+                  <GripVertical size={14} color={theme.palette.text.primary} />
                 </div>
-                <Typography variant="h5" sx={{ fontSize: '1.25rem' }}>
+                <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
                   {getCategoryEmoji(categoryName)}
                 </Typography>
-                <Typography variant="h6" sx={{ 
+                <Typography variant="subtitle1" sx={{ 
                   flexGrow: 1, 
                   fontWeight: 600,
-                  fontSize: '1.1rem',
+                  fontSize: '1rem',
                   color: theme.palette.text.primary,
                 }}>
                   {categoryName}
@@ -364,13 +364,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   label={items.length}
                   size="small"
                   sx={{ 
-                    borderRadius: '10px',
+                    borderRadius: '8px',
                     background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
                     color: 'white',
                     fontWeight: 600,
-                    fontSize: '0.75rem',
-                    height: '24px',
-                    minWidth: '24px',
+                    fontSize: '0.7rem',
+                    height: '20px',
+                    minWidth: '20px',
                   }}
                 />
                 <IconButton 
@@ -378,7 +378,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   sx={{ 
                     transform: `rotate(${isCollapsed ? 0 : 180}deg)`,
                     transition: 'transform 0.3s ease',
-                    padding: '4px',
+                    padding: '3px',
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -387,33 +387,33 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     }
                   }}
                 >
-                  <ChevronDown size={18} />
+                  <ChevronDown size={16} />
                 </IconButton>
               </Stack>
             </CardContent>
 
             <Collapse in={!isCollapsed}>
-              <Box sx={{ p: 2, pt: 0 }}>
-                <Stack spacing={1}>
+              <Box sx={{ p: 1.5, pt: 0 }}>
+                <Stack spacing={0.5}>
                   {items.map((item) => (
                     <Card
                       key={item.id}
                       className="glass-item glass-hover"
                       sx={{
-                        borderRadius: '12px',
+                        borderRadius: '10px',
                         background: item.completed
-                          ? alpha(theme.palette.success.main, 0.08)
+                          ? alpha(theme.palette.success.main, 0.06)
                           : 'inherit',
                       }}
                     >
-                      <CardContent sx={{ p: 1.5 }}>
-                        <Stack direction="row" alignItems="center" spacing={1.5}>
+                      <CardContent sx={{ p: 1 }}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
                           <Checkbox
                             checked={item.completed}
                             onChange={() => onToggleComplete(item.id)}
                             size="small"
                             sx={{
-                              padding: '4px',
+                              padding: '2px',
                               color: theme.palette.primary.main,
                               '&.Mui-checked': {
                                 color: theme.palette.success.main,
@@ -424,9 +424,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           {item.imageUrl && (
                             <Box
                               sx={{
-                                width: '40px',
-                                height: '40px',
-                                borderRadius: '8px',
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: '6px',
                                 overflow: 'hidden',
                                 flexShrink: 0,
                               }}
@@ -444,12 +444,12 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           )}
                           
                           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
-                            <Stack direction="row" alignItems="center" spacing={1}>
+                            <Stack direction="row" alignItems="center" spacing={0.5}>
                               <Typography
-                                variant="subtitle2"
+                                variant="body2"
                                 sx={{
                                   fontWeight: 600,
-                                  fontSize: '0.95rem',
+                                  fontSize: '0.85rem',
                                   textDecoration: item.completed ? 'line-through' : 'none',
                                   opacity: item.completed ? 0.7 : 1,
                                   flexGrow: 1,
@@ -462,15 +462,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                               {getPriorityIcon(item.priority)}
                             </Stack>
                             
-                            <Stack direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
+                            <Stack direction="row" spacing={0.25} sx={{ mt: 0.125 }}>
                               <Chip
                                 label={`${item.amount} ${item.units}`}
                                 size="small"
                                 sx={{ 
-                                  borderRadius: '6px', 
-                                  fontSize: '0.65rem',
-                                  height: '18px',
-                                  background: alpha(theme.palette.primary.main, 0.1),
+                                  borderRadius: '4px', 
+                                  fontSize: '0.6rem',
+                                  height: '16px',
+                                  background: alpha(theme.palette.primary.main, 0.08),
                                   color: theme.palette.primary.main,
                                 }}
                               />
@@ -480,43 +480,43 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                   size="small"
                                   variant="outlined"
                                   sx={{ 
-                                    borderRadius: '6px',
-                                    fontSize: '0.65rem',
-                                    height: '18px',
-                                    borderColor: alpha(theme.palette.text.secondary, 0.3),
+                                    borderRadius: '4px',
+                                    fontSize: '0.6rem',
+                                    height: '16px',
+                                    borderColor: alpha(theme.palette.text.secondary, 0.25),
                                   }}
                                 />
                               )}
                             </Stack>
                           </Box>
                           
-                          <Stack direction="row" spacing={0.5}>
+                          <Stack direction="row" spacing={0.25}>
                             <IconButton
                               size="small"
                               onClick={() => onEditItem(item)}
                               sx={{ 
-                                borderRadius: '6px',
-                                padding: '4px',
+                                borderRadius: '4px',
+                                padding: '3px',
                                 '&:hover': {
-                                  background: alpha(theme.palette.primary.main, 0.1),
+                                  background: alpha(theme.palette.primary.main, 0.08),
                                 }
                               }}
                             >
-                              <Edit size={12} />
+                              <Edit size={10} />
                             </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => onDeleteItem(item.id)}
                               sx={{ 
-                                borderRadius: '6px',
-                                padding: '4px',
+                                borderRadius: '4px',
+                                padding: '3px',
                                 color: theme.palette.error.main,
                                 '&:hover': {
-                                  background: alpha(theme.palette.error.main, 0.1),
+                                  background: alpha(theme.palette.error.main, 0.08),
                                 }
                               }}
                             >
-                              <Trash2 size={12} />
+                              <Trash2 size={10} />
                             </IconButton>
                           </Stack>
                         </Stack>
@@ -623,8 +623,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         width: '100%',
         minHeight: '100vh'
       }}>
-        {/* Enhanced Compact Search and Controls */}
-        <Box className="glass-search compact-fade-in" sx={{ mb: 2.5, p: 1.5, borderRadius: '16px' }}>
+        {/* Ultra Compact Search and Controls */}
+        <Box className="glass-search compact-fade-in" sx={{ mb: 1.5, p: 1, borderRadius: '12px' }}>
           <Stack spacing={1.5}>
             {/* Search Input Row */}
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -637,8 +637,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   flexGrow: 1,
                   minWidth: '200px',
                   '& .MuiOutlinedInput-root': { 
-                    borderRadius: '12px',
-                    height: '36px',
+                    borderRadius: '10px',
+                    height: '32px',
                     background: alpha(theme.palette.background.paper, 0.4),
                     backdropFilter: 'blur(10px)',
                     border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
@@ -684,8 +684,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 sx={{
                   textTransform: 'none',
                   borderRadius: '10px',
-                  fontSize: '0.8rem',
-                  height: '36px',
+                  fontSize: '0.75rem',
+                  height: '32px',
                   minWidth: 'auto',
                   px: 2,
                   whiteSpace: 'nowrap',
@@ -697,7 +697,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             
             {/* Additional Controls - only show when needed */}
             {sortedCategories.length > 1 && !searchQuery && (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexWrap: 'wrap' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                 <Button
                   variant="outlined"
                   size="small"
@@ -705,11 +705,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   className="glass-button"
                   sx={{
                     textTransform: 'none',
-                    borderRadius: '10px',
-                    fontSize: '0.75rem',
-                    height: '32px',
+                    borderRadius: '8px',
+                    fontSize: '0.7rem',
+                    height: '28px',
                     minWidth: 'auto',
-                    px: 2,
+                    px: 1.5,
                   }}
                 >
                   {areAllCollapsed ? 'Expand All' : 'Collapse All'}
@@ -723,11 +723,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     className="glass-button"
                     sx={{
                       textTransform: 'none',
-                      borderRadius: '10px',
-                      fontSize: '0.75rem',
-                      height: '32px',
+                      borderRadius: '8px',
+                      fontSize: '0.7rem',
+                      height: '28px',
                       minWidth: 'auto',
-                      px: 2,
+                      px: 1.5,
                     }}
                   >
                     Reset Order
@@ -745,27 +745,27 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 ref={provided.innerRef}
                 {...provided.droppableProps}
                 sx={{
-                  minHeight: snapshot.isDraggingOver ? 100 : 50,
+                  minHeight: snapshot.isDraggingOver ? 80 : 40,
                   width: '100%',
                   overflow: 'visible',
                   position: 'relative',
                   transition: 'all 0.3s ease',
-                  borderRadius: snapshot.isDraggingOver ? '12px' : '0px',
+                  borderRadius: snapshot.isDraggingOver ? '10px' : '0px',
                   background: snapshot.isDraggingOver 
-                    ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.06)}, ${alpha(theme.palette.secondary.main, 0.06)})`
+                    ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.05)}, ${alpha(theme.palette.secondary.main, 0.04)})`
                     : 'transparent',
                   border: snapshot.isDraggingOver 
-                    ? `2px dashed ${alpha(theme.palette.primary.main, 0.3)}`
-                    : '2px dashed transparent',
-                  padding: snapshot.isDraggingOver ? '6px' : '0px',
+                    ? `1px dashed ${alpha(theme.palette.primary.main, 0.25)}`
+                    : '1px dashed transparent',
+                  padding: snapshot.isDraggingOver ? '4px' : '0px',
                 }}
               >
                 <Box sx={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  gap: 2,
+                  gap: 1,
                   width: '100%',
-                  minHeight: 50,
+                  minHeight: 40,
                   position: 'relative',
                   overflow: 'visible'
                 }}>
@@ -774,11 +774,11 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                       {renderCategoryCard(categoryName, groupedItems[categoryName], index, collapsedCategories.has(categoryName))}
                     </div>
                   ))}
-                  {/* Enhanced placeholder */}
+                  {/* Compact placeholder */}
                   <Box
                     sx={{ 
                       display: isDragging ? 'block' : 'none',
-                      minHeight: '50px',
+                      minHeight: '40px',
                       animation: isDragging ? 'placeholderPulse 1.5s ease-in-out infinite' : 'none',
                       '@keyframes placeholderPulse': {
                         '0%, 100%': { opacity: 0.3, transform: 'scale(0.98)' },
