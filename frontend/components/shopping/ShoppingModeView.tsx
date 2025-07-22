@@ -269,11 +269,10 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
         transition={{ duration: 0.5 }}
       >
         <Card
+          className="glass-search"
           sx={{
-            mb: 3,
-            borderRadius: '20px',
-            background: `linear-gradient(135deg, ${theme.palette.primary.main}15, ${theme.palette.secondary.main}15)`,
-            border: `1px solid ${theme.palette.divider}`,
+            mb: 2.5,
+            borderRadius: '16px',
           }}
         >
           <CardContent sx={{ p: 3 }}>
@@ -292,24 +291,13 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
               {/* Unchecked-only toggle */}
               <Button
                 variant={showUncheckedOnly ? 'contained' : 'outlined'}
-                startIcon={<Circle size={16} />}
+                startIcon={<Circle size={14} />}
                 onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
+                className="glass-button"
                 sx={{
                   textTransform: 'none',
-                  borderRadius: '12px',
-                  borderColor: alpha(theme.palette.warning.main, 0.3),
-                  color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
-                  background: showUncheckedOnly
-                    ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
-                    : alpha(theme.palette.warning.main, 0.05),
-                  backdropFilter: 'blur(10px)',
-                  '&:hover': {
-                    background: showUncheckedOnly
-                      ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
-                      : alpha(theme.palette.warning.main, 0.1),
-                    borderColor: theme.palette.warning.main,
-                    boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
-                  },
+                  borderRadius: '10px',
+                  fontSize: '0.9rem',
                   mr: 1.5,
                 }}
               >
@@ -355,11 +343,10 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
             transition={{ duration: 0.5, delay: categoryIndex * 0.1 }}
           >
             <Card
+              className="glass-category"
               sx={{
-                mb: 3,
+                mb: 2,
                 borderRadius: '16px',
-                background: theme.palette.background.paper,
-                border: `1px solid ${theme.palette.divider}`,
                 overflow: 'hidden',
               }}
             >
