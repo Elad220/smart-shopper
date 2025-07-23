@@ -43,10 +43,13 @@ import {
   clearChatHistory, 
   checkApiKeyStatus,
   ChatMessage,
-  UserPreferences
+  UserPreferences,
+  sendAudioMessage,
 } from '../src/services/api';
 import toast from 'react-hot-toast';
 import PreferencesModal from './settings/PreferencesModal';
+import MicIcon from '@mui/icons-material/Mic';
+import StopIcon from '@mui/icons-material/Stop';
 
 interface SmartAssistantProps {
   open: boolean;
@@ -70,6 +73,10 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [isUploadingAudio, setIsUploadingAudio] = useState(false);
 
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -162,7 +169,60 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
     }
   };
 
+  // Audio recording logic
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new window.MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      setAudioChunks([]);
+      recorder.start();
+      setIsRecording(true);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) setAudioChunks((prev) => [...prev, e.data]);
+      };
+      recorder.onstop = () => {
+        setIsRecording(false);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+    } catch (err) {
+      toast.error('Could not access microphone.');
+    }
+  };
 
+  const handleStopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+    }
+  };
+
+  useEffect(() => {
+    if (!isRecording && audioChunks.length > 0) {
+      handleUploadAudio();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isRecording]);
+
+  const handleUploadAudio = async () => {
+    if (!token || !hasApiKey || audioChunks.length === 0) return;
+    setIsUploadingAudio(true);
+    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+    try {
+      // Call the new API function (to be implemented in api.ts)
+      const response = await sendAudioMessage(token, audioBlob);
+      const assistantMessage: ChatMessage = {
+        role: 'assistant',
+        content: response.message,
+        timestamp: response.timestamp,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+      setAudioChunks([]);
+    } catch (err: any) {
+      toast.error('Failed to process audio.');
+    } finally {
+      setIsUploadingAudio(false);
+    }
+  };
 
   const formatTime = (timestamp: Date) => {
     return new Date(timestamp).toLocaleTimeString([], { 
@@ -600,6 +660,18 @@ const SmartAssistant: React.FC<SmartAssistantProps> = ({ open, onClose, token })
                 >
                   <Send size={isMobile ? 18 : 20} />
                 </Fab>
+                <Fab
+                  color={isRecording ? 'secondary' : 'default'}
+                  size={isMobile ? 'small' : 'medium'}
+                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                  disabled={isLoading || isUploadingAudio || !hasApiKey}
+                  sx={{ ml: 1 }}
+                >
+                  {isRecording ? <StopIcon /> : <MicIcon />}
+                </Fab>
+                {isUploadingAudio && (
+                  <CircularProgress size={28} sx={{ ml: 1 }} />
+                )}
               </Stack>
             </Box>
           </motion.div>

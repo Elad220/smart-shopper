@@ -403,6 +403,29 @@ export const sendChatMessage = async (token: string, message: string): Promise<{
     return handleResponse<{ message: string; timestamp: Date }>(response);
 };
 
+/**
+ * Send an audio message to the smart assistant (Gemini) for transcription and item parsing.
+ * @param token Auth token
+ * @param audioBlob The audio file (webm or wav)
+ * @returns Gemini AI response (parsed items or message)
+ */
+export const sendAudioMessage = async (
+  token: string,
+  audioBlob: Blob
+): Promise<{ message: string; timestamp: Date }> => {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'recording.webm');
+  const response = await fetch(`${BASE_URL}/api/smart-assistant/audio`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      // 'Content-Type' is set automatically by the browser for FormData
+    },
+    body: formData,
+  });
+  return handleResponse<{ message: string; timestamp: Date }>(response);
+};
+
 // Autofill item details
 export interface AutofillItemDetails {
     category: string;

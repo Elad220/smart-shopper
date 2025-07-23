@@ -1,6 +1,8 @@
 const User = require('../models/User');
 const { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } = require('@google/generative-ai');
 const { decrypt } = require('../utils/crypto');
+const multer = require('multer');
+const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB max
 
 // Chat with the smart assistant
 exports.chat = async (req, res) => {
@@ -234,6 +236,51 @@ Return only the JSON array.`;
     } catch (error) {
         console.error("Error in smart assistant:", error);
         res.status(500).json({ message: error.message || 'Failed to generate items.' });
+    }
+};
+
+// Audio transcription endpoint
+exports.transcribeAudio = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        if (!user || !user.apiKey) {
+            return res.status(400).json({ message: 'API key not configured for this user.' });
+        }
+        if (!req.file) {
+            return res.status(400).json({ message: 'No audio file uploaded.' });
+        }
+        // Decrypt the API key before using it
+        const decryptedApiKey = decrypt(user.apiKey);
+        const genAI = new GoogleGenerativeAI(decryptedApiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
+        // Gemini expects audio as a part in the request
+        const audioBuffer = req.file.buffer;
+        const mimeType = req.file.mimetype;
+        // Gemini API expects base64 for audio
+        const base64Audio = audioBuffer.toString('base64');
+        const prompt = "Transcribe this audio to text for shopping list item entry. Only return the transcript.";
+        const result = await model.generateContent({
+            contents: [
+                { role: 'user', parts: [
+                    { text: prompt },
+                    { inlineData: { data: base64Audio, mimeType } }
+                ] }
+            ],
+            generationConfig: {
+                maxOutputTokens: 256,
+                temperature: 0.2,
+            },
+        });
+        const response = await result.response;
+        if (!response.text) {
+            throw new Error("The response was blocked for safety reasons. Please try a different message.");
+        }
+        const transcript = response.text();
+        res.json({ message: transcript, timestamp: new Date() });
+    } catch (error) {
+        console.error("Error in audio transcription:", error);
+        res.status(500).json({ message: error.message || 'Failed to transcribe audio.' });
     }
 };
 
