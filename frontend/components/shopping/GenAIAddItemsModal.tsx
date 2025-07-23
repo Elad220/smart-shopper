@@ -1,17 +1,33 @@
 import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Checkbox, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Typography } from '@mui/material';
-import { generateItemsFromApi } from '../../src/services/api';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Checkbox, List, ListItem, ListItemText, CircularProgress, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
+import { generateItemsFromApi } from '../../src/services/api';
 
-const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) => {
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [items, setItems] = useState([]);
-  const [selected, setSelected] = useState([]);
-  const [error, setError] = useState('');
-  const [listening, setListening] = useState(false);
-  const recognitionRef = React.useRef(null);
+// Add global SpeechRecognition type for TS
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+declare global {
+  interface Window {
+    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: typeof SpeechRecognition;
+  }
+}
+
+interface GenAIAddItemsModalProps {
+  open: boolean;
+  onClose: () => void;
+  onAddItems: (items: { name: string; category: string }[]) => void;
+  token: string;
+}
+
+const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, onAddItems, token }) => {
+  const [input, setInput] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [items, setItems] = useState<{ name: string; category: string }[]>([]);
+  const [selected, setSelected] = useState<boolean[]>([]);
+  const [error, setError] = useState<string>('');
+  const [listening, setListening] = useState<boolean>(false);
+  const recognitionRef = React.useRef<SpeechRecognition | null>(null);
 
   // Voice input logic
   const handleVoiceInput = () => {
@@ -24,16 +40,16 @@ const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) =>
       setListening(false);
       return;
     }
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionClass();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    recognition.onresult = (event) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setInput(prev => prev ? prev + ', ' + transcript : transcript);
     };
-    recognition.onerror = (event) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
       setError('Voice recognition error: ' + event.error);
       setListening(false);
     };
@@ -49,16 +65,16 @@ const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) =>
     setLoading(true);
     setError('');
     try {
-      const result = await generateItemsFromApi(token, input);
+      const result: { name: string; category: string }[] = await generateItemsFromApi(token, input);
       setItems(result);
-      setSelected(result.map((_, i) => true));
+      setSelected(result.map(() => true));
     } catch (e) {
       setError('Failed to parse items.');
     }
     setLoading(false);
   };
 
-  const handleToggle = idx => {
+  const handleToggle = (idx: number) => {
     setSelected(sel => sel.map((v, i) => (i === idx ? !v : v)));
   };
 
