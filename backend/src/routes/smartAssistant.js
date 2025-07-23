@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const smartAssistantController = require('../controllers/smartAssistantController');
 const auth = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ limits: { fileSize: 10 * 1024 * 1024 } });
 
 router.use(auth);
 
@@ -16,5 +18,8 @@ router.post('/autofill', smartAssistantController.autofillItemDetails);
 
 // Original item generation (kept for backward compatibility)
 router.post('/generate', smartAssistantController.generateItems);
+
+// Audio transcription endpoint
+router.post('/audio', upload.single('audio'), smartAssistantController.transcribeAudio);
 
 module.exports = router;
