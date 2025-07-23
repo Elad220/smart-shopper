@@ -14,6 +14,7 @@ interface ShoppingListViewProps {
   items: ShoppingItem[];
   listId: string;
   userId: string;
+  token: string;
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
@@ -67,6 +68,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   items,
   listId,
   userId,
+  token,
   onToggleComplete,
   onDeleteItem,
   onEditItem,
@@ -892,7 +894,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
         open={isGenAIAddModalOpen}
         onClose={() => setGenAIAddModalOpen(false)}
         onAddItems={handleGenAIAddItems}
-        token={userId}
+        token={token}
       />
     </>
   );

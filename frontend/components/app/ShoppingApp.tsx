@@ -445,6 +445,7 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
                       items={items}
                       listId={selectedListId}
                       userId={user.id}
+                      token={user.token}
                       onToggleComplete={handleToggleComplete}
                       onDeleteItem={handleDeleteItem}
                       onEditItem={handleEditItem}
