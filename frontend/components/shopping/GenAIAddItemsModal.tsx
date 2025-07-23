@@ -2,18 +2,8 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Checkbox, List, ListItem, ListItemText, CircularProgress, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
-import { generateItemsFromApi } from '../../src/services/api';
+import { generateItemsFromApi, analyzeAudioItems } from '../../src/services/api';
 import { UNIT_OPTIONS } from '../../constants';
-
-// TypeScript: Add minimal types for SpeechRecognition for browser compatibility
-// These types are not in the default TS lib, so we define them here for our use case
-
-type SpeechRecognitionType = typeof window & {
-  SpeechRecognition: any;
-  webkitSpeechRecognition: any;
-};
-type SpeechRecognitionEventType = Event & { results: { [key: number]: { [key: number]: { transcript: string } } } };
-type SpeechRecognitionErrorEventType = Event & { error: string };
 
 interface GenAIAddItemsModalProps {
   open: boolean;
@@ -28,42 +18,58 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
   const [items, setItems] = useState<{ name: string; category: string }[]>([]);
   const [selected, setSelected] = useState<boolean[]>([]);
   const [error, setError] = useState<string>('');
-  const [listening, setListening] = useState<boolean>(false);
-  const recognitionRef = React.useRef<any>(null);
+  const [recording, setRecording] = useState<boolean>(false);
+  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
+  const audioChunksRef = React.useRef<Blob[]>([]);
   const [amounts, setAmounts] = useState<number[]>([]);
   const [units, setUnits] = useState<string[]>([]);
 
-  // Voice input logic
-  const handleVoiceInput = () => {
-    const win = window as SpeechRecognitionType;
-    if (!("webkitSpeechRecognition" in win || "SpeechRecognition" in win)) {
-      setError('Voice recognition not supported in this browser.');
+  // Voice input logic (MediaRecorder)
+  const handleVoiceInput = async () => {
+    if (recording) {
+      // Stop recording
+      mediaRecorderRef.current?.stop();
+      setRecording(false);
       return;
     }
-    if (listening) {
-      recognitionRef.current && recognitionRef.current.stop();
-      setListening(false);
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setError('Audio recording not supported in this browser.');
       return;
     }
-    const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionClass();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event: SpeechRecognitionEventType) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(prev => prev ? prev + ', ' + transcript : transcript);
-    };
-    recognition.onerror = (event: SpeechRecognitionErrorEventType) => {
-      setError('Voice recognition error: ' + event.error);
-      setListening(false);
-    };
-    recognition.onend = () => {
-      setListening(false);
-    };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        setRecording(false);
+        setLoading(true);
+        setError('');
+        try {
+          const result = await analyzeAudioItems(token, audioBlob);
+          setInput(result.transcript || '');
+          if (result.items) {
+            setItems(result.items);
+            setSelected(result.items.map(() => true));
+            setAmounts(result.items.map(item => item.amount ?? 1));
+            setUnits(result.items.map(item => item.units ?? 'pcs'));
+          }
+        } catch (e: any) {
+          setError(e.message || 'Failed to analyze audio.');
+        }
+        setLoading(false);
+      };
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setRecording(true);
+    } catch (err) {
+      setError('Could not start audio recording.');
+    }
   };
 
   const handleProcess = async () => {
@@ -153,8 +159,8 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
               margin="normal"
               InputProps={{
                 endAdornment: (
-                  <Button onClick={handleVoiceInput} sx={{ minWidth: 0 }}>
-                    {listening ? <MicOffIcon color="error" /> : <MicIcon color="primary" />}
+                  <Button onClick={handleVoiceInput} sx={{ minWidth: 0 }} disabled={loading}>
+                    {recording ? <MicOffIcon color="error" /> : <MicIcon color="primary" />}
                   </Button>
                 )
               }}

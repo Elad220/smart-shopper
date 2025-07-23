@@ -237,6 +237,35 @@ Return only the JSON array.`;
     }
 };
 
+// Audio analysis (speech-to-text and item extraction)
+exports.analyzeAudio = async (req, res) => {
+    try {
+        // For now, use multer or similar middleware to handle multipart/form-data if not already set up
+        // We'll use req.file or req.files if using multer, or req.body if using express-fileupload
+        // Placeholder: Assume req.file is available and is the audio file
+        // In production, add proper file handling and cleanup
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+        if (!user || !user.apiKey) {
+            return res.status(400).json({ message: 'API key not configured for this user.' });
+        }
+        // Placeholder: Simulate speech-to-text
+        // In production, use Google Speech-to-Text, OpenAI Whisper, or another service
+        // Example: const transcript = await transcribeAudio(req.file.path);
+        // For now, just return a dummy transcript and items
+        const transcript = 'milk, eggs, bread';
+        const items = [
+            { name: 'milk', category: 'Dairy', amount: 1, units: 'pcs' },
+            { name: 'eggs', category: 'Dairy', amount: 12, units: 'pcs' },
+            { name: 'bread', category: 'Bakery', amount: 1, units: 'loaf' }
+        ];
+        res.json({ transcript, items });
+    } catch (error) {
+        console.error('Error in audio analysis:', error);
+        res.status(500).json({ message: error.message || 'Failed to analyze audio.' });
+    }
+};
+
 // Helper function to build user context for the AI
 function buildUserContext(user) {
     const context = [];
