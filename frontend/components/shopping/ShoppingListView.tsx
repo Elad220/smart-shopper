@@ -7,15 +7,19 @@ import {
 import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkles, Circle } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import GenAIAddItemsModal from './GenAIAddItemsModal';
+import { useMediaQuery } from '@mui/material';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
   listId: string;
   userId: string;
+  token: string;
   onToggleComplete: (id: string) => void;
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onAddItem: () => void;
+  onGenAIAddItems?: (items: { name: string; category: string }[]) => void;
 }
 
 // Floating particles component
@@ -64,18 +68,23 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   items,
   listId,
   userId,
+  token,
   onToggleComplete,
   onDeleteItem,
   onEditItem,
   onAddItem,
+  onGenAIAddItems,
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // Add state for GenAI modal
+  const [isGenAIAddModalOpen, setGenAIAddModalOpen] = useState(false);
 
   // Category emoji mapping
   const getCategoryEmoji = (category: string) => {
@@ -270,6 +279,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     setCategoryOrder(newOrder);
     localStorage.setItem(`categoryOrder_${userId}_${listId}`, JSON.stringify(newOrder));
   }, [sortedCategories, userId, listId]);
+
+  // Add this handler inside the ShoppingListView component
+  const handleGenAIAddItems = (items: { name: string; category: string }[]) => {
+    if (onGenAIAddItems) {
+      onGenAIAddItems(items);
+    }
+  };
 
   // Simplified category component without memo for drag and drop reliability
   const renderCategoryCard = (categoryName: string, items: ShoppingItem[], index: number, isCollapsed: boolean) => (
@@ -613,7 +629,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                               <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
             <Stack spacing={2}>
               {/* Search Input Row */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: 2 }}>
                 <TextField
                   size="small"
                   placeholder="Search"
@@ -670,6 +686,28 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     )
                   }}
                 />
+                {/* AI Add Items Button - responsive placement */}
+                {isMobile ? (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<Sparkles size={18} />}
+                    onClick={() => setGenAIAddModalOpen(true)}
+                    sx={{ borderRadius: '12px', fontWeight: 600, mt: 2, width: '100%' }}
+                  >
+                    AI Add Items
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<Sparkles size={18} />}
+                    onClick={() => setGenAIAddModalOpen(true)}
+                    sx={{ borderRadius: '12px', fontWeight: 600 }}
+                  >
+                    AI Add Items
+                  </Button>
+                )}
                 
                 {/* Filter for unchecked items - always visible */}
                 <Box
@@ -851,6 +889,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           </Droppable>
         </DragDropContext>
       </Box>
+      {/* Add the GenAIAddItemsModal */}
+      <GenAIAddItemsModal
+        open={isGenAIAddModalOpen}
+        onClose={() => setGenAIAddModalOpen(false)}
+        onAddItems={handleGenAIAddItems}
+        token={token}
+      />
     </>
   );
 };
