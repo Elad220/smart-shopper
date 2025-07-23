@@ -673,16 +673,17 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               <Button
                 variant="contained"
                 color="secondary"
-                startIcon={<Sparkles size={15} />}
+                size="small"
+                startIcon={<Sparkles size={14} />}
                 onClick={() => setGenAIAddModalOpen(true)}
                 sx={{
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   fontWeight: 500,
-                  fontSize: '0.97rem',
+                  fontSize: '0.93rem',
                   minWidth: isMobile ? '100%' : 0,
-                  px: 2,
-                  py: 0.5,
-                  height: 36,
+                  px: 1.5,
+                  py: 0.25,
+                  height: 30,
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -693,19 +694,19 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 variant={showUncheckedOnly ? 'contained' : 'outlined'}
                 size="small"
                 onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
-                startIcon={<Circle size={13} />}
+                startIcon={<Circle size={12} />}
                 sx={{
                   textTransform: 'none',
-                  borderRadius: '10px',
+                  borderRadius: '8px',
                   borderColor: alpha(theme.palette.warning.main, 0.25),
                   color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
                   background: showUncheckedOnly
                     ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
                     : alpha(theme.palette.warning.main, 0.04),
-                  fontSize: '0.97rem',
-                  px: 1.5,
-                  py: 0.5,
-                  height: 36,
+                  fontSize: '0.93rem',
+                  px: 1.2,
+                  py: 0.25,
+                  height: 30,
                   minWidth: 0,
                   whiteSpace: 'nowrap',
                 }}
@@ -720,14 +721,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   onClick={toggleAllCategories}
                   sx={{
                     textTransform: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '8px',
                     borderColor: alpha(theme.palette.primary.main, 0.25),
                     color: theme.palette.primary.main,
                     background: alpha(theme.palette.primary.main, 0.04),
-                    fontSize: '0.97rem',
-                    px: 1.5,
-                    py: 0.5,
-                    height: 36,
+                    fontSize: '0.93rem',
+                    px: 1.2,
+                    py: 0.25,
+                    height: 30,
                     minWidth: 0,
                     whiteSpace: 'nowrap',
                   }}
@@ -743,14 +744,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   onClick={resetCategoryOrder}
                   sx={{
                     textTransform: 'none',
-                    borderRadius: '10px',
+                    borderRadius: '8px',
                     borderColor: alpha(theme.palette.secondary.main, 0.25),
                     color: theme.palette.secondary.main,
                     background: alpha(theme.palette.secondary.main, 0.04),
-                    fontSize: '0.97rem',
-                    px: 1.5,
-                    py: 0.5,
-                    height: 36,
+                    fontSize: '0.93rem',
+                    px: 1.2,
+                    py: 0.25,
+                    height: 30,
                     minWidth: 0,
                     whiteSpace: 'nowrap',
                   }}
