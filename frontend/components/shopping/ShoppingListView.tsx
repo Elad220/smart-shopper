@@ -4,7 +4,7 @@ import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
 } from '@mui/material';
-import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkles, Circle } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
