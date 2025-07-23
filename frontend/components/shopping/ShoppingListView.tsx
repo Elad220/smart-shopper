@@ -7,6 +7,7 @@ import {
 import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkles, Circle } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import GenAIAddItemsModal from './GenAIAddItemsModal';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
@@ -76,6 +77,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showUncheckedOnly, setShowUncheckedOnly] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  // Add state for GenAI modal
+  const [isGenAIAddModalOpen, setGenAIAddModalOpen] = useState(false);
 
   // Category emoji mapping
   const getCategoryEmoji = (category: string) => {
@@ -270,6 +273,17 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     setCategoryOrder(newOrder);
     localStorage.setItem(`categoryOrder_${userId}_${listId}`, JSON.stringify(newOrder));
   }, [sortedCategories, userId, listId]);
+
+  // Add this handler inside the ShoppingListView component
+  const handleGenAIAddItems = (items) => {
+    // You may need to adapt this to your add item logic
+    items.forEach(item => {
+      // Call your add item function/prop for each item
+      // Example: onAddItem(item)
+      // If you need to map fields, do so here
+      // You may want to batch or optimize this if needed
+    });
+  };
 
   // Simplified category component without memo for drag and drop reliability
   const renderCategoryCard = (categoryName: string, items: ShoppingItem[], index: number, isCollapsed: boolean) => (
@@ -851,6 +865,14 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           </Droppable>
         </DragDropContext>
       </Box>
+      {/* Add the GenAIAddItemsModal */}
+      <GenAIAddItemsModal
+        open={isGenAIAddModalOpen}
+        onClose={() => setGenAIAddModalOpen(false)}
+        onAddItems={handleGenAIAddItems} // implement this handler
+        token={userId} // or pass the correct token/prop
+        categories={Object.keys(groupedItems)}
+      />
     </>
   );
 };
