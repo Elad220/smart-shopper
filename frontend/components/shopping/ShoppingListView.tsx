@@ -669,7 +669,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   ),
                 }}
               />
-              {/* AI Add Items Button */}
+              {/* All Controls in the Same Row */}
               <Button
                 variant="contained"
                 color="secondary"
@@ -680,7 +680,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   borderRadius: '8px',
                   fontWeight: 500,
                   fontSize: '0.93rem',
-                  minWidth: isMobile ? '100%' : 0,
+                  minWidth: 0,
                   px: 1.5,
                   py: 0.25,
                   height: 30,
@@ -689,7 +689,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               >
                 AI Add Items
               </Button>
-              {/* Unchecked Only Button */}
               <Button
                 variant={showUncheckedOnly ? 'contained' : 'outlined'}
                 size="small"
@@ -713,7 +712,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               >
                 Unchecked Only
               </Button>
-              {/* Expand/Collapse All Button */}
               {sortedCategories.length > 1 && !searchQuery && (
                 <Button
                   variant="outlined"
@@ -736,7 +734,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   {areAllCollapsed ? 'Expand All' : 'Collapse All'}
                 </Button>
               )}
-              {/* Reset Order Button */}
               {sortedCategories.length > 1 && !searchQuery && categoryOrder.length > 0 && (
                 <Button
                   variant="outlined"
