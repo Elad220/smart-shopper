@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Checkbox, List, ListItem, ListItemText, CircularProgress, Typography } from '@mui/material';
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
-import { generateItemsFromApi } from '../../src/services/api';
+import { generateItemsFromApi, sendAudioMessage } from '../../src/services/api';
 import { UNIT_OPTIONS } from '../../constants';
 
 // TypeScript: Add minimal types for SpeechRecognition for browser compatibility
@@ -28,42 +28,55 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
   const [items, setItems] = useState<{ name: string; category: string }[]>([]);
   const [selected, setSelected] = useState<boolean[]>([]);
   const [error, setError] = useState<string>('');
-  const [listening, setListening] = useState<boolean>(false);
-  const recognitionRef = React.useRef<any>(null);
+  const [recording, setRecording] = useState<boolean>(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
+  const [uploading, setUploading] = useState<boolean>(false);
   const [amounts, setAmounts] = useState<number[]>([]);
   const [units, setUnits] = useState<string[]>([]);
 
-  // Voice input logic
-  const handleVoiceInput = () => {
-    const win = window as SpeechRecognitionType;
-    if (!("webkitSpeechRecognition" in win || "SpeechRecognition" in win)) {
-      setError('Voice recognition not supported in this browser.');
+  // Voice input logic (MediaRecorder)
+  const handleVoiceInput = async () => {
+    if (recording) {
+      if (mediaRecorder) mediaRecorder.stop();
+      setRecording(false);
       return;
     }
-    if (listening) {
-      recognitionRef.current && recognitionRef.current.stop();
-      setListening(false);
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+      setError('Audio recording is not supported in this browser.');
       return;
     }
-    const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionClass();
-    recognition.lang = 'en-US';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.onresult = (event: SpeechRecognitionEventType) => {
-      const transcript = event.results[0][0].transcript;
-      setInput(prev => prev ? prev + ', ' + transcript : transcript);
-    };
-    recognition.onerror = (event: SpeechRecognitionErrorEventType) => {
-      setError('Voice recognition error: ' + event.error);
-      setListening(false);
-    };
-    recognition.onend = () => {
-      setListening(false);
-    };
-    recognitionRef.current = recognition;
-    recognition.start();
-    setListening(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new window.MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      setAudioChunks([]);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) setAudioChunks((prev) => [...prev, e.data]);
+      };
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        setRecording(false);
+        if (audioChunks.length === 0) return;
+        setUploading(true);
+        try {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          const response = await sendAudioMessage(token, audioBlob);
+          if (response && response.message) {
+            setInput(response.message);
+          }
+        } catch (err) {
+          setError('Failed to process audio.');
+        } finally {
+          setUploading(false);
+          setAudioChunks([]);
+        }
+      };
+      recorder.start();
+      setRecording(true);
+    } catch (err) {
+      setError('Could not access microphone.');
+    }
   };
 
   const handleProcess = async () => {
@@ -153,8 +166,8 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
               margin="normal"
               InputProps={{
                 endAdornment: (
-                  <Button onClick={handleVoiceInput} sx={{ minWidth: 0 }}>
-                    {listening ? <MicOffIcon color="error" /> : <MicIcon color="primary" />}
+                  <Button onClick={handleVoiceInput} sx={{ minWidth: 0 }} disabled={uploading}>
+                    {recording ? <MicOffIcon color="error" /> : <MicIcon color="primary" />}
                   </Button>
                 )
               }}
