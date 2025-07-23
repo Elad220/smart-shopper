@@ -3,6 +3,7 @@ import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, C
 import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import { generateItemsFromApi } from '../../src/services/api';
+import { UNIT_OPTIONS } from '../../constants';
 
 // TypeScript: Add minimal types for SpeechRecognition for browser compatibility
 // These types are not in the default TS lib, so we define them here for our use case
@@ -29,6 +30,8 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
   const [error, setError] = useState<string>('');
   const [listening, setListening] = useState<boolean>(false);
   const recognitionRef = React.useRef<any>(null);
+  const [amounts, setAmounts] = useState<number[]>([]);
+  const [units, setUnits] = useState<string[]>([]);
 
   // Voice input logic
   const handleVoiceInput = () => {
@@ -72,9 +75,12 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
       return;
     }
     try {
-      const result: { name: string; category: string }[] = await generateItemsFromApi(token, input);
+      // Try to support amount/units if returned by API, else fallback
+      const result: { name: string; category: string; amount?: number; units?: string }[] = await generateItemsFromApi(token, input);
       setItems(result);
       setSelected(result.map(() => true));
+      setAmounts(result.map(item => item.amount ?? 1));
+      setUnits(result.map(item => item.units ?? 'pcs'));
     } catch (e: any) {
       if (e && e.status === 401) {
         setError('Session expired or unauthorized. Please log in again.');
@@ -85,12 +91,34 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
     setLoading(false);
   };
 
+  const handleClear = () => {
+    setItems([]);
+    setSelected([]);
+    setAmounts([]);
+    setUnits([]);
+    setError('');
+  };
+
+  const handleAmountChange = (idx: number, value: number) => {
+    setAmounts(arr => arr.map((v, i) => (i === idx ? value : v)));
+  };
+  const handleUnitChange = (idx: number, value: string) => {
+    setUnits(arr => arr.map((v, i) => (i === idx ? value : v)));
+  };
+
   const handleToggle = (idx: number) => {
     setSelected(sel => sel.map((v, i) => (i === idx ? !v : v)));
   };
 
   const handleAdd = () => {
-    const selectedItems = items.filter((_, i) => selected[i]);
+    const selectedItems = items
+      .map((item, i) => selected[i] ? {
+        name: item.name,
+        category: item.category,
+        amount: amounts[i],
+        units: units[i],
+      } : null)
+      .filter(Boolean) as { name: string; category: string; amount: number; units: string }[];
     onAddItems(selectedItems);
     onClose();
   };
@@ -133,9 +161,31 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
             <Typography variant="subtitle1" sx={{ mb: 2 }}>Found {items.length} Items</Typography>
             <List>
               {items.map((item, idx) => (
-                <ListItem key={idx} button onClick={() => handleToggle(idx)}>
+                <ListItem key={idx} button onClick={() => handleToggle(idx)} alignItems="flex-start">
                   <Checkbox checked={selected[idx]} tabIndex={-1} disableRipple />
                   <ListItemText primary={item.name} secondary={item.category} />
+                  <TextField
+                    type="number"
+                    label="Amount"
+                    value={amounts[idx]}
+                    onChange={e => handleAmountChange(idx, Math.max(1, parseInt(e.target.value) || 1))}
+                    size="small"
+                    sx={{ width: 80, mr: 1 }}
+                    inputProps={{ min: 1 }}
+                  />
+                  <TextField
+                    select
+                    label="Unit"
+                    value={units[idx]}
+                    onChange={e => handleUnitChange(idx, e.target.value)}
+                    size="small"
+                    sx={{ width: 100 }}
+                    SelectProps={{ native: true }}
+                  >
+                    {UNIT_OPTIONS.map(unit => (
+                      <option key={unit} value={unit}>{unit}</option>
+                    ))}
+                  </TextField>
                 </ListItem>
               ))}
             </List>
@@ -146,7 +196,7 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
         {items.length === 0 ? (
           <Button onClick={handleCancel}>Cancel</Button>
         ) : (
-          <Button onClick={handleCancel}>Clear</Button>
+          <Button onClick={handleClear}>Clear</Button>
         )}
         {items.length === 0 ? (
           <Button onClick={handleProcess} disabled={loading || !input.trim()} variant="contained">
