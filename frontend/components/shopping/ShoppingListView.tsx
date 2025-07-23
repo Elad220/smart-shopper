@@ -626,207 +626,139 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             transition: 'all 0.6s ease',
           }}
         >
-                              <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
-            <Stack spacing={2}>
-              {/* Search Input Row */}
-              <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: 2 }}>
-                <TextField
+          {/* --- COMPACTED CONTROLS SECTION START --- */}
+          <Box className="glass-card" sx={{ mb: 2, p: 1.5, borderRadius: '16px' }}>
+            <Stack
+              direction="row"
+              spacing={1.2}
+              alignItems="center"
+              flexWrap="wrap"
+              sx={{ width: '100%' }}
+            >
+              {/* Search Bar */}
+              <TextField
+                size="small"
+                placeholder="Search"
+                value={searchQuery}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
+                sx={{
+                  flexGrow: 1,
+                  minWidth: '140px',
+                  maxWidth: isMobile ? '100%' : '220px',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: '10px',
+                    background: alpha(theme.palette.background.paper, 0.6),
+                    border: `1px solid ${alpha(theme.palette.primary.main, 0.15)}`,
+                    fontSize: '0.97rem',
+                    height: 36,
+                    paddingRight: 0,
+                  },
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search size={16} color={theme.palette.primary.main} />
+                    </InputAdornment>
+                  ),
+                  endAdornment: searchQuery && (
+                    <InputAdornment position="end">
+                      <IconButton size="small" onClick={() => setSearchQuery('')} sx={{ p: 0.5 }}>
+                        <X size={14} />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              {/* All Controls in the Same Row */}
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                startIcon={<Sparkles size={14} />}
+                onClick={() => setGenAIAddModalOpen(true)}
+                sx={{
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  fontSize: '0.93rem',
+                  minWidth: 0,
+                  px: 1.5,
+                  py: 1,
+                  height: 30,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                AI Add Items
+              </Button>
+              <Button
+                variant={showUncheckedOnly ? 'contained' : 'outlined'}
+                size="small"
+                onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
+                startIcon={<Circle size={12} />}
+                sx={{
+                  textTransform: 'none',
+                  borderRadius: '8px',
+                  borderColor: alpha(theme.palette.warning.main, 0.25),
+                  color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
+                  background: showUncheckedOnly
+                    ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
+                    : alpha(theme.palette.warning.main, 0.04),
+                  fontSize: '0.93rem',
+                  px: 1.2,
+                  py: 1,
+                  height: 30,
+                  minWidth: 0,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                Unchecked Only
+              </Button>
+              {sortedCategories.length > 1 && !searchQuery && (
+                <Button
+                  variant="outlined"
                   size="small"
-                  placeholder="Search"
-                  value={searchQuery}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-                  sx={{ 
-                    flexGrow: 1,
-                    minWidth: '200px', // Ensure minimum width for search input
-                    '& .MuiOutlinedInput-root': { 
-                      borderRadius: '16px',
-                      background: alpha(theme.palette.background.paper, 0.5),
-                      backdropFilter: 'blur(10px)',
-                      border: `1px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        background: alpha(theme.palette.background.paper, 0.7),
-                        borderColor: theme.palette.primary.main,
-                      },
-                      '&.Mui-focused': {
-                        background: alpha(theme.palette.background.paper, 0.8),
-                        borderColor: theme.palette.primary.main,
-                        boxShadow: `0 0 20px ${alpha(theme.palette.primary.main, 0.2)}`,
-                      }
-                    }
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Search size={18} color={theme.palette.primary.main} />
-                      </InputAdornment>
-                    ),
-                    endAdornment: searchQuery && (
-                      <InputAdornment position="end">
-                        <Box
-                          sx={{
-                            transition: 'transform 0.2s ease',
-                            '&:hover': {
-                              transform: 'scale(1.1)',
-                            },
-                            '&:active': {
-                              transform: 'scale(0.9)',
-                            },
-                          }}
-                        >
-                          <IconButton
-                            size="small"
-                            onClick={() => setSearchQuery('')}
-                            sx={{ p: 0.5 }}
-                          >
-                            <X size={16} />
-                          </IconButton>
-                        </Box>
-                      </InputAdornment>
-                    )
-                  }}
-                />
-                {/* AI Add Items Button - responsive placement */}
-                {isMobile ? (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<Sparkles size={18} />}
-                    onClick={() => setGenAIAddModalOpen(true)}
-                    sx={{ borderRadius: '12px', fontWeight: 600, mt: 2, width: '100%' }}
-                  >
-                    AI Add Items
-                  </Button>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<Sparkles size={18} />}
-                    onClick={() => setGenAIAddModalOpen(true)}
-                    sx={{ borderRadius: '12px', fontWeight: 600 }}
-                  >
-                    AI Add Items
-                  </Button>
-                )}
-                
-                {/* Filter for unchecked items - always visible */}
-                <Box
+                  onClick={toggleAllCategories}
                   sx={{
-                    transition: 'transform 0.2s ease',
-                    flexShrink: 0, // Prevent button from shrinking
-                    '&:hover': {
-                      transform: 'scale(1.05)',
-                    },
-                    '&:active': {
-                      transform: 'scale(0.95)',
-                    },
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    borderColor: alpha(theme.palette.primary.main, 0.25),
+                    color: theme.palette.primary.main,
+                    background: alpha(theme.palette.primary.main, 0.04),
+                    fontSize: '0.93rem',
+                    px: 1.2,
+                    py: 1,
+                    height: 30,
+                    minWidth: 0,
+                    whiteSpace: 'nowrap',
                   }}
                 >
-                  <Button
-                    variant={showUncheckedOnly ? 'contained' : 'outlined'}
-                    size="small"
-                    onClick={() => setShowUncheckedOnly(!showUncheckedOnly)}
-                    startIcon={<Circle size={16} />}
-                    sx={{
-                      textTransform: 'none',
-                      borderRadius: '12px',
-                      borderColor: alpha(theme.palette.warning.main, 0.3),
-                      color: showUncheckedOnly ? 'white' : theme.palette.warning.main,
-                      background: showUncheckedOnly 
-                        ? `linear-gradient(135deg, ${theme.palette.warning.main}, ${theme.palette.warning.dark})`
-                        : alpha(theme.palette.warning.main, 0.05),
-                      backdropFilter: 'blur(10px)',
-                      whiteSpace: 'nowrap',
-                      '&:hover': {
-                        background: showUncheckedOnly 
-                          ? `linear-gradient(135deg, ${theme.palette.warning.dark}, ${theme.palette.warning.main})`
-                          : alpha(theme.palette.warning.main, 0.1),
-                        borderColor: theme.palette.warning.main,
-                        boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
-                      },
-                    }}
-                  >
-                    Unchecked Only
-                  </Button>
-                </Box>
-              </Box>
-              
-              {/* Additional Control Buttons Row - only show when needed */}
-              {sortedCategories.length > 1 && !searchQuery && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-                  <Box
-                    sx={{
-                      transition: 'transform 0.2s ease',
-                      '&:hover': {
-                        transform: 'scale(1.05)',
-                      },
-                      '&:active': {
-                        transform: 'scale(0.95)',
-                      },
-                    }}
-                  >
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={toggleAllCategories}
-                      sx={{
-                        textTransform: 'none',
-                        borderRadius: '12px',
-                        borderColor: alpha(theme.palette.primary.main, 0.3),
-                        color: theme.palette.primary.main,
-                        background: alpha(theme.palette.primary.main, 0.05),
-                        backdropFilter: 'blur(10px)',
-                        whiteSpace: 'nowrap',
-                        '&:hover': {
-                          background: alpha(theme.palette.primary.main, 0.1),
-                          borderColor: theme.palette.primary.main,
-                          boxShadow: `0 4px 20px ${alpha(theme.palette.primary.main, 0.2)}`,
-                        },
-                      }}
-                    >
-                      {areAllCollapsed ? 'Expand All' : 'Collapse All'}
-                    </Button>
-                  </Box>
-                  
-                  {categoryOrder.length > 0 && (
-                    <Box
-                      sx={{
-                        transition: 'transform 0.2s ease',
-                        '&:hover': {
-                          transform: 'scale(1.05)',
-                        },
-                        '&:active': {
-                          transform: 'scale(0.95)',
-                        },
-                      }}
-                    >
-                      <Button
-                        variant="outlined"
-                        size="small"
-                        onClick={resetCategoryOrder}
-                        sx={{
-                          textTransform: 'none',
-                          borderRadius: '12px',
-                          borderColor: alpha(theme.palette.secondary.main, 0.3),
-                          color: theme.palette.secondary.main,
-                          background: alpha(theme.palette.secondary.main, 0.05),
-                          backdropFilter: 'blur(10px)',
-                          whiteSpace: 'nowrap',
-                          '&:hover': {
-                            background: alpha(theme.palette.secondary.main, 0.1),
-                            borderColor: theme.palette.secondary.main,
-                            boxShadow: `0 4px 20px ${alpha(theme.palette.secondary.main, 0.2)}`,
-                          },
-                        }}
-                      >
-                        Reset Order
-                      </Button>
-                    </Box>
-                  )}
-                </Box>
+                  {areAllCollapsed ? 'Expand All' : 'Collapse All'}
+                </Button>
+              )}
+              {sortedCategories.length > 1 && !searchQuery && categoryOrder.length > 0 && (
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={resetCategoryOrder}
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '8px',
+                    borderColor: alpha(theme.palette.secondary.main, 0.25),
+                    color: theme.palette.secondary.main,
+                    background: alpha(theme.palette.secondary.main, 0.04),
+                    fontSize: '0.93rem',
+                    px: 1.2,
+                    py: 1,
+                    height: 30,
+                    minWidth: 0,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  Reset Order
+                </Button>
               )}
             </Stack>
           </Box>
+          {/* --- COMPACTED CONTROLS SECTION END --- */}
         </Box>
 
         <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
