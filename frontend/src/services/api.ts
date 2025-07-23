@@ -454,7 +454,7 @@ export const updateUserPreferences = async (token: string, preferences: Partial<
 export const analyzeAudioItems = async (token: string, audioBlob: Blob): Promise<{ transcript: string, items?: { name: string, category: string, amount?: number, units?: string }[] }> => {
   const formData = new FormData();
   formData.append('audio', audioBlob, 'audio.webm');
-  const response = await fetch(`${BASE_URL}/smart-assistant/audio`, {
+  const response = await fetch(`${BASE_URL}/api/smart-assistant/audio`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`
