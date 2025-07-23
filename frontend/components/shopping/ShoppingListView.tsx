@@ -4,7 +4,7 @@ import {
   Box, Card, CardContent, Typography, Checkbox, IconButton,
   Stack, Chip, useTheme, alpha, Collapse, Button, TextField, InputAdornment
 } from '@mui/material';
-import { Trash2, ShoppingBag, AlertTriangle, Clock, Circle, ChevronDown, Edit, GripVertical, Search, X, Sparkles } from 'lucide-react';
+import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkles, Circle } from 'lucide-react';
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
@@ -271,19 +271,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
     localStorage.setItem(`categoryOrder_${userId}_${listId}`, JSON.stringify(newOrder));
   }, [sortedCategories, userId, listId]);
 
-  const getPriorityIcon = useCallback((priority: string) => {
-    switch (priority) {
-      case 'High':
-        return <AlertTriangle size={14} color={theme.palette.error.main} />;
-      case 'Medium':
-        return <Clock size={14} color={theme.palette.warning.main} />;
-      case 'Low':
-        return <Circle size={14} color={theme.palette.info.main} />;
-      default:
-        return <Circle size={14} color={theme.palette.info.main} />;
-    }
-  }, [theme.palette]);
-
   // Simplified category component without memo for drag and drop reliability
   const renderCategoryCard = (categoryName: string, items: ShoppingItem[], index: number, isCollapsed: boolean) => (
     <Draggable 
@@ -466,7 +453,6 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                               >
                                 {item.name}
                               </Typography>
-                              {getPriorityIcon(item.priority)}
                             </Stack>
                             
                             <Stack direction="row" spacing={0.75} sx={{ mt: 0.25 }}>
