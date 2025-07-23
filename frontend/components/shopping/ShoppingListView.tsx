@@ -682,6 +682,16 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     )
                   }}
                 />
+                {/* AI Add Items Button */}
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<Sparkles size={18} />}
+                  onClick={() => setGenAIAddModalOpen(true)}
+                  sx={{ borderRadius: '12px', fontWeight: 600 }}
+                >
+                  AI Add Items
+                </Button>
                 
                 {/* Filter for unchecked items - always visible */}
                 <Box
