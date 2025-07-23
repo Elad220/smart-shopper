@@ -196,7 +196,19 @@ exports.generateItems = async (req, res) => {
         
         const fullPrompt = `${languageInstruction}
 
-Based on the theme "${prompt}", generate a list of 5-10 shopping items. For each item, suggest a relevant category from the following list: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other. Format the output as a JSON array of objects, where each object has a "name" and "category" property. For example: [{"name": "Taco Shells", "category": "Pantry"}]`;
+Parse the following shopping list: "${prompt}".
+For each item, extract:
+- "name" (string)
+- "category" (one of: Produce, Dairy, Fridge, Freezer, Bakery, Pantry, Disposable, Hygiene, Canned Goods, Organics, Deli, Other)
+- "amount" (number, default 1 if not specified)
+- "units" (string, e.g. pcs, kg, L, dozen, etc., default "pcs" if not specified)
+
+Format the output as a JSON array of objects, e.g.:
+[
+  {"name": "Bananas", "category": "Produce", "amount": 6, "units": "pcs"},
+  {"name": "Milk", "category": "Dairy", "amount": 2, "units": "L"}
+]
+Return only the JSON array.`;
 
         const result = await model.generateContent(fullPrompt);
         const response = await result.response;
@@ -207,7 +219,15 @@ Based on the theme "${prompt}", generate a list of 5-10 shopping items. For each
 
         const text = await response.text();
         const jsonText = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const items = JSON.parse(jsonText);
+        let items = JSON.parse(jsonText);
+
+        // Ensure all items have amount and units
+        items = items.map(item => ({
+            name: item.name,
+            category: item.category,
+            amount: item.amount ?? 1,
+            units: item.units ?? 'pcs',
+        }));
 
         res.json(items);
 
