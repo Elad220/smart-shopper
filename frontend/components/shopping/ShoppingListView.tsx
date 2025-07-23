@@ -17,6 +17,7 @@ interface ShoppingListViewProps {
   onDeleteItem: (id: string) => void;
   onEditItem: (item: ShoppingItem) => void;
   onAddItem: () => void;
+  onGenAIAddItems?: (items: { name: string; category: string }[]) => void;
 }
 
 // Floating particles component
@@ -69,6 +70,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   onDeleteItem,
   onEditItem,
   onAddItem,
+  onGenAIAddItems,
 }) => {
   const theme = useTheme();
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
@@ -275,14 +277,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   }, [sortedCategories, userId, listId]);
 
   // Add this handler inside the ShoppingListView component
-  const handleGenAIAddItems = (items) => {
-    // You may need to adapt this to your add item logic
-    items.forEach(item => {
-      // Call your add item function/prop for each item
-      // Example: onAddItem(item)
-      // If you need to map fields, do so here
-      // You may want to batch or optimize this if needed
-    });
+  const handleGenAIAddItems = (items: { name: string; category: string }[]) => {
+    if (onGenAIAddItems) {
+      onGenAIAddItems(items);
+    }
   };
 
   // Simplified category component without memo for drag and drop reliability

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Checkbox, List, ListItem, ListItemText, ListItemSecondaryAction, CircularProgress, Box, Typography } from '@mui/material';
 import { generateItemsFromApi } from '../../src/services/api';
+import MicIcon from '@mui/icons-material/Mic';
+import MicOffIcon from '@mui/icons-material/MicOff';
 
 const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) => {
   const [input, setInput] = useState('');
@@ -8,6 +10,40 @@ const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) =>
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState([]);
   const [error, setError] = useState('');
+  const [listening, setListening] = useState(false);
+  const recognitionRef = React.useRef(null);
+
+  // Voice input logic
+  const handleVoiceInput = () => {
+    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      setError('Voice recognition not supported in this browser.');
+      return;
+    }
+    if (listening) {
+      recognitionRef.current && recognitionRef.current.stop();
+      setListening(false);
+      return;
+    }
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput(prev => prev ? prev + ', ' + transcript : transcript);
+    };
+    recognition.onerror = (event) => {
+      setError('Voice recognition error: ' + event.error);
+      setListening(false);
+    };
+    recognition.onend = () => {
+      setListening(false);
+    };
+    recognitionRef.current = recognition;
+    recognition.start();
+    setListening(true);
+  };
 
   const handleProcess = async () => {
     setLoading(true);
@@ -55,6 +91,13 @@ const GenAIAddItemsModal = ({ open, onClose, onAddItems, token, categories }) =>
               minRows={2}
               autoFocus
               margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <Button onClick={handleVoiceInput} sx={{ minWidth: 0 }}>
+                    {listening ? <MicOffIcon color="error" /> : <MicIcon color="primary" />}
+                  </Button>
+                )
+              }}
             />
             {error && <Typography color="error">{error}</Typography>}
           </>

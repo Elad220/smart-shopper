@@ -178,6 +178,25 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
     }
   };
 
+  // Add this handler for GenAI Add Items
+  const handleGenAIAddItems = async (aiItems: { name: string; category: string }[]) => {
+    try {
+      for (const aiItem of aiItems) {
+        await addItem({
+          name: aiItem.name,
+          category: aiItem.category,
+          amount: 1,
+          units: 'pcs',
+          priority: 'Medium',
+          notes: '',
+        });
+      }
+      toast.success(`Added ${aiItems.length} items from AI! 🤖`);
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
+
   const handleToggleShoppingMode = () => {
     setIsShoppingMode(!isShoppingMode);
     if (!isShoppingMode) {
@@ -430,6 +449,7 @@ const ShoppingApp: FC<ShoppingAppProps> = ({ user, mode, onToggleMode, onLogout 
                       onDeleteItem={handleDeleteItem}
                       onEditItem={handleEditItem}
                       onAddItem={() => setIsAddModalOpen(true)}
+                      onGenAIAddItems={handleGenAIAddItems}
                     />
                   ) : (
                      <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8 }}>
