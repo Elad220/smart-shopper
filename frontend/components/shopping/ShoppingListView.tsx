@@ -274,13 +274,13 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   const getPriorityIcon = useCallback((priority: string) => {
     switch (priority) {
       case 'High':
-        return <AlertTriangle size={16} color={theme.palette.error.main} />;
+        return <AlertTriangle size={14} color={theme.palette.error.main} />;
       case 'Medium':
-        return <Clock size={16} color={theme.palette.warning.main} />;
+        return <Clock size={14} color={theme.palette.warning.main} />;
       case 'Low':
-        return <Circle size={16} color={theme.palette.info.main} />;
+        return <Circle size={14} color={theme.palette.info.main} />;
       default:
-        return <Circle size={16} color={theme.palette.info.main} />;
+        return <Circle size={14} color={theme.palette.info.main} />;
     }
   }, [theme.palette]);
 
@@ -297,20 +297,20 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           {...provided.draggableProps}
           style={{
             ...provided.draggableProps.style,
-            marginBottom: '16px',
+            marginBottom: '12px',
           }}
         >
           <Card
             className="glass-card"
                           sx={{
-                borderRadius: '20px',
+                borderRadius: '12px',
                 overflow: 'hidden',
                 // Simple visual effects during drag
                 transform: snapshot.isDragging ? 'rotate(2deg) scale(1.02)' : 'none',
                 // Enhanced shadow during drag
                 boxShadow: snapshot.isDragging 
-                  ? `0 8px 32px ${alpha(theme.palette.primary.main, 0.3)}`
-                  : '0 2px 8px rgba(0,0,0,0.1)',
+                  ? `0 6px 24px ${alpha(theme.palette.primary.main, 0.25)}`
+                  : '0 1px 4px rgba(0,0,0,0.08)',
                 // Smooth transition when not dragging
                 transition: snapshot.isDragging ? 'none' : 'all 0.2s ease',
                 // Add border during drag for better visual feedback
@@ -322,7 +322,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
             {/* Simplified Category Header */}
             <CardContent 
               sx={{ 
-                p: 3, 
+                p: 2, 
                 cursor: 'pointer',
                 background: snapshot.isDragging 
                   ? alpha(theme.palette.primary.main, 0.15)
@@ -332,7 +332,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
               }}
               onClick={() => !snapshot.isDragging && toggleCategoryCollapse(categoryName)}
             >
-              <Stack direction="row" alignItems="center" spacing={2}>
+              <Stack direction="row" alignItems="center" spacing={1.5}>
                 <div
                   {...provided.dragHandleProps}
                   style={{
@@ -340,8 +340,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     cursor: snapshot.isDragging ? 'grabbing' : 'grab',
-                    padding: '8px',
-                    borderRadius: '8px',
+                    padding: '6px',
+                    borderRadius: '6px',
                     backgroundColor: snapshot.isDragging 
                       ? alpha(theme.palette.primary.main, 0.3)
                       : alpha(theme.palette.action.hover, 0.5),
@@ -351,29 +351,33 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   onClick={(e) => e.stopPropagation()}
                 >
                   <GripVertical 
-                    size={18} 
+                    size={16} 
                     color={theme.palette.text.primary}
                   />
                 </div>
-                <Typography variant="h4" sx={{ fontSize: '1.5rem' }}>
+                <Typography variant="h5" sx={{ fontSize: '1.2rem' }}>
                   {getCategoryEmoji(categoryName)}
                 </Typography>
-                <Typography variant="h6" sx={{ 
+                <Typography variant="subtitle1" sx={{ 
                   flexGrow: 1, 
                   fontWeight: 600,
+                  fontSize: '1rem',
                   // Simplified gradient for performance
                   color: theme.palette.text.primary,
                 }}>
                   {categoryName}
                 </Typography>
                 <Chip 
-                  label={`${items.length} items`}
+                  label={`${items.length}`}
                   size="small"
                   sx={{ 
-                    borderRadius: '12px',
+                    borderRadius: '8px',
                     background: theme.palette.primary.main,
                     color: 'white',
-                    fontWeight: 600,
+                    fontWeight: 500,
+                    fontSize: '0.75rem',
+                    height: '20px',
+                    minWidth: '24px',
                   }}
                 />
                 <IconButton 
@@ -381,6 +385,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                   sx={{ 
                     transform: `rotate(${isCollapsed ? 0 : 180}deg)`,
                     transition: 'transform 0.3s ease',
+                    padding: '4px',
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -389,30 +394,31 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     }
                   }}
                 >
-                  <ChevronDown size={20} />
+                  <ChevronDown size={18} />
                 </IconButton>
               </Stack>
             </CardContent>
 
             <Collapse in={!isCollapsed}>
-              <Box sx={{ p: 3, pt: 0 }}>
-                <Stack spacing={2}>
+              <Box sx={{ p: 2, pt: 0 }}>
+                <Stack spacing={1.5}>
                   {items.map((item) => (
                     <Card
                       key={item.id}
                       className="glass-card"
                       sx={{
-                        borderRadius: '16px',
+                        borderRadius: '10px',
                         background: item.completed
                           ? alpha(theme.palette.success.main, 0.08)
                           : 'inherit',
                       }}
                     >
-                      <CardContent sx={{ p: item.imageUrl ? 2 : 3 }}>
-                        <Stack direction="row" alignItems="center" spacing={2}>
+                      <CardContent sx={{ p: item.imageUrl ? 1.5 : 2 }}>
+                        <Stack direction="row" alignItems="center" spacing={1.5}>
                           <Checkbox
                             checked={item.completed}
                             onChange={() => onToggleComplete(item.id)}
+                            size="small"
                             sx={{
                               color: theme.palette.primary.main,
                               '&.Mui-checked': {
@@ -424,9 +430,9 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           {item.imageUrl && (
                             <Box
                               sx={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '8px',
+                                width: '40px',
+                                height: '40px',
+                                borderRadius: '6px',
                                 overflow: 'hidden',
                                 flexShrink: 0,
                               }}
@@ -446,9 +452,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                           <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                             <Stack direction="row" alignItems="center" spacing={1}>
                               <Typography
-                                variant="subtitle1"
+                                variant="body1"
                                 sx={{
-                                  fontWeight: 600,
+                                  fontWeight: 500,
+                                  fontSize: '0.9rem',
                                   textDecoration: item.completed ? 'line-through' : 'none',
                                   opacity: item.completed ? 0.7 : 1,
                                   flexGrow: 1,
@@ -462,14 +469,15 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                               {getPriorityIcon(item.priority)}
                             </Stack>
                             
-                            <Stack direction="row" spacing={1} sx={{ mt: 0.5 }}>
+                            <Stack direction="row" spacing={0.75} sx={{ mt: 0.25 }}>
                               <Chip
                                 label={`${item.amount} ${item.units}`}
                                 size="small"
                                 sx={{ 
-                                  borderRadius: '8px', 
-                                  fontSize: '0.7rem',
-                                  height: '20px',
+                                  borderRadius: '6px', 
+                                  fontSize: '0.65rem',
+                                  height: '18px',
+                                  fontWeight: 500,
                                 }}
                               />
                               {item.notes && (
@@ -478,32 +486,37 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                                   size="small"
                                   variant="outlined"
                                   sx={{ 
-                                    borderRadius: '8px',
-                                    fontSize: '0.7rem',
-                                    height: '20px',
+                                    borderRadius: '6px',
+                                    fontSize: '0.65rem',
+                                    height: '18px',
+                                    fontWeight: 400,
                                   }}
                                 />
                               )}
                             </Stack>
                           </Box>
                           
-                          <Stack direction="row" spacing={0.5}>
+                          <Stack direction="row" spacing={0.25}>
                             <IconButton
                               size="small"
                               onClick={() => onEditItem(item)}
-                              sx={{ borderRadius: '6px' }}
+                              sx={{ 
+                                borderRadius: '4px',
+                                padding: '4px',
+                              }}
                             >
-                              <Edit size={14} />
+                              <Edit size={12} />
                             </IconButton>
                             <IconButton
                               size="small"
                               onClick={() => onDeleteItem(item.id)}
                               sx={{ 
-                                borderRadius: '6px',
+                                borderRadius: '4px',
+                                padding: '4px',
                                 color: theme.palette.error.main,
                               }}
                             >
-                              <Trash2 size={14} />
+                              <Trash2 size={12} />
                             </IconButton>
                           </Stack>
                         </Stack>
@@ -819,7 +832,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                 <Box sx={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
-                  gap: 3,
+                  gap: 0,
                   width: '100%',
                   minHeight: 60,
                   // Ensure the drag area extends properly
