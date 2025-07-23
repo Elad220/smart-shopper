@@ -629,10 +629,10 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
           {/* --- COMPACTED CONTROLS SECTION START --- */}
           <Box className="glass-card" sx={{ mb: 2, p: 1.5, borderRadius: '16px' }}>
             <Stack
-              direction={isMobile ? 'column' : 'row'}
-              spacing={isMobile ? 1 : 1.5}
-              alignItems={isMobile ? 'stretch' : 'center'}
-              justifyContent="flex-start"
+              direction="row"
+              spacing={1.2}
+              alignItems="center"
+              flexWrap="wrap"
               sx={{ width: '100%' }}
             >
               {/* Search Bar */}
