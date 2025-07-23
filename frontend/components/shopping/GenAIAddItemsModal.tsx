@@ -66,12 +66,21 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
   const handleProcess = async () => {
     setLoading(true);
     setError('');
+    if (!token) {
+      setError('You must be logged in to use this feature. Please log in and try again.');
+      setLoading(false);
+      return;
+    }
     try {
       const result: { name: string; category: string }[] = await generateItemsFromApi(token, input);
       setItems(result);
       setSelected(result.map(() => true));
-    } catch (e) {
-      setError('Failed to parse items.');
+    } catch (e: any) {
+      if (e && e.status === 401) {
+        setError('Session expired or unauthorized. Please log in again.');
+      } else {
+        setError('Failed to parse items.');
+      }
     }
     setLoading(false);
   };

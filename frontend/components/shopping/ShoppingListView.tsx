@@ -8,6 +8,7 @@ import { Trash2, ShoppingBag, ChevronDown, Edit, GripVertical, Search, X, Sparkl
 import { ShoppingItem } from '../../types';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import GenAIAddItemsModal from './GenAIAddItemsModal';
+import { useMediaQuery } from '@mui/material';
 
 interface ShoppingListViewProps {
   items: ShoppingItem[];
@@ -73,6 +74,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
   onGenAIAddItems,
 }) => {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
   const [categoryOrder, setCategoryOrder] = useState<string[]>([]);
   const [areAllCollapsed, setAreAllCollapsed] = useState(false);
@@ -625,7 +627,7 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                               <Box className="glass-card" sx={{ mb: 3, p: 2, borderRadius: '20px' }}>
             <Stack spacing={2}>
               {/* Search Input Row */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Box sx={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'stretch' : 'center', gap: 2 }}>
                 <TextField
                   size="small"
                   placeholder="Search"
@@ -682,16 +684,28 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
                     )
                   }}
                 />
-                {/* AI Add Items Button */}
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  startIcon={<Sparkles size={18} />}
-                  onClick={() => setGenAIAddModalOpen(true)}
-                  sx={{ borderRadius: '12px', fontWeight: 600 }}
-                >
-                  AI Add Items
-                </Button>
+                {/* AI Add Items Button - responsive placement */}
+                {isMobile ? (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<Sparkles size={18} />}
+                    onClick={() => setGenAIAddModalOpen(true)}
+                    sx={{ borderRadius: '12px', fontWeight: 600, mt: 2, width: '100%' }}
+                  >
+                    AI Add Items
+                  </Button>
+                ) : (
+                  <Button
+                    variant="contained"
+                    color="secondary"
+                    startIcon={<Sparkles size={18} />}
+                    onClick={() => setGenAIAddModalOpen(true)}
+                    sx={{ borderRadius: '12px', fontWeight: 600 }}
+                  >
+                    AI Add Items
+                  </Button>
+                )}
                 
                 {/* Filter for unchecked items - always visible */}
                 <Box
