@@ -5,16 +5,6 @@ import MicOffIcon from '@mui/icons-material/MicOff';
 import { generateItemsFromApi, sendAudioMessage } from '../../src/services/api';
 import { UNIT_OPTIONS } from '../../constants';
 
-// TypeScript: Add minimal types for SpeechRecognition for browser compatibility
-// These types are not in the default TS lib, so we define them here for our use case
-
-type SpeechRecognitionType = typeof window & {
-  SpeechRecognition: any;
-  webkitSpeechRecognition: any;
-};
-type SpeechRecognitionEventType = Event & { results: { [key: number]: { [key: number]: { transcript: string } } } };
-type SpeechRecognitionErrorEventType = Event & { error: string };
-
 interface GenAIAddItemsModalProps {
   open: boolean;
   onClose: () => void;
