@@ -110,6 +110,11 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
     setSelected(sel => sel.map((v, i) => (i === idx ? !v : v)));
   };
 
+  // Add handler for select/deselect all
+  const handleSelectAll = (checked: boolean) => {
+    setSelected(selected => selected.map(() => checked));
+  };
+
   const handleAdd = () => {
     const selectedItems = items
       .map((item, i) => selected[i] ? {
@@ -159,6 +164,16 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
         ) : (
           <>
             <Typography variant="subtitle1" sx={{ mb: 2 }}>Found {items.length} Items</Typography>
+            {/* Select/Deselect All Checkbox */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+              <Checkbox
+                indeterminate={selected.some(s => s) && !selected.every(s => s)}
+                checked={selected.length > 0 && selected.every(s => s)}
+                onChange={e => handleSelectAll(e.target.checked)}
+                inputProps={{ 'aria-label': 'Select/Deselect All Items' }}
+              />
+              <Typography variant="body2">Select/Deselect All</Typography>
+            </div>
             <List>
               {items.map((item, idx) => (
                 <ListItem key={idx} button onClick={() => handleToggle(idx)} alignItems="flex-start">
