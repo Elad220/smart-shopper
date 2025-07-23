@@ -4,14 +4,15 @@ import MicIcon from '@mui/icons-material/Mic';
 import MicOffIcon from '@mui/icons-material/MicOff';
 import { generateItemsFromApi } from '../../src/services/api';
 
-// Add global SpeechRecognition type for TS
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-declare global {
-  interface Window {
-    webkitSpeechRecognition: typeof SpeechRecognition;
-    SpeechRecognition: typeof SpeechRecognition;
-  }
-}
+// TypeScript: Add minimal types for SpeechRecognition for browser compatibility
+// These types are not in the default TS lib, so we define them here for our use case
+
+type SpeechRecognitionType = typeof window & {
+  SpeechRecognition: any;
+  webkitSpeechRecognition: any;
+};
+type SpeechRecognitionEventType = Event & { results: { [key: number]: { [key: number]: { transcript: string } } } };
+type SpeechRecognitionErrorEventType = Event & { error: string };
 
 interface GenAIAddItemsModalProps {
   open: boolean;
@@ -27,11 +28,12 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
   const [selected, setSelected] = useState<boolean[]>([]);
   const [error, setError] = useState<string>('');
   const [listening, setListening] = useState<boolean>(false);
-  const recognitionRef = React.useRef<SpeechRecognition | null>(null);
+  const recognitionRef = React.useRef<any>(null);
 
   // Voice input logic
   const handleVoiceInput = () => {
-    if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+    const win = window as SpeechRecognitionType;
+    if (!("webkitSpeechRecognition" in win || "SpeechRecognition" in win)) {
       setError('Voice recognition not supported in this browser.');
       return;
     }
@@ -40,16 +42,16 @@ const GenAIAddItemsModal: React.FC<GenAIAddItemsModalProps> = ({ open, onClose, 
       setListening(false);
       return;
     }
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognitionClass = win.SpeechRecognition || win.webkitSpeechRecognition;
     const recognition = new SpeechRecognitionClass();
     recognition.lang = 'en-US';
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
+    recognition.onresult = (event: SpeechRecognitionEventType) => {
       const transcript = event.results[0][0].transcript;
       setInput(prev => prev ? prev + ', ' + transcript : transcript);
     };
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+    recognition.onerror = (event: SpeechRecognitionErrorEventType) => {
       setError('Voice recognition error: ' + event.error);
       setListening(false);
     };

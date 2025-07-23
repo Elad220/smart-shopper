@@ -867,9 +867,8 @@ const ShoppingListView: React.FC<ShoppingListViewProps> = ({
       <GenAIAddItemsModal
         open={isGenAIAddModalOpen}
         onClose={() => setGenAIAddModalOpen(false)}
-        onAddItems={handleGenAIAddItems} // implement this handler
-        token={userId} // or pass the correct token/prop
-        categories={Object.keys(groupedItems)}
+        onAddItems={handleGenAIAddItems}
+        token={userId}
       />
     </>
   );
