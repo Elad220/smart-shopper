@@ -12,7 +12,8 @@
     "test:ci": "jest --ci --coverage --detectOpenHandles --forceExit --verbose",
     "test:debug": "node --inspect-brk=0.0.0.0:9229 node_modules/.bin/jest --runInBand",
     "test:integration": "jest --testPathPattern=integration --detectOpenHandles --forceExit",
-    "test:unit": "jest --testPathPattern=unit --detectOpenHandles --forceExit"
+    "test:unit": "jest --testPathPattern=unit --detectOpenHandles --forceExit",
+    "lint": "echo 'No linter configured for backend yet' && exit 0"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

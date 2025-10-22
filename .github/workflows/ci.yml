@@ -1,0 +1,152 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_DATABASE: smart-shopper
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd backend && npm ci
+        cd ../frontend && npm ci
+
+    - name: Lint backend
+      run: |
+        cd backend
+        npm run lint || echo "Backend linting not configured - skipping"
+
+    - name: Lint frontend
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run backend tests
+      run: |
+        cd backend
+        npm run test:ci
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://localhost:27017/smart-shopper-test
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm run test:ci
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload frontend coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./frontend/coverage/lcov.info
+        flags: frontend
+        name: frontend-coverage
+      continue-on-error: true
+
+    - name: Upload backend coverage
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage/lcov.info
+        flags: backend
+        name: backend-coverage
+      continue-on-error: true
+
+  lint:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+        cache: 'npm'
+        cache-dependency-path: |
+          frontend/package-lock.json
+          backend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd backend && npm ci
+        cd ../frontend && npm ci
+
+    - name: Run linting
+      run: make lint
+
+  docker-compose-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Test Docker Compose setup
+      run: |
+        docker compose up -d
+        sleep 10
+        docker compose ps
+        docker compose down
+
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Use Node.js 20.x
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20.x
+
+    - name: Run security audit - Backend
+      run: |
+        cd backend
+        npm audit --audit-level=moderate
+      continue-on-error: true
+
+    - name: Run security audit - Frontend
+      run: |
+        cd frontend
+        npm audit --audit-level=moderate
+      continue-on-error: true
