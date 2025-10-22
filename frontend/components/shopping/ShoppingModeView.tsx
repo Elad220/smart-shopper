@@ -251,6 +251,8 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
                borderRadius: '12px',
                textTransform: 'none',
                fontSize: '1.1rem',
+               whiteSpace: 'normal', // Allow text to wrap
+               wordBreak: 'break-word', // Break long words if needed
              }}
            >
              Exit Shopping Mode
@@ -311,6 +313,8 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
                     boxShadow: `0 4px 20px ${alpha(theme.palette.warning.main, 0.2)}`,
                   },
                   mr: 1.5,
+                  whiteSpace: 'normal', // Allow text to wrap
+                  wordBreak: 'break-word', // Break long words if needed
                 }}
               >
                 Unchecked Only
@@ -336,6 +340,8 @@ const ShoppingModeView: FC<ShoppingModeViewProps> = ({
                   '&:hover': {
                     borderWidth: 2,
                   },
+                  whiteSpace: 'normal', // Allow text to wrap
+                  wordBreak: 'break-word', // Break long words if needed
                 }}
               >
                 Exit
